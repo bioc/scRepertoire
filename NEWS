@@ -1,11 +1,38 @@
+CHANGES IN VERSION 1.3.1
+------------------------
+# I think we can all agree I need to get better at version control - as of right now bioconductor is # at v1.3, so the better alignment here is to start the version alignment at 1.3.1, sorry for the 
+# confusion
 
-CHANGES IN VERSION 1.1.2
+CHANGES IN VERSION 1.2.1
 ------------------------
 
+# Universalizing the versions across GitHub and bioconductor, we are now at 1.2 for bioconductor
+# and v1.2.1 for the master. Dev branch will be updated to reflect this change to v1.2.2. Apologies 
+# for the confusion.
+
+* Updated coding practices based on devtools and bioccheck
+* Deprecated VizVgene() support - erroring during build and new version in dev branch to visualize any gene
+* fixed lengthDF handling of single chains with multi chains stored - ;
+* Changed grabMeta to include assessment of colnames
+* number of changes to the parseTCR/BCR functions to limit assumptions
+
+
+CHANGES IN VERSION 1.1.4
+------------------------
+
+* replaced hammingCompare with lvCompare to enable superior clonotype calling in combineBCR function.
+* added proportion to combineExpression() function so users no longer need to know absolute frequencies when combining the contiguous information. 
+* added clusterTCR() and clonalOverlay() functions.
+* added downsampling to the diversity calculations
+* replaced hammingCompare with lvCompare to enable superior clonotype calling in combineBCR function.
+* added proportion to combineExpression() function so users no longer need to know absolute frequencies when combining the contiguous information. 
+* added clusterTCR() and clonalOverlay() functions.
+* added downsampling to the diversity calculations
 * Clonal Overlap Coefficient issue fixed, was comparing unique barcodes and not clonotypes
 * Added function checkBlanks to remove list elements without clonotypes, this prevents errors for visualizations
 * Re-added Startrac metrics by stripping down the package and adding it piecemeal
 * Heavily modified dependencies to reduce total number 
+
 
 CHANGES IN VERSION 1.0.0
 ------------------------
@@ -142,9 +169,7 @@ DEPRECATED AND DEFUNCT
 CHANGES IN VERSION 1.2.0
 ------------------------
 
-SUBMITTED
-
-* The first version of scRepertoire submitted to Bioconductor.
+The first version of scRepertoire submitted to Bioconductor.
 
 SIGNIFICANT USER-VISIBLE CHANGES
 

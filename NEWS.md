@@ -1,3 +1,52 @@
+# scRepertoire VERSION 2.0.5
+
+## UNDERLYING CHANGES
+* added type checks using assertthat
+* updated conditional statements in constructConDFAndparseTCR.cpp
+* Fixed issue in ```clonalQuant()``` and factor-based **group.by** variable
+
+# scRepertoire VERSION 2.0.4
+
+## UNDERLYING CHANGES
+* ```getCirclize()``` refactored to prevent assumptions and added **include.self** argument
+* Added ```.count.clones()``` internal function for ```getCirclize()``` and ```clonalNetwork()```
+* Added **order.by** parameter to visualizations to specifically call order of plotting using a vector or can use "alphanumeric" to plot things in order
+* Fix issue with ```clonalLength()``` and NA handling
+* ```clonalCompare()``` now retains the original clonal info if using **relabel.clones**
+* Add Dandelion support in to ```loadContigs()``` and testthat
+* Fixed issue with ```positionalProperty()``` assumption that the clones will all have 20 amino acids.
+* Fixed issue with ```positionalProperty()``` and removing non-amino acids.
+* Fixed IGH/K/L mistaking gene issue in ```vizGenes()```
+* Add error message for NULL results in ```clonalCluster()``` with **export.graph = TRUE**
+* Fixed issue with "full.clones" missing in ```combineExpression()``` when using 1 chain
+
+
+# scRepertoire VERSION 2.0.3
+
+## UNDERLYING CHANGES
+
+* Modified support for Omniscope format to allow for dual chains
+* Added ParseBio support in to ```loadContigs()``` and testthat
+* Added support for productive variable to ```loadContigs()``` for BD, Omniscope, and Immcantation formats
+* Replace numerical indexing with name indexing for ```loadContigs()```
+* ```combineBCR()``` and ```combineTCR()``` no allow for unproductive contig inclusions with new **filterNonproductive** parameter.
+* ```combineBCR()``` will now prompt user if **samples** is not included instead of erroring.
+* Added base threshold by length for internal ```.lvCompare()```
+* Ensured internal ```.lvCompare()``` only looks at first set of sequences in multi-sequence chain.
+* Fixed bug in exporting graph for ```clonaCluster()```
+* Fixed conflict in functions between igraph and dplyr packages
+
+# scRepertoire VERSION 2.0.2
+
+## UNDERLYING CHANGES
+
+* ```clonalOccupy()``` rewrite counting and NA handling
+
+# scRepertoire VERSION 2.0.1 
+
+## UNDERLYING CHANGES
+
+* ```clonalOverlay()``` arguments now cutpoint and use cut.category to select either clonalProportion or clonalFrequency
 
 # scRepertoire VERSION 2.0.0 (2024-01-10)
 

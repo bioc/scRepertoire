@@ -45,14 +45,16 @@
 #' @param addLabel This will add a label to the frequency header, allowing
 #' the user to try multiple group.by variables or recalculate frequencies after 
 #' subsetting the data.
-#' @importFrom dplyr bind_rows %>% summarise
-#' @importFrom  rlang %||%
+#' @importFrom dplyr bind_rows %>% summarise left_join mutate select n all_of coalesce
+#' @importFrom  rlang %||% sym :=
 #' @importFrom SummarizedExperiment colData<- colData
+#' @importFrom S4Vectors DataFrame
+#' @importFrom assertthat assert_that is.string is.flag
 #' @export
 #' @concept SC_Functions
 #' @return Single-cell object with clone information added to meta data
 #' information
-#' 
+#'
 combineExpression <- function(input.data, 
                               sc.data, 
                               cloneCall ="strict", 
@@ -63,6 +65,17 @@ combineExpression <- function(input.data,
                               cloneSize = c(Rare = 1e-4,Small = 0.001,Medium = 0.01,Large = 0.1,Hyperexpanded = 1),
                               addLabel = FALSE) {
     call_time <- Sys.time()
+
+    # rudimentary type checking
+    assert_that(isAnyValidProductOfCombineContigs(input.data))
+    assert_that(is_seurat_or_se_object(sc.data))
+    assert_that(is.string(cloneCall))
+    assert_that(is.string(chain))
+    assert_that(is.string(group.by) || is.null(group.by))
+    assert_that(is.flag(proportion))
+    assert_that(is.flag(filterNA))
+    assert_that(is_named_numeric(cloneSize))
+    assert_that(is.flag(addLabel))
   
     options( dplyr.summarise.inform = FALSE )
     if (!proportion && any(cloneSize < 1)) {
@@ -72,6 +85,12 @@ combineExpression <- function(input.data,
     
     cloneCall <- .theCall(input.data, cloneCall)
     if (chain != "both") {
+      #Retain the full clone information
+      full.clone <- lapply(input.data, function(x) {
+                        x[,c("barcode", cloneCall)]
+                 
+      })
+      full.clone <- bind_rows(full.clone)
       for(i in seq_along(input.data)) {
         input.data[[i]] <- .off.the.chain(input.data[[i]], chain, cloneCall)
       }
@@ -87,11 +106,12 @@ combineExpression <- function(input.data,
       
             data <- data.frame(input.data[[i]], stringsAsFactors = FALSE)
             data2 <- unique(data[,c("barcode", cloneCall)])
+            #This ensures all calculations are based on the cells in the SCO
             data2 <- na.omit(data2[data2[,"barcode"] %in% cell.names,])
             data2 <- data2 %>% 
                         group_by(data2[,cloneCall]) %>%
-                        summarise(clonalProportion = n()/nrow(data2), 
-                                  clonalFrequency = n())
+                        summarise(clonalProportion = dplyr::n()/nrow(data2), 
+                                  clonalFrequency = dplyr::n())
             colnames(data2)[1] <- cloneCall
             data <- merge(data, data2, by = cloneCall, all = TRUE)
             if ( cloneCall %!in% c("CTgene", "CTnt", "CTaa", "CTstrict") ) {
@@ -107,11 +127,12 @@ combineExpression <- function(input.data,
     } else if (group.by != "none" || !is.null(group.by)) {
         data <- data.frame(bind_rows(input.data), stringsAsFactors = FALSE)
         data2 <- na.omit(unique(data[,c("barcode", cloneCall, group.by)]))
+        #This ensures all calculations are based on the cells in the SCO
         data2 <- data2[data2[,"barcode"] %in% cell.names, ]
         data2 <- as.data.frame(data2 %>% 
                                   group_by(data2[,cloneCall], data2[,group.by]) %>% 
-                                  summarise(clonalProportion = n()/nrow(data2), 
-                                            clonalFrequency = n())
+                                  summarise(clonalProportion = dplyr::n()/nrow(data2), 
+                                            clonalFrequency = dplyr::n())
         )
         
         colnames(data2)[c(1,2)] <- c(cloneCall, group.by)
@@ -130,7 +151,6 @@ combineExpression <- function(input.data,
     if(!proportion && max(na.omit(Con.df[,"clonalFrequency"])) > cloneSize[length(cloneSize)]) {
       cloneSize[length(cloneSize)] <- max(na.omit(Con.df[,"clonalFrequency"]))
     }
-    
     
     #Creating the bins for cloneSize
     Con.df$cloneSize <- NA
@@ -163,8 +183,18 @@ combineExpression <- function(input.data,
                                 "CTaa", "CTstrict", "clonalProportion", 
                                 "clonalFrequency", "cloneSize")])
     }
+    #Removing any duplicate barcodes, should not be an issue
     dup <- PreMeta$barcode[which(duplicated(PreMeta$barcode))]
     PreMeta <- PreMeta[PreMeta$barcode %!in% dup,]
+    
+    #Re-adding full clones 
+    if (chain != "both") {
+      clone_sym <- sym(cloneCall)
+      PreMeta <- PreMeta %>%
+        left_join(full.clone, by = "barcode", suffix = c("", ".from_full_clones")) %>%
+        mutate(!!clone_sym := coalesce(!!sym(paste0(cloneCall, ".from_full_clones")), !!clone_sym)) %>%
+        select(-all_of(paste0(cloneCall, ".from_full_clones")))
+    }
     barcodes <- PreMeta$barcode
     PreMeta <- PreMeta[,-1]
     rownames(PreMeta) <- barcodes
@@ -187,7 +217,13 @@ combineExpression <- function(input.data,
       if (length(which(rownames(PreMeta) %in% 
                        rownames))/length(rownames) < 0.01) {
         warning(.warn_str) }
-      colData(sc.data) <- cbind(colData(sc.data), PreMeta[rownames,])[, union(colnames(colData(sc.data)),  colnames(PreMeta))]
+      
+      combined_col_names <- unique(c(colnames(colData(sc.data)), colnames(PreMeta)))
+      full_data <- merge(colData(sc.data), PreMeta[rownames, , drop = FALSE], by = "row.names", all.x = TRUE)
+      rownames(full_data) <- full_data[, 1]
+      full_data  <- full_data[, -1]
+      colData(sc.data) <- DataFrame(full_data[, combined_col_names])
+      
       rownames(colData(sc.data)) <- rownames  
     }
     if (filterNA) { 
@@ -203,14 +239,4 @@ combineExpression <- function(input.data,
     return(sc.data)
 } 
 
-
 .warn_str <- "< 1% of barcodes match: Ensure the barcodes in the single-cell object match the barcodes in the combined immune receptor output from scRepertoire. If getting this error, please check https://www.borch.dev/uploads/screpertoire/articles/faq."
-
-
-
-
-
-
-
-
-

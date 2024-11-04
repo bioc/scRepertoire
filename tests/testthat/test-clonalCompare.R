@@ -16,6 +16,18 @@ test_that("clonalCompare works", {
   )
   
   expect_doppelganger(
+    "clonalCompare_alluvial_order_plot",
+    clonalCompare(
+      combined, 
+      top.clones = 10, 
+      samples = c("P17B", "P17L"), 
+      order.by = c("P17L", "P17B"),
+      cloneCall="aa", 
+      graph = "alluvial"
+    )
+  )
+  
+  expect_doppelganger(
     "clonalCompare_area_plot",
     clonalCompare(
       combined, 
@@ -36,4 +48,58 @@ test_that("clonalCompare works", {
                 graph = "alluvial")
    )
   
+})
+
+test_that("clonalCompare works with exportTable and prop FALSE", {
+
+  combined <- getCombined()
+
+  getClonalCompareRes <- function(prop) {
+    clonalCompare(
+      combined,
+      top.clones = 10,
+      highlight.clones = c("CVVSDNTGGFKTIF_CASSVRRERANTGELFF", "NA_CASSVRRERANTGELFF"),
+      relabel.clones = TRUE,
+      samples = c("P17B", "P17L"),
+      cloneCall = "aa",
+      graph = "alluvial",
+      exportTable = TRUE,
+      proportion = prop
+    )
+  }
+
+  countCompareRes <- getClonalCompareRes(prop = FALSE)
+  propCompareRes <- getClonalCompareRes(prop = TRUE)
+
+  expect_identical(
+    countCompareRes %>% dplyr::select(-Count),
+    propCompareRes %>% dplyr::select(-Proportion)
+  )
+
+  fullJoined <- suppressMessages(getClonalCompareRes(FALSE) %>%
+    dplyr::full_join(getClonalCompareRes(TRUE))
+  )
+
+  expect_setequal(
+    colnames(fullJoined),
+    c("clones", "Count", "original.clones", "Proportion", "Sample")
+  )
+
+  expect_identical(
+    fullJoined %>%
+      dplyr::mutate(propToCountScaleFactor = Count / Proportion) %>%
+      dplyr::group_by(Sample) %>%
+      dplyr::summarise(
+        areAllFactorsEqual = var(propToCountScaleFactor) < 1e-10
+      ) %>%
+      dplyr::pull(areAllFactorsEqual),
+    rep(TRUE, length(unique(fullJoined$Sample)))
+  )
+
+  countPropFactor <- fullJoined$Count / fullJoined$Proportion
+
+  expect_identical(
+    as.integer(fullJoined$Count - fullJoined$Proportion * countPropFactor),
+    integer(nrow(fullJoined))
+  )
 })

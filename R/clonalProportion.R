@@ -2,10 +2,10 @@
 #'
 #' This function calculates the relative clonal space occupied by the 
 #' clones. The grouping of these clones is based on the parameter 
-#' \strong{clonalSplit}, at default, \strong{clonalSplit} will group the clones 
+#' **clonalSplit**, at default, **clonalSplit** will group the clones 
 #' into bins of 1:10, 11:100, 101:1001, etc. To adjust the clones 
 #' selected, change the numbers in the variable split. If a matrix output 
-#' for the data is preferred, set \strong{exportTable} = TRUE.
+#' for the data is preferred, set **exportTable** = TRUE.
 #'
 #' @examples
 #' #Making combined contig data
@@ -14,25 +14,27 @@
 #'                                     "P19B","P19L", "P20B", "P20L"))
 #' clonalProportion(combined, cloneCall = "gene")
 #'
-#' @param input.data The product of \code{\link{combineTCR}}, 
-#' \code{\link{combineBCR}}, or \code{\link{combineExpression}}.
-#' @param clonalSplit The cut points for the specific clones.
-#' @param cloneCall How to call the clone - VDJC gene (\strong{gene}), 
-#' CDR3 nucleotide (\strong{nt}), CDR3 amino acid (\strong{aa}),
-#' VDJC gene + CDR3 nucleotide (\strong{strict}) or a custom variable 
-#' in the data. 
+#' @param input.data The product of [combineTCR()], 
+#' [combineBCR()], or [combineExpression()].
+#' @param clonalSplit The cut points for the specific clones
+#' @param cloneCall How to call the clone - VDJC gene (**gene**), 
+#' CDR3 nucleotide (**nt**), CDR3 amino acid (**aa**),
+#' VDJC gene + CDR3 nucleotide (**strict**) or a custom variable 
+#' in the data
 #' @param chain indicate if both or a specific chain should be used - 
-#' e.g. "both", "TRA", "TRG", "IGH", "IGL".
-#' @param group.by The variable to use for grouping.
+#' e.g. "both", "TRA", "TRG", "IGH", "IGL"
+#' @param group.by The variable to use for grouping
+#' @param order.by A vector of specific plotting order or "alphanumeric"
+#' to plot groups in order
 #' @param exportTable Exports a table of the data into the global.
-#' environment in addition to the visualization.
+#' environment in addition to the visualization
 #' @param palette Colors to use in visualization - input any 
-#' \link[grDevices]{hcl.pals}.
+#' [hcl.pals][grDevices::hcl.pals]
 #'
 #' @import ggplot2
 #' @importFrom stringr str_sort
 #' @importFrom reshape2 melt
-#' @importFrom dplyr bind_rows
+#' @importFrom dplyr bind_rows n
 #'
 #' @export
 #' @concept Visualizing_Clones
@@ -42,6 +44,7 @@ clonalProportion <- function(input.data,
                              cloneCall = "strict", 
                              chain = "both", 
                              group.by = NULL,
+                             order.by = NULL,
                              exportTable = FALSE, 
                              palette = "inferno") {
     Con.df <- NULL
@@ -77,6 +80,12 @@ clonalProportion <- function(input.data,
     }
     #Plotting
     mat_melt <- melt(mat)
+    
+    if(!is.null(order.by)) {
+      mat_melt <- .ordering.function(vector = order.by,
+                                     group.by = "Var1", 
+                                     data.frame = mat_melt)
+    }
     col <- length(unique(mat_melt$Var2))
     plot <- ggplot(mat_melt, aes(x=as.factor(Var1), y=value, fill=Var2)) +
         geom_bar(stat = "identity", position="fill", 

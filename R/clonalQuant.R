@@ -9,21 +9,25 @@
 #' combined <- combineTCR(contig_list, 
 #'                         samples = c("P17B", "P17L", "P18B", "P18L", 
 #'                                     "P19B","P19L", "P20B", "P20L"))
-#' clonalQuant(combined, cloneCall="strict", scale = TRUE)
+#' clonalQuant(combined, 
+#'             cloneCall="strict", 
+#'             scale = TRUE)
 #'
-#' @param input.data The product of \code{\link{combineTCR}}, 
-#' \code{\link{combineBCR}}, or \code{\link{combineExpression}}.
-#' @param cloneCall How to call the clone - VDJC gene (\strong{gene}), 
-#' CDR3 nucleotide (\strong{nt}), CDR3 amino acid (\strong{aa}),
-#' VDJC gene + CDR3 nucleotide (\strong{strict}) or a custom variable 
-#' in the data. 
+#' @param input.data The product of [combineTCR()], 
+#' [combineBCR()], or [combineExpression()].
+#' @param cloneCall How to call the clone - VDJC gene (**gene**), 
+#' CDR3 nucleotide (**nt**), CDR3 amino acid (**aa**),
+#' VDJC gene + CDR3 nucleotide (**strict**) or a custom variable 
+#' in the data
 #' @param chain indicate if both or a specific chain should be used - 
 #' e.g. "both", "TRA", "TRG", "IGH", "IGL"
-#' @param group.by The column header used for grouping.
-#' @param scale Converts the graphs into percentage of unique clones.
-#' @param exportTable Returns the data frame used for forming the graph.
+#' @param group.by The column header used for grouping
+#' @param order.by A vector of specific plotting order or "alphanumeric"
+#' to plot groups in order
+#' @param scale Converts the graphs into percentage of unique clones
+#' @param exportTable Returns the data frame used for forming the graph
 #' @param palette Colors to use in visualization - input any 
-#' \link[grDevices]{hcl.pals}.
+#' [hcl.pals][grDevices::hcl.pals]
 #' @import ggplot2
 #' @export
 #' @concept Visualizing_Clones
@@ -32,7 +36,8 @@ clonalQuant <- function(input.data,
                         cloneCall = "strict", 
                         chain = "both", 
                         scale=FALSE, 
-                        group.by = NULL, 
+                        group.by = NULL,
+                        order.by = NULL,
                         exportTable = FALSE, 
                         palette = "inferno") {
   
@@ -44,8 +49,8 @@ clonalQuant <- function(input.data,
                               .theCall(input.data, cloneCall, check.df = FALSE), 
                               chain)
   cloneCall <- .theCall(input.data, cloneCall)
+  
   sco <- is_seurat_object(input.data) | is_se_object(input.data)
-
   if(!is.null(group.by) & !sco) {
     input.data <- .groupList(input.data, group.by)
   }
@@ -68,7 +73,7 @@ clonalQuant <- function(input.data,
       mat[i,3] <- length(na.omit(input.data[[i]][,cloneCall]))
       if (!is.null(group.by)) {
         location <- which(colnames(input.data[[i]]) == group.by)
-        mat[i,4] <- input.data[[i]][1,location]
+        mat[i,4] <- as.vector(input.data[[i]][1,location])
       }
   }
   if (scale) { 
@@ -95,6 +100,12 @@ clonalQuant <- function(input.data,
     col <- length(unique(mat[,group.by]))
   }
   mat[,x] = factor(mat[,x], levels = names(input.data))
+  
+  if(!is.null(order.by)) {
+    mat <- .ordering.function(vector = order.by,
+                              group.by = "values", 
+                              data.frame = mat)
+  }
   
   #Plotting
   plot <- ggplot(data = mat, 

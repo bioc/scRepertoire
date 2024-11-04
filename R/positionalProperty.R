@@ -8,15 +8,15 @@
 #' @details
 #' More information for the individual methods can be found at the following citations:
 #' 
-#' \strong{Atchley:} \href{https://pubmed.ncbi.nlm.nih.gov/15851683/}{citation}
+#' **Atchley:** [citation](https://pubmed.ncbi.nlm.nih.gov/15851683/)
 #' 
-#' \strong{Kidera:} \href{https://link.springer.com/article/10.1007/BF01025492}{citation}
+#' **Kidera:** [citation](https://link.springer.com/article/10.1007/BF01025492)
 #' 
-#' \strong{stScales:} \href{https://pubmed.ncbi.nlm.nih.gov/19373543/}{citation}
+#' **stScales:** [citation](https://pubmed.ncbi.nlm.nih.gov/19373543/)
 #' 
-#' \strong{tScales:} \href{https://www.sciencedirect.com/science/article/pii/S0022286006006314?casa_token=uDj97DwXDDEAAAAA:VZfahldPRwU1WObySJlohudtMSDwF7nJSUzcEGwPhvkY13ALLKhs08Cf0_FyyfYZjxJlj-fVf0SM}{citation}
+#' **tScales:** [citation](https://www.sciencedirect.com/science/article/pii/S0022286006006314?casa_token=uDj97DwXDDEAAAAA:VZfahldPRwU1WObySJlohudtMSDwF7nJSUzcEGwPhvkY13ALLKhs08Cf0_FyyfYZjxJlj-fVf0SM)
 #' 
-#' \strong{VHSE:} \href{https://pubmed.ncbi.nlm.nih.gov/15895431/}{citation}
+#' **VHSE:** [citation](https://pubmed.ncbi.nlm.nih.gov/15895431/)
 #' 
 #'
 #' @examples
@@ -29,25 +29,30 @@
 #'                    method = "Atchley", 
 #'                    aa.length = 20)
 
-#' @param input.data The product of \code{\link{combineTCR}}, 
-#' \code{\link{combineBCR}}, or \code{\link{combineExpression}}.
-#' @param chain "TRA", "TRB", "TRG", "TRG", "IGH", "IGL".
-#' @param group.by The variable to use for grouping.
+#' @param input.data The product of [combineTCR()], 
+#' [combineBCR()], or [combineExpression()]
+#' @param chain "TRA", "TRB", "TRG", "TRG", "IGH", "IGL"
+#' @param group.by The variable to use for grouping
+#' @param order.by A vector of specific plotting order or "alphanumeric"
+#' to plot groups in order
 #' @param aa.length The maximum length of the CDR3 amino acid sequence. 
 #' @param method The method to calculate the property - "Atchley", "Kidera",
-#' "stScales", "tScales", or "VHSE".
-#' @param exportTable Returns the data frame used for forming the graph.
-#' @param palette Colors to use in visualization - input any \link[grDevices]{hcl.pals}.
+#' "stScales", "tScales", or "VHSE"
+#' @param exportTable Returns the data frame used for forming the graph
+#' @param palette Colors to use in visualization - input any [hcl.pals][grDevices::hcl.pals]
 #' @import ggplot2
 #' @importFrom stringr str_split
 #' @importFrom stats qt
+#' @importFrom dplyr %>% summarise n group_by 
 #' @export
 #' @concept Summarize_Repertoire
 #' @return ggplot of line graph of diversity by position
+#' @author Florian Bach, Nick Borcherding
 
 positionalProperty <- function(input.data, 
                                chain = "TRB", 
                                group.by = NULL, 
+                               order.by = NULL,
                                aa.length = 20,
                                method = "Atchley",
                                exportTable = FALSE, 
@@ -79,11 +84,13 @@ positionalProperty <- function(input.data,
   #Getting AA Counts
   aa.count.list <- .aa.counter(input.data, cloneCall, aa.length)
   
+  aa.count.list <- lapply(aa.count.list, function(x)subset(x, x$AA %in% c("A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V")))
+  
   #Calculating properties and melting data
   lapply(seq_along(aa.count.list), function(x) {
       lapply(seq_len(nrow(aa.count.list[[x]]))[-1], function(y) {
-          pos <- aa.count.list[[x]][1:20,y]
-          names(pos) <- aa.count.list[[x]][1:20,1]
+          pos <- aa.count.list[[x]][!is.na(aa.count.list[[x]]$AA),y]
+          names(pos) <- aa.count.list[[x]][!is.na(aa.count.list[[x]]$AA),1]
           pos <- pos[pos > 0]
           lapply(seq_len(length(pos)), function(t) {
             char <- names(pos[t])
@@ -103,11 +110,11 @@ positionalProperty <- function(input.data,
             summary <- df %>% 
                       group_by(group) %>% 
                       summarise(mean = mean(value),
-                                  sd = sd(value),  # Standard deviation
-                                  n = n(),         # Number of observations per group
-                                  se = sd / sqrt(n), # Standard error of the mean
-                                  ci_lower = mean - qt(0.975, n-1) * se,
-                                  ci_upper = mean + qt(0.975, n-1) * se) %>%
+                                sd = sd(value),  # Standard deviation
+                                n = n(),         # Number of observations per group
+                                se = ifelse(n > 1, sd / sqrt(n), 0), # Standard error of the mean
+                                ci_lower = ifelse(n > 1, mean - qt(0.975, n-1) * se, mean),
+                                ci_upper = ifelse(n > 1, mean + qt(0.975, n-1) * se, mean)) %>%
                       as.data.frame()
           
            summary <- summary[,c("mean", "ci_lower", "ci_upper")]
@@ -122,7 +129,13 @@ positionalProperty <- function(input.data,
   mat <- bind_rows(property.calculations, .id = "group")
   mat$position <- paste0("pos", mat$position)
   mat$position <- factor(mat$position, levels = str_sort(unique(mat$position), numeric = TRUE))
-    
+  
+  if(!is.null(order.by)) {
+    mat <- .ordering.function(vector = order.by,
+                              group.by = "group", 
+                              mat)
+  }
+  
     plot <- ggplot(mat, aes(x = position, 
                             y = mean, 
                             group = group, 
@@ -141,7 +154,7 @@ positionalProperty <- function(input.data,
       theme_classic() + 
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
     if (exportTable == TRUE) { 
-      return(mat_melt) 
+      return(mat) 
     }
     return(plot)
   

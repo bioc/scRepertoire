@@ -1,32 +1,32 @@
 #' Calculate the clonal diversity for samples or groupings
 #'
-#' This function calculates traditional measures of diversity - \strong{Shannon}, 
-#' \strong{inverse Simpson}, \strong{normalized entropy}, \strong{Gini-Simpson}, \strong{Chao1 index}, and
-#' \strong{abundance-based coverage estimators (ACE)} measure of species evenness by sample or group. 
+#' This function calculates traditional measures of diversity - **Shannon**, 
+#' **inverse Simpson**, **normalized entropy**, **Gini-Simpson**, **Chao1 index**, and
+#' **abundance-based coverage estimators (ACE)** measure of species evenness by sample or group. 
 #' The function automatically down samples the diversity metrics using 
-#' 100 boot straps (\strong{n.boots = 100}) and outputs the mean of the values.
+#' 100 boot straps (**n.boots = 100**) and outputs the mean of the values.
 #'The group parameter can be used to condense the individual 
-#' samples. If a matrix output for the data is preferred, set \strong{exportTable} = TRUE.
+#' samples. If a matrix output for the data is preferred, set **exportTable** = TRUE.
 #' 
 #' @details
 #' The formulas for the indices and estimators are as follows:
 #' 
-#' \strong{Shannon Index:}
+#' **Shannon Index:**
 #' \deqn{Index = - \sum p_i * \log(p_i)}
 #' 
-#' \strong{Inverse Simpson Index:}
+#' **Inverse Simpson Index:**
 #' \deqn{Index = \frac{1}{(\sum_{i=1}^{S} p_i^2)}}
 #' 
-#' \strong{Normalized Entropy:}
+#' **Normalized Entropy:**
 #' \deqn{Index = -\frac{\sum_{i=1}^{S} p_i \ln(p_i)}{\ln(S)}}
 #' 
-#' \strong{Gini-Simpson Index:}
+#' **Gini-Simpson Index:**
 #' \deqn{Index = 1 - \sum_{i=1}^{S} p_i^2}
 #' 
-#' \strong{Chao1 Index:}
+#' **Chao1 Index:**
 #' \deqn{Index = S_{obs} + \frac{n_1(n_1-1)}{2*n_2+1}}
 #' 
-#' \strong{Abundance-based Coverage Estimator (ACE):}
+#' **Abundance-based Coverage Estimator (ACE):**
 #' \deqn{Index = S_{abund} + \frac{S_{rare}}{C_{ace}} + \frac{F_1}{C_{ace}}} 
 #' 
 #' Where:
@@ -44,24 +44,26 @@
 #'                                     "P19B","P19L", "P20B", "P20L"))
 #' clonalDiversity(combined, cloneCall = "gene")
 #'
-#' @param input.data The product of \code{\link{combineTCR}}, 
-#' \code{\link{combineBCR}}, or \code{\link{combineExpression}}.
-#' @param cloneCall How to call the clone - VDJC gene (\strong{gene}), 
-#' CDR3 nucleotide (\strong{nt}), CDR3 amino acid (\strong{aa}),
-#' VDJC gene + CDR3 nucleotide (\strong{strict}) or a custom variable 
-#' in the data. 
+#' @param input.data The product of [combineTCR()], 
+#' [combineBCR()], or [combineExpression()].
+#' @param cloneCall How to call the clone - VDJC gene (**gene**), 
+#' CDR3 nucleotide (**nt**), CDR3 amino acid (**aa**),
+#' VDJC gene + CDR3 nucleotide (**strict**) or a custom variable 
+#' in the data
 #' @param chain indicate if both or a specific chain should be used - 
-#' e.g. "both", "TRA", "TRG", "IGH", "IGL".
-#' @param group.by Variable in which to combine for the diversity calculation.
-#' @param x.axis Additional variable grouping that will space the sample along the x-axis.
+#' e.g. "both", "TRA", "TRG", "IGH", "IGL"
+#' @param group.by Variable in which to combine for the diversity calculation
+#' @param order.by A vector of specific plotting order or "alphanumeric"
+#' to plot groups in order
+#' @param x.axis Additional variable grouping that will space the sample along the x-axis
 #' @param metrics The indices to use in diversity calculations - 
-#' "shannon", "inv.simpson", "norm.entropy", "gini.simpson", "chao1", "ACE".
+#' "shannon", "inv.simpson", "norm.entropy", "gini.simpson", "chao1", "ACE"
 #' @param exportTable Exports a table of the data into the global environment 
-#' in addition to the visualization.
+#' in addition to the visualization
 #' @param palette Colors to use in visualization - input any 
-#' \link[grDevices]{hcl.pals}.
+#' [hcl.pals][grDevices::hcl.pals]
 #' @param n.boots number of bootstraps to down sample in order to 
-#' get mean diversity.
+#' get mean diversity
 #' @param return.boots export boot strapped values calculated - 
 #' will automatically exportTable = TRUE.
 #' @param skip.boots remove down sampling and boot strapping from the calculation.
@@ -77,6 +79,7 @@ clonalDiversity <- function(input.data,
                             cloneCall = "strict", 
                             chain = "both",
                             group.by = NULL, 
+                            order.by = NULL,
                             x.axis = NULL, 
                             metrics = c("shannon", "inv.simpson", "norm.entropy", "gini.simpson", "chao1", "ACE"),
                             exportTable = FALSE, 
@@ -151,6 +154,12 @@ clonalDiversity <- function(input.data,
     rownames(mat) <- names(input.data)
   
     mat_melt <- suppressMessages(melt(mat, id.vars = c(group.by, x.axis)))
+    if(!is.null(order.by)) {
+      mat_melt <- .ordering.function(vector = order.by,
+                                     group.by = names(mat_melt)[1], 
+                                     mat_melt)
+    }
+    
     if (x.axis == "x.axis") {
         plot <- ggplot(mat_melt, aes(x=1, y=as.numeric(value)))
     } else {

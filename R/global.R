@@ -48,5 +48,7 @@
     utils::globalVariables ("mat_melt") 
     utils::globalVariables ("position") 
     utils::globalVariables ("se")
+    utils::globalVariables ("column_sym")
+    utils::globalVariables ("contigType")
     invisible ()
 }

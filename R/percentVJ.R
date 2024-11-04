@@ -1,7 +1,7 @@
 #' Quantifying the V and J gene usage across clones
 #'
 #' This function the proportion V and J genes used by 
-#' grouping variables for an indicated \strong{chain} to
+#' grouping variables for an indicated **chain** to
 #' produce a matrix of VJ gene pairings.
 #'
 #' @examples
@@ -11,13 +11,15 @@
 #'                                     "P19B","P19L", "P20B", "P20L"))
 #' percentVJ(combined, chain = "TRB")
 #' 
-#' @param input.data The product of \code{\link{combineTCR}}, 
-#' \code{\link{combineBCR}}, or \code{\link{combineExpression}}.
+#' @param input.data The product of [combineTCR()], 
+#' [combineBCR()], or [combineExpression()].
 #' @param chain "TRA", "TRB", "TRG", "TRG", "IGH", "IGL"
-#' @param group.by The variable to use for grouping.
+#' @param group.by The variable to use for grouping
+#' @param order.by A vector of specific plotting order or "alphanumeric"
+#' to plot groups in order
 #' @param exportTable Returns the data frame used for forming the graph
 #' @param palette Colors to use in visualization - input any 
-#' \link[grDevices]{hcl.pals}.
+#' [hcl.pals][grDevices::hcl.pals].
 #' @import ggplot2
 #' @importFrom stringr str_split str_sort 
 #' @importFrom reshape2 melt
@@ -28,6 +30,7 @@
 percentVJ <- function(input.data,
                       chain = "TRB",
                       group.by = NULL, 
+                      order.by = NULL,
                       exportTable = FALSE, 
                       palette = "inferno") {
   
@@ -86,12 +89,20 @@ percentVJ <- function(input.data,
   
   #Melting matrix and Visualizing
   mat_melt <- melt(mat)
+  if(!is.null(order.by)) {
+    mat_melt <- .ordering.function(vector = order.by,
+                                   group.by = "L1", 
+                                   mat_melt)
+  }
+  
   plot <- ggplot(mat_melt, aes(y=Var1, x = Var2, fill=round(value*100,2))) +
     geom_tile(lwd= 0.25, color = "black") +
     scale_fill_gradientn(name = "Percentage", colors = .colorizer(palette,21)) +
     theme_classic() + 
-    facet_wrap(~L1) + 
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
           axis.title = element_blank())
+  if(length(unique(mat_melt$L1)) > 1) {
+    plot <- plot + facet_wrap(~L1) 
+  }
   return(plot)
 }

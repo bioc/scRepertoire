@@ -21,12 +21,12 @@ utils::globalVariables(c(
 #' @title Combining the list of T cell receptor contigs into clones
 #'
 #' @description This function consolidates a list of TCR sequencing results to
-#' the level of  the individual cell barcodes. Using the \strong{samples} and 
-#' \strong{ID} parameters, the function will add the strings as prefixes to 
+#' the level of  the individual cell barcodes. Using the **samples** and 
+#' **ID** parameters, the function will add the strings as prefixes to 
 #' prevent issues with repeated  barcodes. The resulting new barcodes will 
 #' need to match the Seurat or SCE object in order to use, 
-#' \code{\link{combineExpression}}. Several levels of filtering exist - 
-#' \emph{removeNA}, \emph{removeMulti}, or \emph{filterMulti} are parameters 
+#' [combineExpression()]. Several levels of filtering exist - 
+#' *removeNA*, *removeMulti*, or *filterMulti* are parameters 
 #' that control how the function deals with barcodes with multiple chains 
 #' recovered.
 #' 
@@ -36,15 +36,18 @@ utils::globalVariables(c(
 #'                                     "P19B","P19L", "P20B", "P20L"))
 #' 
 #' @param input.data List of filtered contig annotations or 
-#' outputs from \code{\link{loadContigs}}.
+#' outputs from [loadContigs()].
 #' @param samples The labels of samples (recommended).
 #' @param ID The additional sample labeling (optional).
 #' @param removeNA This will remove any chain without values.
 #' @param removeMulti This will remove barcodes with greater than 2 chains.
 #' @param filterMulti This option will allow for the selection of the 2 
 #' corresponding chains with the highest expression for a single barcode. 
+#' @param filterNonproductive This option will allow for the removal of 
+#' nonproductive chains if the variable exists in the contig data. Default
+#' is set to TRUE to remove nonproductive contigs.
 #' 
-#' @import dplyr
+#' @importFrom assertthat assert_that is.flag
 #' @export
 #' @concept Loading_and_Processing_Contigs
 #' @return List of clones for individual cell barcodes
@@ -54,7 +57,16 @@ combineTCR <- function(input.data,
                        ID = NULL, 
                        removeNA = FALSE, 
                        removeMulti = FALSE, 
-                       filterMulti = FALSE) {
+                       filterMulti = FALSE,
+                       filterNonproductive = TRUE) {
+
+    # rudimentary input checking
+    assert_that(is.character(samples) || is.null(samples))
+    assert_that(is.character(ID) || is.null(ID))
+    assert_that(is.flag(removeNA))
+    assert_that(is.flag(removeMulti))
+    assert_that(is.flag(filterMulti))
+    
     input.data <- .checkList(input.data)
     input.data <- .checkContigs(input.data)
     out <- NULL
@@ -63,7 +75,7 @@ combineTCR <- function(input.data,
         if(c("chain") %in% colnames(input.data[[i]])) {
           input.data[[i]] <- subset(input.data[[i]], chain != "Multi")
         }
-        if(c("productive") %in% colnames(input.data[[i]])) {
+        if(c("productive") %in% colnames(input.data[[i]]) & filterNonproductive) {
           input.data[[i]] <- subset(input.data[[i]], productive %in% c(TRUE, "TRUE", "True", "true"))
         }
         input.data[[i]]$sample <- samples[i]
@@ -95,13 +107,22 @@ combineTCR <- function(input.data,
         Con.df[Con.df == "NA_NA" | Con.df == "NA;NA_NA;NA"] <- NA 
         data3 <- merge(data2[,-which(names(data2) %in% c("TCR1","TCR2"))], 
             Con.df, by = "barcode")
-        if (!is.null(samples) && !is.null(ID)) {
-            data3 <- data3[, c("barcode", "sample", "ID", tcr1_lines, tcr2_lines,
-                CT_lines)] }
-        else if (!is.null(samples) & is.null(ID)) {
-          data3<-data3[,c("barcode","sample",tcr1_lines,tcr2_lines,
-                          CT_lines)] 
+        
+        columns_to_include <- c("barcode")
+        # Conditionally add columns based on user input
+        if (!is.null(samples)) {
+          columns_to_include <- c(columns_to_include, "sample")
         }
+        if (!is.null(ID)) {
+          columns_to_include <- c(columns_to_include, "ID")
+        }
+        
+        # Add TCR and CT lines which are presumably always needed
+        columns_to_include <- c(columns_to_include, tcr1_lines, tcr2_lines, CT_lines)
+        
+        # Subset the data frame based on the dynamically built list of columns
+        data3 <- data3[, columns_to_include]
+        
         final[[i]] <- data3 
     }
     name_vector <- character(length(samples))
@@ -138,14 +159,14 @@ combineTCR <- function(input.data,
 #' of the individual cell barcodes. Using the samples and ID parameters, 
 #' the function will add the strings as prefixes to prevent issues with 
 #' repeated barcodes. The resulting new barcodes will need to match the 
-#' Seurat or SCE object in order to use, \code{\link{combineExpression}}. 
-#' Unlike \code{\link{combineTCR}}, combineBCR produces a column 
-#' \strong{CTstrict} of an index of nucleotide sequence and the 
+#' Seurat or SCE object in order to use, [combineExpression()]. 
+#' Unlike [combineTCR()], combineBCR produces a column 
+#' **CTstrict** of an index of nucleotide sequence and the 
 #' corresponding V gene. This index automatically calculates the 
 #' Levenshtein distance between sequences with the same V gene and will
 #' index sequences using a normalized Levenshtein distance with the same 
 #' ID. After which, clone clusters are called using the 
-#' \code{\link[igraph]{components}} function. Clones that are clustered 
+#' [igraph::components()] function. Clones that are clustered 
 #' across multiple sequences will then be labeled with "Cluster" in the 
 #' CTstrict header.
 #'
@@ -157,8 +178,8 @@ combineTCR <- function(input.data,
 #'                        threshold = 0.85)
 #' 
 #' @param input.data List of filtered contig annotations or outputs from 
-#' \code{\link{loadContigs}}.
-#' @param samples The labels of samples
+#' [loadContigs()].
+#' @param samples The labels of samples (required).
 #' @param ID The additional sample labeling (optional).
 #' @param call.related.clones Use the nucleotide sequence and V gene 
 #' to call related clones. Default is set to TRUE. FALSE will return 
@@ -169,7 +190,11 @@ combineTCR <- function(input.data,
 #' @param removeMulti This will remove barcodes with greater than 2 chains.
 #' @param filterMulti This option will allow for the selection of the 
 #' highest-expressing light and heavy chains, if not calling related clones.
-#' @import dplyr
+#' @param filterNonproductive This option will allow for the removal of 
+#' nonproductive chains if the variable exists in the contig data. Default
+#' is set to TRUE to remove nonproductive contigs.
+#' @importFrom dplyr %>% mutate
+#' @importFrom assertthat assert_that is.flag
 #' @export
 #' @concept Loading_and_Processing_Contigs
 #' @return List of clones for individual cell barcodes
@@ -180,7 +205,21 @@ combineBCR <- function(input.data,
                        threshold = 0.85,
                        removeNA = FALSE, 
                        removeMulti = FALSE,
-                       filterMulti = TRUE) {
+                       filterMulti = TRUE,
+                       filterNonproductive = TRUE) {
+    if(is.null(samples)) {
+      stop("combineBCR() requires the samples parameter for the calculation of edit distance.")
+    }
+
+    # rudimentary input checking
+    assert_that(is.character(samples) || is.null(samples))
+    assert_that(is.character(ID) || is.null(ID))
+    assert_that(is.flag(call.related.clones))
+    assert_that(is.numeric(threshold))
+    assert_that(is.flag(removeNA))
+    assert_that(is.flag(removeMulti))
+    assert_that(is.flag(filterMulti))
+
     input.data <- .checkList(input.data)
     input.data <- .checkContigs(input.data)
     out <- NULL
@@ -190,6 +229,9 @@ combineBCR <- function(input.data,
     for (i in seq_along(input.data)) {
         input.data[[i]] <- subset(input.data[[i]], chain %in% c("IGH", "IGK", "IGL"))
         input.data[[i]]$ID <- ID[i]
+        if(c("productive") %in% colnames(input.data[[i]]) & filterNonproductive) {
+          input.data[[i]] <- subset(input.data[[i]], productive %in% c(TRUE, "TRUE", "True", "true"))
+        }
         if (filterMulti) {
                     # Keep IGH / IGK / IGL info in save_chain
                     input.data[[i]]$save_chain <- input.data[[i]]$chain

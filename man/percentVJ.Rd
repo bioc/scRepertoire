@@ -8,28 +8,32 @@ percentVJ(
   input.data,
   chain = "TRB",
   group.by = NULL,
+  order.by = NULL,
   exportTable = FALSE,
   palette = "inferno"
 )
 }
 \arguments{
-\item{input.data}{The product of \code{\link{combineTCR}}, 
-\code{\link{combineBCR}}, or \code{\link{combineExpression}}.}
+\item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}},
+\code{\link[=combineBCR]{combineBCR()}}, or \code{\link[=combineExpression]{combineExpression()}}.}
 
 \item{chain}{"TRA", "TRB", "TRG", "TRG", "IGH", "IGL"}
 
-\item{group.by}{The variable to use for grouping.}
+\item{group.by}{The variable to use for grouping}
+
+\item{order.by}{A vector of specific plotting order or "alphanumeric"
+to plot groups in order}
 
 \item{exportTable}{Returns the data frame used for forming the graph}
 
-\item{palette}{Colors to use in visualization - input any 
-\link[grDevices]{hcl.pals}.}
+\item{palette}{Colors to use in visualization - input any
+\link[grDevices:palettes]{hcl.pals}.}
 }
 \value{
 ggplot of percentage of V and J gene pairings as a heatmap
 }
 \description{
-This function the proportion V and J genes used by 
+This function the proportion V and J genes used by
 grouping variables for an indicated \strong{chain} to
 produce a matrix of VJ gene pairings.
 }

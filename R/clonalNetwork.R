@@ -25,37 +25,36 @@
 #'               group.by = "seurat_clusters")
 #' }
 #'               
-#' @param sc.data The single-cell object after \code{\link{combineExpression}}.
+#' @param sc.data The single-cell object after [combineExpression()].
 #' @param reduction The name of the dimensional reduction of the 
 #' single-cell object.
 #' @param group.by The variable to use for the nodes. 
-#' @param filter.clones Use to select the top n clones (e.g., \strong{filter.clones} 
+#' @param filter.clones Use to select the top n clones (e.g., **filter.clones** 
 #' = 2000) or n of clones based on the minimum number of all the comparators 
-#' (e.g., \strong{filter.clone} = "min").
+#' (e.g., **filter.clone** = "min").
 #' @param filter.identity Display the network for a specific level of the 
 #' indicated identity.
 #' @param filter.proportion Remove clones from the network below a specific
 #'  proportion.
 #' @param filter.graph Remove the reciprocal edges from the half of the graph,
 #' allowing for cleaner visualization.
-#' @param cloneCall How to call the clone - VDJC gene (\strong{gene}), 
-#' CDR3 nucleotide (\strong{nt}), CDR3 amino acid (\strong{aa}),
-#' VDJC gene + CDR3 nucleotide (\strong{strict}) or a custom variable 
+#' @param cloneCall How to call the clone - VDJC gene (**gene**), 
+#' CDR3 nucleotide (**nt**), CDR3 amino acid (**aa**),
+#' VDJC gene + CDR3 nucleotide (**strict**) or a custom variable 
 #' in the data. 
 #' @param chain indicate if both or a specific chain should be used - 
 #' e.g. "both", "TRA", "TRG", "IGH", "IGL".
 #' @param exportTable Exports a table of the data into the global 
-#' environment in addition to the visualization.
 #' @param exportClones Exports a table of clones that are shared
 #' across multiple identity groups and ordered by the total number
 #' of clone copies.
 #' @param palette Colors to use in visualization - input any 
-#' \link[grDevices]{hcl.pals}.
+#' [hcl.pals][grDevices::hcl.pals].
 
 #' @import ggplot2
 #' @importFrom stringr str_sort
 #' @importFrom igraph graph_from_data_frame V `V<-`
-#' @importFrom dplyr %>% group_by select summarize_all count
+#' @importFrom dplyr %>% group_by select summarize_all count n across all_of desc
 #' @importFrom tidygraph as_tbl_graph activate
 #' @importFrom ggraph ggraph geom_edge_bend  geom_node_point scale_edge_colour_gradientn circle guide_edge_colourbar
 #' @importFrom stats setNames
@@ -72,8 +71,8 @@ clonalNetwork <- function(sc.data,
                           filter.graph = FALSE,
                           cloneCall = "strict", 
                           chain = "both", 
-                          exportTable = FALSE, 
                           exportClones = FALSE,
+                          exportTable = FALSE,
                           palette = "inferno") {
     to <- from <- weight <- y <- NULL
     meta <- .grabMeta(sc.data)
@@ -91,14 +90,9 @@ clonalNetwork <- function(sc.data,
         }
         #Filtering clones based on the minimum value
         min_val <- min(min)
-        table <- meta %>%
-          group_by(across(all_of(c(group.by, cloneCall)))) %>%
-          count() %>%
-          na.omit() %>%
-          arrange(desc(n)) %>%
-          mutate(cumSum = cumsum(n))
-        cut <- which.min(abs(table$cumSum - min_val))
-        clones.to.filter <- table$group.by[seq_len(cut)]
+        table <- .clone.counter(meta, group.by, cloneCall)
+        cut <- which.min(abs(table$clone.sum - min_val))
+        clones.to.filter <- table[,1][seq_len(cut)]
       } else if (is.numeric(filter.clones)) {
           #Filtering based on a numeric value
           table <- meta %>%
@@ -115,18 +109,16 @@ clonalNetwork <- function(sc.data,
     
     if(exportClones) {
       #Summarizing all the clones by group.by
-      table <- meta %>%
-        group_by(meta[,group.by], meta[, cloneCall]) %>%
-        dplyr::count() %>%
-        na.omit() %>%
-        arrange(desc(n))
+      table <- .clone.counter(meta, group.by, cloneCall)[,seq_len(3)]
       #Identifying the clones across the group by
-      clones.across.identities <- names(which(table(table[[2]]) > 1))
+      clones.across.identities <- names(which(table(table[,2]) > 1))
+      if(length(clones.across.identities) < 1) {
+        stop("No shared clones across group.by variables for the current parameters selected")
+      }
       #Getting the clones to output
-      subset.table <- as.data.frame(table)
-      subset.table <- subset.table[subset.table[,2] %in% clones.across.identities,]
-      colnames(subset.table) <- c("id", "clone", "n")
-      dupl.clones <- subset.table %>%
+      table <- table[table[,2] %in% clones.across.identities,]
+      colnames(table) <- c("id", "clone", "n")
+      dupl.clones <- table %>%
                       group_by(clone) %>%
                       summarise(sum = sum(n))%>%
                       arrange(desc(sum)) 
@@ -155,7 +147,7 @@ clonalNetwork <- function(sc.data,
       group_by(meta[,group.by]) %>%
       na.omit() %>%
       unique() %>%
-      summarise(n = n()) %>%
+      summarise(n = dplyr::n()) %>%
       {setNames(.$n, .$`meta[, group.by]`)} 
     
     #Total clones per group.by
@@ -163,7 +155,7 @@ clonalNetwork <- function(sc.data,
       select(all_of(c(cloneCall, group.by))) %>%
       group_by(meta[,group.by]) %>%
       na.omit() %>%
-      summarise(n = n()) %>%
+      summarise(n = dplyr::n()) %>%
       {setNames(.$n, .$`meta[, group.by]`)} 
     
     edge.list <- NULL

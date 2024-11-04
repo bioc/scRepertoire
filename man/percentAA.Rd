@@ -8,30 +8,34 @@ percentAA(
   input.data,
   chain = "TRB",
   group.by = NULL,
+  order.by = NULL,
   aa.length = 20,
   exportTable = FALSE,
   palette = "inferno"
 )
 }
 \arguments{
-\item{input.data}{The product of \code{\link{combineTCR}}, \code{\link{combineBCR}}, or
-\code{\link{combineExpression}}.}
+\item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}}, \code{\link[=combineBCR]{combineBCR()}}, or
+\code{\link[=combineExpression]{combineExpression()}}.}
 
 \item{chain}{"TRA", "TRB", "TRG", "TRG", "IGH", "IGL".}
 
 \item{group.by}{The variable to use for grouping.}
 
+\item{order.by}{A vector of specific plotting order or "alphanumeric"
+to plot groups in order}
+
 \item{aa.length}{The maximum length of the CDR3 amino acid sequence.}
 
 \item{exportTable}{Returns the data frame used for forming the graph.}
 
-\item{palette}{Colors to use in visualization - input any \link[grDevices]{hcl.pals}.}
+\item{palette}{Colors to use in visualization - input any \link[grDevices:palettes]{hcl.pals}.}
 }
 \value{
 ggplot of stacked bar graphs of amino acid proportions
 }
 \description{
-This function the proportion of amino acids along the residues 
+This function the proportion of amino acids along the residues
 of the CDR3 amino acid sequence.
 }
 \examples{

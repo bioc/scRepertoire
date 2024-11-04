@@ -9,6 +9,7 @@ percentKmer(
   chain = "TRB",
   cloneCall = "aa",
   group.by = NULL,
+  order.by = NULL,
   motif.length = 3,
   top.motifs = 30,
   exportTable = FALSE,
@@ -16,31 +17,34 @@ percentKmer(
 )
 }
 \arguments{
-\item{input.data}{The product of \code{\link{combineTCR}}, 
-\code{\link{combineBCR}}, or \code{\link{combineExpression}}.}
+\item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}},
+\code{\link[=combineBCR]{combineBCR()}}, or \code{\link[=combineExpression]{combineExpression()}}}
 
-\item{chain}{"TRA", "TRB", "TRG", "TRG", "IGH", "IGL".}
+\item{chain}{"TRA", "TRB", "TRG", "TRG", "IGH", "IGL"}
 
-\item{cloneCall}{How to call the clone - CDR3 nucleotide (\strong{nt}) or 
-CDR3 amino acid (\strong{aa}).}
+\item{cloneCall}{How to call the clone - CDR3 nucleotide (\strong{nt}) or
+CDR3 amino acid (\strong{aa})}
 
-\item{group.by}{The variable to use for grouping.}
+\item{group.by}{The variable to use for grouping}
 
-\item{motif.length}{The length of the kmer to analyze.}
+\item{order.by}{A vector of specific plotting order or "alphanumeric"
+to plot groups in order}
 
-\item{top.motifs}{Return the n most variable motifs as a function of 
-median absolute deviation.}
+\item{motif.length}{The length of the kmer to analyze}
+
+\item{top.motifs}{Return the n most variable motifs as a function of
+median absolute deviation}
 
 \item{exportTable}{Returns the data frame used for forming the graph.}
 
-\item{palette}{Colors to use in visualization - input any 
-\link[grDevices]{hcl.pals}.}
+\item{palette}{Colors to use in visualization - input any
+\link[grDevices:palettes]{hcl.pals}}
 }
 \value{
 ggplot of percentage of kmers as a heatmap
 }
 \description{
-This function the of kmer for nucleotide (\strong{nt}) or 
+This function the of kmer for nucleotide (\strong{nt}) or
 amino acid (\strong{aa}) sequences. Select the length of the
 kmer to quantify using the \strong{motif.length} parameter.
 }

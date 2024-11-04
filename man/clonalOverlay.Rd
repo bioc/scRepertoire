@@ -7,18 +7,22 @@
 clonalOverlay(
   sc.data,
   reduction = NULL,
-  freq.cutpoint = 30,
+  cut.category = "clonalFrequency",
+  cutpoint = 30,
   bins = 25,
   facet.by = NULL
 )
 }
 \arguments{
-\item{sc.data}{The single-cell object after \code{\link{combineExpression}}.}
+\item{sc.data}{The single-cell object after \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{reduction}{The dimensional reduction to visualize}
+\item{reduction}{The dimensional reduction to visualize.}
 
-\item{freq.cutpoint}{The overlay cut point to include, this corresponds to the 
-Frequency variable in the single-cell object}
+\item{cut.category}{Meta data variable of the single-cell object to use for
+filtering.}
+
+\item{cutpoint}{The overlay cut point to include, this corresponds to the
+cut.category variable in the meta data of the single-cell object.}
 
 \item{bins}{The number of contours to the overlay}
 
@@ -28,7 +32,7 @@ Frequency variable in the single-cell object}
 ggplot object
 }
 \description{
-This function allows the user to visualize the clonal expansion by overlaying the 
+This function allows the user to visualize the clonal expansion by overlaying the
 cells with specific clonal frequency onto the dimensional reduction plots in Seurat.
 Credit to the idea goes to Drs Andreatta and Carmona and their work with
 \href{https://github.com/carmonalab/ProjecTILs}{ProjectTIL}.
@@ -48,7 +52,7 @@ scRep_example <- combineExpression(combined,
 #Using clonalOverlay()
 clonalOverlay(scRep_example, 
               reduction = "umap", 
-              freq.cutpoint = 0.3, 
+              cutpoint = 3, 
               bins = 5) 
 
 }

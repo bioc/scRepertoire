@@ -2,10 +2,12 @@
 #'
 #' This function uses edit distances of either the nucleotide or amino acid 
 #' sequences of the CDR3 and V genes to cluster similar TCR/BCRs together. 
-#' As a default, the function takes the input from \code{\link{combineTCR}}, 
-#' \code{\link{combineBCR}} or \code{\link{combineExpression}} and amends a 
-#' cluster to the data frame or meta data. If \strong{exportGraph} is set 
+#' As a default, the function takes the input from [combineTCR()], 
+#' [combineBCR()] or [combineExpression()] and amends a 
+#' cluster to the data frame or meta data. If **exportGraph** is set 
 #' to TRUE, the function returns an igraph object of the connected sequences. 
+#' If multiple sequences per chain are present, this function only compares
+#' the first sequence.
 #' 
 #' @examples
 #' # Getting the combined contigs
@@ -17,29 +19,31 @@
 #'                               chain = "TRA", 
 #'                               sequence = "aa")
 #' 
-#' @param input.data The product of \code{\link{combineTCR}}, 
-#' \code{\link{combineBCR}} or \code{\link{combineExpression}}.
+#' @param input.data The product of [combineTCR()], 
+#' [combineBCR()] or [combineExpression()].
 #' @param chain Indicate if both or a specific chain should be used - 
 #' e.g. "both", "TRA", "TRG", "IGH", "IGL".
-#' @param sequence Clustering based on either \strong{"aa"} or 
-#' \strong{"nt"}.
+#' @param sequence Clustering based on either **"aa"** or 
+#' **"nt"**.
 #' @param samples The specific samples to isolate for visualization.
 #' @param threshold The normalized edit distance to consider. 
 #' The higher the number the more similarity of sequence will be 
 #' used for clustering.
 #' @param group.by The column header used for to group contigs.
-#' If (\strong{NULL}), clusters will be calculated across samples.
+#' If (**NULL**), clusters will be calculated across samples.
 #' @param exportGraph Return an igraph object of connected 
-#' sequences (\strong{TRUE}) or the amended input with a
-#' new cluster-based variable (\strong{FALSE}).
+#' sequences (**TRUE**) or the amended input with a
+#' new cluster-based variable (**FALSE**).
 #' @importFrom stringdist stringdist
-#' @importFrom igraph set_vertex_attr V
+#' @importFrom igraph set_vertex_attr V union
 #' @importFrom plyr join
-#' @importFrom dplyr bind_rows
+#' @importFrom dplyr bind_rows summarize
 #' @importFrom stringr str_split str_replace_all
 #' @importFrom rlang %||%
 #' @importFrom SummarizedExperiment colData<- colData
 #' @importFrom stats na.omit
+#' @importFrom S4Vectors DataFrame
+#' 
 #' @export
 #' @concept Visualizing_Clones
 #' @return Either amended input with edit-distanced clusters added 
@@ -95,13 +99,19 @@ clonalCluster <- function(input.data,
   
   if (!is.null(group.by)) {
     bound <- bind_rows(dat, .id = "group.by")
+    bound <- bound[!is.na(bound[,ref2]),]
+    retain.ref <- data.frame(old = bound[,ref2], new = str_split(bound[,ref2], ";", simplify = TRUE)[,1])
+    bound[,ref2] <- str_split(bound[,ref2], ";", simplify = TRUE)[,1]
     graph.variables <- bound %>%
                           group_by(bound[,ref2]) %>%
                           dplyr::summarize(sample_count = n(),
                                     unique_samples = paste0(unique(group.by), collapse = ","))
   } else {
     bound <- bind_rows(dat)
-    graph.variables <- bind_rows(dat) %>%
+    bound <- bound[!is.na(bound[,ref2]),]
+    retain.ref <- data.frame(old = bound[,ref2], new = str_split(bound[,ref2], ";", simplify = TRUE)[,1])
+    bound[,ref2] <- str_split(bound[,ref2], ";", simplify = TRUE)[,1]
+    graph.variables <- bound %>%
                           group_by(bound[,ref2]) %>%
                           dplyr::summarize(sample_count = n())
   }
@@ -118,25 +128,30 @@ clonalCluster <- function(input.data,
   #Grabbing column order for later return
   column.order <- colnames(bound)
   
-  #Returning the igraph object if eexportGraph = TRUE
+  #Returning the igraph object if exportGraph = TRUE
   if(exportGraph) {
-    cluster <- output.list[[1]]
-    vertex <- names(V(cluster))
-    data_df <- unique(data.frame(
-      id = V(cluster)$name
-    ))
-    data_df <- merge(data_df, graph.variables, by = 1)
-    cluster <- set_vertex_attr(cluster, 
-                               name = "size", 
-                               index = data_df$id, 
-                               value = data_df[,2])
-    if(ncol(data_df) == 3) { #add grouping variable
+    output.list <- output.list[lapply(output.list,length)>0]
+    cluster <- do.call(igraph::union, output.list)
+    if(length(is.null(cluster)) == length(cluster)) {
+      stop("No clusters detected with current parameters.")
+    } else {
+      vertex <- names(V(cluster))
+      data_df <- unique(data.frame(
+        id = vertex
+      ))
+      data_df <- merge(data_df, graph.variables, by = 1)
       cluster <- set_vertex_attr(cluster, 
-                                 name = "group", 
+                                 name = "size", 
                                  index = data_df$id, 
-                                 value = data_df[,3])
+                                 value = data_df[,2])
+      if(ncol(data_df) == 3) { #add grouping variable
+        cluster <- set_vertex_attr(cluster, 
+                                   name = "group", 
+                                   index = data_df$id, 
+                                   value = data_df[,3])
+      }
+      return(cluster)
     }
-    return(cluster)
   }
   
   cluster.list <- lapply(seq_len(length(output.list)), function(x) {
@@ -146,9 +161,9 @@ clonalCluster <- function(input.data,
                         }
                         colnames(output.list[[x]]) <- c(paste0(chain, "_cluster"), ref2)
                         output.list[[x]]
-                        
+
   })
-  cluster <- bind_rows(cluster.list)
+  cluster <- bind_rows(cluster.list) # the TRA_cluster isnt assigned in the failing test
   
   #Merging with contig info
   tmp <- bound
@@ -169,10 +184,11 @@ clonalCluster <- function(input.data,
       col.name <- names(PreMeta) %||% colnames(PreMeta)
       input.data[[col.name]] <- PreMeta
     } else {
-      rownames <- rownames(colData(input.data))
-      colData(input.data) <- cbind(colData(input.data), 
-                                   PreMeta[rownames,])[, union(colnames(colData(input.data)),  colnames(PreMeta))]
-      rownames(colData(input.data)) <- rownames 
+      combined_col_names <- unique(c(colnames(colData(sc.data)), colnames(PreMeta)))
+      full_data <- merge(colData(sc.data), PreMeta[rownames, , drop = FALSE], by = "row.names", all.x = TRUE)
+      rownames(full_data) <- full_data[, 1]
+      full_data  <- full_data[, -1]
+      colData(sc.data) <- DataFrame(full_data[, combined_col_names])
     }
   } else {
     #Reorder columns

@@ -184,6 +184,9 @@ Key Parameter(s) for `combineBCR()`
 * `call.related.clones`: If `TRUE` (default), uses `clonalCluster()` to identify related clones based on sequence similarity.
 * `group.by`: The column header used to group clones for clustering (if `NULL`, clusters will be calculated across all samples).
 * `threshold`: The similarity threshold for `clonalCluster()` (default: 0.85).
+* `dist_type`: The metric for calculating difference: "levenshtein" (default), "hamming", "nw" (Needleman-Wunsch), or "sw" (Smith-Waterman).
+* `dist_mat:` The substitution matrix used if dist_type is "nw" or "sw" (e.g., "BLOSUM62", "PAM30")
+* `normalize`: How to handle the threshold: "none", "length", or "maxlen".
 * `chain`: The chain to use for clustering when call.related.clones = TRUE (default: `both`).
 * `sequence`: The sequence type (`nt` or `aa`) for clustering (default: `nt`).
 * use.V, use.J: If `TRUE`, sequences must share the same V/J gene to be clustered (default: `TRUE`)
@@ -209,8 +212,25 @@ combined.BCR.clustered <- combineBCR(BCR.contigs,
 head(combined.BCR.clustered[[1]][, c("barcode", "CTstrict", "IGH", "cdr3_aa1")])
 ```
 
-### Filtering and Cleaning Data
+### Advanced: Grouping by Alignment
 
+For more biological accuracy—specifically when analyzing amino acid sequences—you can use alignment metrics. This allows the clustering to penalize conservative amino acid changes less than radical changes.
+
+Here we use Needleman-Wunsch alignment with the BLOSUM80 substitution matrix:
+
+```{r}
+combined.BCR.aligned <- combineBCR(BCR.contigs, 
+                                   samples = "Patient1",
+                                   sequence = "aa",        
+                                   dist_type = "nw",      
+                                   dist_mat = "BLOSUM80",  
+                                   threshold = 0.85)
+
+head(combined.BCR.aligned[[1]][, c("barcode", "CTstrict", "IGH", "cdr3_aa1")])
+```
+
+
+### Filtering and Cleaning Data
 
 `combineBCR()` includes several arguments to filter and clean the contig data during processing.
 * `filterNonproductive = TRUE` (Default): Removes any contigs that are not classified as productive, ensuring that only functional receptor chains are included in the analysis.

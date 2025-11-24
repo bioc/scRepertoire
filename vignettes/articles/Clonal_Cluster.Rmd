@@ -90,7 +90,7 @@ Key Parameter(s) for ```clonalCluster()```
 
 To run clustering on the first two samples for the TRA chain, using amino acid sequences with a normalized similarity threshold of 0.85:
 
-```{r}
+```{r tidy = FALSE}
 # Run clustering on the first two samples for the TRA chain
 sub_combined <- clonalCluster(combined.TCR[c(1,2)], 
                               chain = "TRA", 

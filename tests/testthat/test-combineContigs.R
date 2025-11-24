@@ -34,17 +34,70 @@ test_that("combineTCR `removeNA` and `removeMulti` work", {
   expect_true(all(!grepl(";", combined_removeMulti$CTnt)))
 })
 
+# --- combineBCR testing -------------------------------------------------------
 
-test_that("combineBCR works", {
+BCR_SOURCE <- read.csv("https://www.borch.dev/uploads/contigs/b_contigs.csv")
 
-  BCR <- read.csv("https://www.borch.dev/uploads/contigs/b_contigs.csv")
-  combined_bcr <- combineBCR(BCR, 
-                    samples = "Patient1")
-  expect_true(any(grepl("cluster.", combined_bcr[[1]]$CTstrict)))
+
+BCR_LIST <- list(P1 = BCR_SOURCE,
+                 P2 = BCR_SOURCE)
+
+BCR_LIST$P2$barcode <- paste0(BCR_LIST$P2$barcode, "_2")
+
+test_that("Standard combineBCR functionality (Legacy & Basic)", {
+  combined_bcr <- combineBCR(BCR_SOURCE, samples = "Patient1")
+  
+  expect_true(any(grepl("cluster", combined_bcr[[1]]$CTstrict)))
   expect_type(combined_bcr, "list")
   expect_length(combined_bcr, 1)
   expect_s3_class(combined_bcr[[1]], "data.frame")
-  # Check if barcodes are prefixed
   expect_true(startsWith(combined_bcr[[1]]$barcode[1], "Patient1_"))
+  expect_true(all(c("cdr3_aa1", "cdr3_nt1", "CTgene", "CTnt") %in% colnames(combined_bcr[[1]])))
+})
 
+test_that("combineBCR with Alignment Metrics", {
+  combined_nw <- combineBCR(BCR_LIST[1], 
+                            samples = "Patient1",
+                            dist_type = "nw", 
+                            dist_mat = "BLOSUM62",
+                            threshold = 0.85, # Normalized score
+                            normalize = "length")
+  
+  expect_true("CTstrict" %in% colnames(combined_nw[[1]]))
+  expect_true(any(grepl("^cluster", combined_nw[[1]]$CTstrict)))
+  
+  # Test Smith-Waterman (Local Alignment)
+  combined_sw <- combineBCR(BCR_LIST[1], 
+                            samples = "Patient1",
+                            dist_type = "sw", 
+                            dist_mat = "PAM30",
+                            threshold = 2, # Raw score threshold
+                            normalize = "none") # Raw score usually requires normalize='none'
+  
+  expect_true("CTstrict" %in% colnames(combined_sw[[1]]))
+})
+
+test_that("Clustering Logic: call.related.clones = FALSE", {
+  combined_exact <- combineBCR(BCR_LIST[1], 
+                               samples = "Patient1", 
+                               call.related.clones = FALSE)
+  
+  sample_ct <- combined_exact[[1]]$CTstrict[1]
+  expect_false(grepl("cluster", sample_ct))
+  expect_true(grepl("_", sample_ct)) 
+})
+
+test_that("Output Structure and samples/ID handling", {
+  # Test with Sample + ID
+  combined_id <- combineBCR(BCR_LIST[1], 
+                            samples = "P1", 
+                            ID = "Timepoint1")
+  
+  first_barcode <- combined_id[[1]]$barcode[1]
+  # Format should be: Sample_ID_Barcode
+  expect_true(startsWith(first_barcode, "P1_Timepoint1_"))
+  
+  # Check column existence for specific BCR chains
+  cols <- colnames(combined_id[[1]])
+  expect_true(all(c("IGH", "IGLC") %in% cols))
 })

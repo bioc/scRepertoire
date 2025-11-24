@@ -1,3 +1,11 @@
+# scRepertoire VERSION 2.6.2
+
+## UNDERLYING CHANGES
+* Adding expanded functionality to `combineBCR()` and `clonalCluster()`
+	* Add new metrics beyond normalized Levenshtein edit distances 
+	* Allow for raw and normalized-based calculations
+	* Allow for distance matrices to allow for alignment
+
 # scRepertoire VERSION 2.6.1
 
 Update to 2.6.0 to match Bioconductor Release 3.22 on 2025/10/30

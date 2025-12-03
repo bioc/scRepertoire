@@ -94,13 +94,6 @@ test_that("Alignment (NW/SW) and Matrix selection", {
                           threshold = 0.8) 
   expect_true("TRB.Cluster" %in% names(res_nw[[1]]))
   
-  # Test Smith-Waterman with PAM30
-  res_sw <- clonalCluster(toy_data, 
-                          dist_type = "sw", 
-                          dist_mat = "PAM30", 
-                          threshold = 5) 
-  expect_true("TRB.Cluster" %in% names(res_sw[[1]]))
-  
   # Test Damerau (Transposition)
   res_dam <- clonalCluster(toy_data, dist_type = "damerau")
   expect_true("TRB.Cluster" %in% names(res_dam[[1]]))

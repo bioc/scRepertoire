@@ -5,6 +5,7 @@
 	* Add new metrics beyond normalized Levenshtein edit distances 
 	* Allow for raw and normalized-based calculations
 	* Allow for distance matrices to allow for alignment
+* Added support for declaring chains = "IGL", "IGK" or "Light" to get all light chains in downstream quantification
 
 # scRepertoire VERSION 2.6.1
 

@@ -12,7 +12,7 @@ clonalCluster(
   group.by = NULL,
   dist_type = "levenshtein",
   dist_mat = "BLOSUM80",
-  normalize = "none",
+  normalize = "length",
   gap_open = -10,
   gap_extend = -1,
   cluster.method = "components",
@@ -28,8 +28,8 @@ clonalCluster(
 \code{\link[=combineBCR]{combineBCR()}} or \code{\link[=combineExpression]{combineExpression()}}.}
 
 \item{chain}{The TCR/BCR chain to use. Use \code{both} to include both chains
-(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL}
-(for both light chains), \code{both}.}
+(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL},
+\code{IGK}, \code{Light} (for both light chains), or \code{both} (for TRA/B and Heavy/Light).}
 
 \item{sequence}{Clustering based on either \code{aa} or \code{nt} sequences.}
 
@@ -50,9 +50,10 @@ or \code{"sw"} (Smith-Waterman).}
 \code{"BLOSUM80"} (default), \code{"BLOSUM100"}, \code{"PAM30"}, \code{"PAM40"}, \code{"PAM70"}, \code{"PAM120"},
 \code{"PAM250"}, or \code{"identity"}.}
 
-\item{normalize}{Method for normalizing distances. Options: \code{"none"} (default),
-\code{"maxlen"} (divide by max sequence length), or \code{"length"} (divide by mean sequence length).
-If \code{threshold < 1}, this controls how the similarity is calculated.}
+\item{normalize}{Method for normalizing distances. Options: \code{"none"},
+\code{"maxlen"} (divide by max sequence length), or \code{"length"} (default, divide
+by mean sequence length). If \code{threshold < 1}, this controls how the
+similarity is calculated.}
 
 \item{gap_open}{Penalty for opening a gap in alignment metrics (default: -10).}
 

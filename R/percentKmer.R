@@ -23,8 +23,9 @@
 #' 
 #' @param input.data The product of [combineTCR()], 
 #' [combineBCR()], or [combineExpression()]
-#' @param chain The TCR/BCR chain to use. Accepted values: `TRA`, `TRB`, `TRG`,
-#'  `TRD`, `IGH`, or `IGL` (for both light chains).
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
+#' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param cloneCall Defines the clonal sequence grouping. Accepted values 
 #' are: `nt` (CDR3 nucleotide sequence) or `aa` (CDR3 amino acid sequence).
 #' @param group.by A column header in the metadata or lists to group the analysis 

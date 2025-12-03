@@ -216,14 +216,14 @@
 # Get position of chain
 .chainPositionParser <- function(chain) {
   chain1 <- toupper(chain) #to just make it easier
-  if (chain1 %in% c("TRA", "TRG", "IGH")) {
+  if (chain1 %in% c("TRA", "TRG", "IGH", "HEAVY")) {
     x <- 1
-  } else if (chain1 %in% c("TRB", "TRD", "IGL", "IGK")) {
+  } else if (chain1 %in% c("TRB", "TRD", "IGL", "IGK", "LIGHT")) {
     x <- 2
   } else {
     # It's good practice to use stop() for fatal errors
     stop("'", chain, "' is not a valid entry for the `chain` argument.
-         Please use 'TRA', 'TRG', 'IGH', 'TRB', 'TRD', 'IGL', 'IGK'.")
+         Please use 'TRA', 'TRG', 'IGH', 'TRB', 'TRD', 'IGL', 'IGK', 'Heavy', or 'Light'.")
   }
   return(x)
 }
@@ -235,7 +235,16 @@
   # Get position of chain
   x <- .chainPositionParser(chain)
   
+
   if (check) {
+    if(chain == "Light") {
+      chain.pattern <- "IGL|IGK"
+    } else if (chain == "Heavy") {
+      chain.pattern <- "IGH"
+    } else {
+      chain.pattern <- chain
+    }
+    
     split_genes <- strsplit(dat[, "CTgene"], "_")
     gene_elements <- sapply(split_genes, `[`, x)
     
@@ -246,7 +255,7 @@
     chain.check[is.na(chain.check)] <- NA #
     chain.check[chain.check == "Non"] <- NA
     
-    any.alt.chains <- which(!is.na(chain.check) & chain.check != chain)
+    any.alt.chains <- which(!is.na(chain.check) & !grepl(chain.pattern, chain.check))
     
     if (length(any.alt.chains) > 0) {
       dat <- dat[-any.alt.chains, ]

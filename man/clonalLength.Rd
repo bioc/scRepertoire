@@ -24,8 +24,8 @@ clonalLength(
 are: \code{nt} (CDR3 nucleotide sequence) or \code{aa} (CDR3 amino acid sequence)}
 
 \item{chain}{The TCR/BCR chain to use. Use \code{both} to include both chains
-(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL}
-(for both light chains), \code{both}.}
+(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL},
+\code{IGK}, \code{Light} (for both light chains), or \code{both} (for TRA/B and Heavy/Light).}
 
 \item{group.by}{A column header in the metadata or lists to group the analysis
 by (e.g., "sample", "treatment"). If \code{NULL}, data will be analyzed

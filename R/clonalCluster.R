@@ -55,8 +55,8 @@
 #' @param input.data The product of [combineTCR()], 
 #' [combineBCR()] or [combineExpression()].
 #' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
-#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL` 
-#' (for both light chains), `both`.
+#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
+#' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param sequence Clustering based on either `aa` or `nt` sequences.
 #' @param threshold The similarity threshold. If < 1, treated as normalized
 #' similarity (higher is stricter). If >= 1, treated as raw edit distance
@@ -75,9 +75,10 @@
 #' (`"nw"` or `"sw"`). Options: `"BLOSUM45"`, `"BLOSUM50"`, `"BLOSUM62"`,
 #' `"BLOSUM80"` (default), `"BLOSUM100"`, `"PAM30"`, `"PAM40"`, `"PAM70"`, `"PAM120"`, 
 #' `"PAM250"`, or `"identity"`.
-#' @param normalize Method for normalizing distances. Options: `"none"` (default),
-#' `"maxlen"` (divide by max sequence length), or `"length"` (divide by mean sequence length).
-#' If `threshold < 1`, this controls how the similarity is calculated.
+#' @param normalize Method for normalizing distances. Options: `"none"`,
+#' `"maxlen"` (divide by max sequence length), or `"length"` (default, divide 
+#' by mean sequence length). If `threshold < 1`, this controls how the 
+#' similarity is calculated.
 #' @param gap_open Penalty for opening a gap in alignment metrics (default: -10).
 #' @param gap_extend Penalty for extending a gap in alignment metrics (default: -1).
 #' @param cluster.method The clustering algorithm to use. Defaults to `"components"`, 
@@ -114,7 +115,7 @@ clonalCluster <- function(input.data,
                           group.by = NULL, 
                           dist_type = "levenshtein",
                           dist_mat = "BLOSUM80",
-                          normalize = "none",
+                          normalize = "length",
                           gap_open = -10,
                           gap_extend = -1,
                           cluster.method = "components",

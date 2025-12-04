@@ -114,10 +114,8 @@ percentGeneUsage <- function(input.data,
   }
   
   ir_data_list <- lapply(chains_to_extract, function(ch) {
-    if (ch == "IGH") ch <- "Heavy"
-    if (ch %in% c("IGL", "IGK")) ch <- "Light"
     dfs <- immApex::getIR(input.data, 
-                          chains = ch, 
+                          chains = .chainConverter(ch), 
                           sequence.type = "aa", 
                           group.by = group.by)
     if(inherits(dfs, "list")) {

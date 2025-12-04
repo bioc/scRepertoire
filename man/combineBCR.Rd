@@ -11,8 +11,8 @@ combineBCR(
   chain = "both",
   sequence = "nt",
   dist_type = "levenshtein",
-  dist_mat = "BLOSUM62",
-  normalize = "none",
+  dist_mat = "BLOSUM80",
+  normalize = "length",
   gap_open = -10,
   gap_extend = -1,
   call.related.clones = TRUE,
@@ -95,10 +95,13 @@ This function consolidates a list of BCR sequencing results to the level
 of the individual cell barcodes. Using the samples and ID parameters,
 the function will add the strings as prefixes to prevent issues with
 repeated barcodes. The resulting new barcodes will need to match the
-Seurat or SCE object in order to use, \code{\link[=combineExpression]{combineExpression()}}.
-Unlike \code{\link[=combineTCR]{combineTCR()}}, combineBCR produces a column
-\code{CTstrict} of an index of nucleotide sequence and the
-corresponding V and J genes using \code{\link[=clonalCluster]{clonalCluster()}}.
+Seurat or SCE object in order to use, \code{\link[=combineExpression]{combineExpression()}}. Unlike
+\code{\link[=combineTCR]{combineTCR()}}, combineBCR produces a column \code{CTstrict} based on the
+edit distance clustering from \code{\link[=clonalCluster]{clonalCluster()}}. The \code{CTstrict} column
+is formatted as \code{Heavy_Light} (underscore-separated) for downstream
+compatibility. Connected clones are labeled with \code{cluster.X}, while
+unconnected clones (singlets) are labeled with the V gene and CDR3
+sequence (e.g., \verb{IGHV3-64.CAKSYS..._IGKV3-15.CQQYSN...}).
 }
 \examples{
 # Data derived from the 10x Genomics intratumoral NSCLC B cells

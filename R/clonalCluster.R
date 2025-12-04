@@ -141,7 +141,7 @@ clonalCluster <- function(input.data,
       getIR(input.data, chains = x, sequence.type = sequence, group.by = group.by)
     })
   } else {
-    chain_data <- getIR(input.data, chains = chain, sequence.type = sequence, group.by = group.by)
+    chain_data <- getIR(input.data, chains = .chainConverter(chain), sequence.type = sequence, group.by = group.by)
     chain_data <- list(chain_data)
   }
   

@@ -155,10 +155,13 @@ combineTCR <- function(input.data,
 #' of the individual cell barcodes. Using the samples and ID parameters,
 #' the function will add the strings as prefixes to prevent issues with
 #' repeated barcodes. The resulting new barcodes will need to match the
-#' Seurat or SCE object in order to use, [combineExpression()].
-#' Unlike [combineTCR()], combineBCR produces a column
-#' `CTstrict` of an index of nucleotide sequence and the
-#' corresponding V and J genes using [clonalCluster()]. 
+#' Seurat or SCE object in order to use, [combineExpression()]. Unlike 
+#' [combineTCR()], combineBCR produces a column `CTstrict` based on the 
+#' edit distance clustering from [clonalCluster()]. The `CTstrict` column 
+#' is formatted as `Heavy_Light` (underscore-separated) for downstream
+#' compatibility. Connected clones are labeled with `cluster.X`, while
+#' unconnected clones (singlets) are labeled with the V gene and CDR3 
+#' sequence (e.g., `IGHV3-64.CAKSYS..._IGKV3-15.CQQYSN...`).
 #'
 #' @examples
 #' # Data derived from the 10x Genomics intratumoral NSCLC B cells
@@ -307,8 +310,51 @@ combineBCR <- function(input.data,
   final_list <- purrr::map2(processed_list, seq_along(processed_list), function(df, i) {
     # Assigning CTstrict
     if (call.related.clones) {
+      # Get the cluster column from clonalCluster output
       cluster_col <- clusters[[i]][, ncol(clusters[[i]])]
-      df[, "CTstrict"] <- cluster_col
+      
+      # ========== CTstrict FORMATTING LOGIC ==========
+      seq_col <- ifelse(sequence == "aa", "cdr3_aa", "cdr3_nt")
+      heavy_seq_col <- paste0(seq_col, "1")
+      light_seq_col <- paste0(seq_col, "2")
+      
+      # Create unique identifiers for each chain (vgene.sequence format)
+      heavy_unique <- ifelse(
+        !is.na(df[, "vgene1"]) & !is.na(df[, heavy_seq_col]),
+        paste0(df[, "vgene1"], ".", df[, heavy_seq_col]),
+        "NA"
+      )
+      
+      light_unique <- ifelse(
+        !is.na(df[, "vgene2"]) & !is.na(df[, light_seq_col]),
+        paste0(df[, "vgene2"], ".", df[, light_seq_col]),
+        "NA"
+      )
+      
+      if (chain == "both") {
+        # Both chains in same network - use cluster ID for both parts
+        heavy_part <- ifelse(is.na(cluster_col), heavy_unique, cluster_col)
+        light_part <- ifelse(is.na(cluster_col), light_unique, cluster_col)
+        
+      } else if (chain == "IGH") {
+        # Only heavy chain clustered
+        heavy_part <- ifelse(is.na(cluster_col), heavy_unique, cluster_col)
+        light_part <- light_unique  # Light chain always uses unique ID
+        
+      } else if (chain %in% c("IGL", "IGK", "Light")) {
+        # Only light chain clustered
+        heavy_part <- heavy_unique  # Heavy chain always uses unique ID
+        light_part <- ifelse(is.na(cluster_col), light_unique, cluster_col)
+        
+      } else {
+        # Fallback for any other chain specification
+        heavy_part <- heavy_unique
+        light_part <- light_unique
+      }
+      
+      # Combine into CTstrict with underscore separator
+      df[, "CTstrict"] <- paste0(heavy_part, "_", light_part)
+      
     } else {
       df[, "CTstrict"] <- paste0(df[, "vgene1"], ".", df[, "cdr3_aa1"], "_",
                                  df[, "vgene2"], ".", df[, "cdr3_aa2"])

@@ -549,6 +549,15 @@
     return(x)
 }
 
+.chainConverter <- function(chain) {
+  if(chain == "IGH") {
+    chain <- "Heavy"
+  } else if (chain %in% c("IGL", "IGK")) {
+    chain <- "Light"
+  }
+  return(chain)
+}
+
 # helper for .theCall # Qile: on second thought - converting to x to lowercase may be a bad idea...
 .convertClonecall <- function(x, silent) {
 

@@ -31,8 +31,8 @@ acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be
 \item{y.axis}{name of the list element to appear on the y.axis.}
 
 \item{chain}{The TCR/BCR chain to use. Use \code{both} to include both chains
-(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL}
-(for both light chains), \code{both}.}
+(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL},
+\code{IGK}, \code{Light} (for both light chains), or \code{both} (for TRA/B and Heavy/Light).}
 
 \item{dot.size}{either total or the name of the list element to
 use for size of dots.}

@@ -23,8 +23,9 @@
 #' 
 #' @param input.data The product of [combineTCR()], 
 #' [combineBCR()], or [combineExpression()]
-#' @param chain The TCR/BCR chain to use. Accepted values: `TRA`, `TRB`, `TRG`,
-#'  `TRD`, `IGH`, or `IGL` (for both light chains).
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
+#' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param cloneCall Defines the clonal sequence grouping. Accepted values 
 #' are: `nt` (CDR3 nucleotide sequence) or `aa` (CDR3 amino acid sequence).
 #' @param group.by A column header in the metadata or lists to group the analysis 
@@ -89,7 +90,9 @@ percentKmer <- function(input.data,
   
   # Collecting motifs into a matrix
   unique.motifs <- unique(unlist(lapply(motif.list, `[`, , 1)))
-  unique.motifs <- unique.motifs[-grep(";", unique.motifs)] #remove seq deliminator
+  if(any(grepl(";", unique.motifs))) { #remove seq deliminator
+    unique.motifs <- unique.motifs[-grep(";", unique.motifs)] 
+  }
   mat <- matrix(0, ncol = length(unique.motifs), nrow = length(input.data))
   colnames(mat) <- unique.motifs
   rownames(mat) <- names(input.data)

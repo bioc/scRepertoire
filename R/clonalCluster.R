@@ -1,32 +1,32 @@
 #' Cluster clones by sequence similarity
 #'
-#' This function clusters TCRs or BCRs based on the edit distance of their CDR3
-#' sequences. It can operate on either nucleotide (`nt`) or amino acid (`aa`)
-#' sequences and can optionally enforce that clones share the same V and/or J 
-#' genes. The output can be the input object with an added metadata column for 
-#' cluster IDs, a sparse adjacency matrix, or an `igraph` graph object 
-#' representing the cluster network.
+#' This function clusters TCRs or BCRs based on the edit distance or alignment 
+#' score of their CDR3 sequences. It can operate on either nucleotide (`nt`) 
+#' or amino acid (`aa`) sequences and can optionally enforce that clones share 
+#' the same V and/or J genes. The output can be the input object with an added 
+#' metadata column for cluster IDs, a sparse adjacency matrix, or an `igraph` 
+#' graph object representing the cluster network.
 #' 
 #' @details
 #' The clustering process is as follows:
 #' 1.  The function retrieves the relevant chain data from the input object.
-#' 2.  It calculates the edit distance between all sequences within each group
+#' 2.  It calculates the distance between all sequences within each group
 #'     (or across the entire dataset if `group.by` is `NULL`).
 #' 3.  An edge list is constructed, connecting sequences that meet the similarity
 #'     `threshold`.
 #' 4.  The `threshold` parameter behaves differently based on its value:
-#'     - **`threshold` < 1 (e.g., 0.85):** Interpreted as a *normalized* edit
-#'       distance or sequence similarity. A higher value means greater
-#'       similarity is required. This is the default behavior.
+#'     - **`threshold` < 1 (e.g., 0.85):** Interpreted as a *normalized* 
+#'       distance. A higher value means greater similarity is required.
 #'     - **`threshold` >= 1 (e.g., 2):** Interpreted as a maximum *raw* edit
 #'       distance. A lower value means greater similarity is required.
-#' 5.  An `igraph` graph is built from the edge list.
-#' 6.  A clustering algorithm is run on the graph. The default 
-#'     `cluster.method = "components"` simply identifies the connected 
-#'     components (i.e., each cluster is a group of sequences connected by 
-#'     edges). Other methods from `igraph` can be used.
-#' 7.  The resulting cluster information is formatted and returned in the
-#'     specified format.
+#' 5.  **Distance Metrics:**
+#'     - **Levenshtein/Hamming/Damerau:** Standard edit distance calculations.
+#'     - **Alignment (NW/SW):** If `dist_type` is "nw" (Needleman-Wunsch) or 
+#'       "sw" (Smith-Waterman), alignment scores are calculated using the 
+#'       specified substitution matrix (`dist_mat`). These scores are converted 
+#'       to a distance-like metric for clustering.
+#' 6.  An `igraph` graph is built from the edge list.
+#' 7.  A clustering algorithm is run on the graph (default: connected components).
 #' 
 #' @examples
 #' # Getting the combined contigs
@@ -34,11 +34,18 @@
 #'                        samples = c("P17B", "P17L", "P18B", "P18L",
 #'                                    "P19B","P19L", "P20B", "P20L"))
 #'
-#' # Add cluster information to the list
+#' # Standard Levenshtein clustering (85% similarity)
 #' sub_combined <- clonalCluster(combined[c(1,2)],
 #'                               chain = "TRA",
 #'                               sequence = "aa",
 #'                               threshold = 0.85)
+#'
+#' # Alignment-based clustering using BLOSUM80
+#' sub_combined_nw <- clonalCluster(combined[c(1,2)],
+#'                                  chain = "TRA",
+#'                                  dist_type = "nw",
+#'                                  dist_mat = "BLOSUM80",
+#'                                  threshold = 0.85)
 #'
 #' # Export the graph object instead
 #' graph_obj <- clonalCluster(combined[c(1,2)],
@@ -48,8 +55,8 @@
 #' @param input.data The product of [combineTCR()], 
 #' [combineBCR()] or [combineExpression()].
 #' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
-#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL` 
-#' (for both light chains), `both`.
+#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
+#' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param sequence Clustering based on either `aa` or `nt` sequences.
 #' @param threshold The similarity threshold. If < 1, treated as normalized
 #' similarity (higher is stricter). If >= 1, treated as raw edit distance
@@ -61,6 +68,19 @@
 #' clustered together.
 #' @param use.J If `TRUE`, sequences must share the same J gene to be
 #' clustered together.
+#' @param dist_type The distance metric to use. Options: `"levenshtein"` (default),
+#' `"hamming"`, `"damerau"` (allows transpositions), `"nw"` (Needleman-Wunsch),
+#' or `"sw"` (Smith-Waterman).
+#' @param dist_mat The substitution matrix to use for alignment-based metrics 
+#' (`"nw"` or `"sw"`). Options: `"BLOSUM45"`, `"BLOSUM50"`, `"BLOSUM62"`,
+#' `"BLOSUM80"` (default), `"BLOSUM100"`, `"PAM30"`, `"PAM40"`, `"PAM70"`, `"PAM120"`, 
+#' `"PAM250"`, or `"identity"`.
+#' @param normalize Method for normalizing distances. Options: `"none"`,
+#' `"maxlen"` (divide by max sequence length), or `"length"` (default, divide 
+#' by mean sequence length). If `threshold < 1`, this controls how the 
+#' similarity is calculated.
+#' @param gap_open Penalty for opening a gap in alignment metrics (default: -10).
+#' @param gap_extend Penalty for extending a gap in alignment metrics (default: -1).
 #' @param cluster.method The clustering algorithm to use. Defaults to `"components"`, 
 #' which finds connected subgraphs.
 #' @param cluster.prefix A character prefix to add to the cluster names (e.g.,
@@ -69,11 +89,9 @@
 #' object of the sequence network.
 #' @param exportAdjMatrix If `TRUE`, the function returns a sparse
 #' adjacency matrix (`dgCMatrix`) of the network.
-#' @param exportGraph If `TRUE` returns an igraph object of connected 
-#' sequences  or the amended `input.data` with a new cluster-based variable 
 #' @importFrom igraph graph_from_edgelist E E<- V V<- as_data_frame 
 #' as_adjacency_matrix membership set_vertex_attr
-#' @importFrom dplyr left_join
+#' @importFrom dplyr left_join ungroup
 #' @importFrom rlang %||%
 #' @importFrom SummarizedExperiment colData colData<-
 #' @importFrom S4Vectors DataFrame
@@ -95,6 +113,11 @@ clonalCluster <- function(input.data,
                           sequence = "aa",
                           threshold = 0.85, 
                           group.by = NULL, 
+                          dist_type = "levenshtein",
+                          dist_mat = "BLOSUM80",
+                          normalize = "length",
+                          gap_open = -10,
+                          gap_extend = -1,
                           cluster.method = "components",
                           cluster.prefix = "cluster.",
                           use.V = TRUE,
@@ -118,7 +141,7 @@ clonalCluster <- function(input.data,
       getIR(input.data, chains = x, sequence.type = sequence, group.by = group.by)
     })
   } else {
-    chain_data <- getIR(input.data, chains = chain, sequence.type = sequence, group.by = group.by)
+    chain_data <- getIR(input.data, chains = .chainConverter(chain), sequence.type = sequence, group.by = group.by)
     chain_data <- list(chain_data)
   }
   
@@ -131,7 +154,9 @@ clonalCluster <- function(input.data,
   # Apply the network function to each data frame and combine into one edge list
   result_list <- lapply(chain_data, function(y) {
     y <- y[!is.na(y[,1]),]
-    .buildNetwork(y, use.V, use.J, threshold)
+    .buildNetwork(y, use.V, use.J, threshold, 
+                  dist_type, dist_mat, normalize, 
+                  gap_open, gap_extend)
   })
   full_edge_list <- do.call(rbind, result_list)
   
@@ -160,7 +185,7 @@ clonalCluster <- function(input.data,
   
   # Create the graph object
   full_g <- igraph::graph_from_data_frame(full_edge_list, 
-                                        directed = FALSE)
+                                          directed = FALSE)
   igraph::E(full_g)$weight <- full_edge_list$dist
   if (!is.null(group.by)) {
     vertex_map_df <- data.frame(
@@ -196,10 +221,10 @@ clonalCluster <- function(input.data,
     if (nrow(full_meta_long) > 0) {
       meta_to_process <- unique(full_meta_long[, c("barcode", "cdr3_aa", "v", "j")])
       meta_indexed <- meta_to_process %>% 
-                          group_by(barcode) %>%
-                          mutate(chain_num = dplyr::row_number()) %>%
-                          ungroup() %>%
-                          as.data.frame()
+        group_by(barcode) %>%
+        mutate(chain_num = dplyr::row_number()) %>%
+        ungroup() %>%
+        as.data.frame()
       original_meta <- reshape(
         data = meta_indexed, 
         idvar = "barcode",
@@ -236,10 +261,10 @@ clonalCluster <- function(input.data,
     adjacency_matrix[barcodes_in_graph, barcodes_in_graph] <- adj_from_graph
     return(adjacency_matrix)
   }
-
- # Attaching to input.data
- bound <- igraph::as_data_frame(full_g, what = "vertices")
- colnames(bound)[2] <- ifelse(chain == "both", "Multi.Cluster", paste0(chain, ".Cluster"))
+  
+  # Attaching to input.data
+  bound <- igraph::as_data_frame(full_g, what = "vertices")
+  colnames(bound)[2] <- ifelse(chain == "both", "Multi.Cluster", paste0(chain, ".Cluster"))
   
   #Adding to potential single-cell object
   if(.is.seurat.or.se.object(input.data)) {
@@ -299,16 +324,22 @@ clonalCluster <- function(input.data,
 }
 
 #' @importFrom immApex buildNetwork
-.buildNetwork <- function(df, use.V, use.J, threshold) {
+.buildNetwork <- function(df, use.V, use.J, threshold, 
+                          dist_type, dist_mat, normalize, 
+                          gap_open, gap_extend) {
   edge_list <- buildNetwork(df,
                             seq_col   = "cdr3_aa",
                             v_col     = "v",
                             j_col     = "j",
                             filter.v  = use.V,
                             filter.j  = use.J,
-                            ids = df[["barcode"]],
-                            threshold = threshold)
+                            ids       = df[["barcode"]],
+                            threshold = threshold,
+                            dist_type = dist_type,
+                            dist_mat  = dist_mat,
+                            normalize = normalize,
+                            gap_open  = gap_open,
+                            gap_extend= gap_extend)
   
   return(edge_list)
 }
-  

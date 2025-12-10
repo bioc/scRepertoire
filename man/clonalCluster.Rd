@@ -10,6 +10,11 @@ clonalCluster(
   sequence = "aa",
   threshold = 0.85,
   group.by = NULL,
+  dist_type = "levenshtein",
+  dist_mat = "BLOSUM80",
+  normalize = "length",
+  gap_open = -10,
+  gap_extend = -1,
   cluster.method = "components",
   cluster.prefix = "cluster.",
   use.V = TRUE,
@@ -23,8 +28,8 @@ clonalCluster(
 \code{\link[=combineBCR]{combineBCR()}} or \code{\link[=combineExpression]{combineExpression()}}.}
 
 \item{chain}{The TCR/BCR chain to use. Use \code{both} to include both chains
-(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL}
-(for both light chains), \code{both}.}
+(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL},
+\code{IGK}, \code{Light} (for both light chains), or \code{both} (for TRA/B and Heavy/Light).}
 
 \item{sequence}{Clustering based on either \code{aa} or \code{nt} sequences.}
 
@@ -35,6 +40,24 @@ similarity (higher is stricter). If >= 1, treated as raw edit distance
 \item{group.by}{A column header in the metadata or lists to group the analysis
 by (e.g., "sample", "treatment"). If \code{NULL}, clusters will be calculated across
 all sequences.}
+
+\item{dist_type}{The distance metric to use. Options: \code{"levenshtein"} (default),
+\code{"hamming"}, \code{"damerau"} (allows transpositions), \code{"nw"} (Needleman-Wunsch),
+or \code{"sw"} (Smith-Waterman).}
+
+\item{dist_mat}{The substitution matrix to use for alignment-based metrics
+(\code{"nw"} or \code{"sw"}). Options: \code{"BLOSUM45"}, \code{"BLOSUM50"}, \code{"BLOSUM62"},
+\code{"BLOSUM80"} (default), \code{"BLOSUM100"}, \code{"PAM30"}, \code{"PAM40"}, \code{"PAM70"}, \code{"PAM120"},
+\code{"PAM250"}, or \code{"identity"}.}
+
+\item{normalize}{Method for normalizing distances. Options: \code{"none"},
+\code{"maxlen"} (divide by max sequence length), or \code{"length"} (default, divide
+by mean sequence length). If \code{threshold < 1}, this controls how the
+similarity is calculated.}
+
+\item{gap_open}{Penalty for opening a gap in alignment metrics (default: -10).}
+
+\item{gap_extend}{Penalty for extending a gap in alignment metrics (default: -1).}
 
 \item{cluster.method}{The clustering algorithm to use. Defaults to \code{"components"},
 which finds connected subgraphs.}
@@ -51,8 +74,8 @@ clustered together.}
 \item{exportAdjMatrix}{If \code{TRUE}, the function returns a sparse
 adjacency matrix (\code{dgCMatrix}) of the network.}
 
-\item{exportGraph}{If \code{TRUE} returns an igraph object of connected
-sequences  or the amended \code{input.data} with a new cluster-based variable}
+\item{exportGraph}{If \code{TRUE}, the function returns an \code{igraph}
+object of the sequence network.}
 }
 \value{
 Depending on the export parameters, one of the following:
@@ -63,36 +86,38 @@ Depending on the export parameters, one of the following:
 }
 }
 \description{
-This function clusters TCRs or BCRs based on the edit distance of their CDR3
-sequences. It can operate on either nucleotide (\code{nt}) or amino acid (\code{aa})
-sequences and can optionally enforce that clones share the same V and/or J
-genes. The output can be the input object with an added metadata column for
-cluster IDs, a sparse adjacency matrix, or an \code{igraph} graph object
-representing the cluster network.
+This function clusters TCRs or BCRs based on the edit distance or alignment
+score of their CDR3 sequences. It can operate on either nucleotide (\code{nt})
+or amino acid (\code{aa}) sequences and can optionally enforce that clones share
+the same V and/or J genes. The output can be the input object with an added
+metadata column for cluster IDs, a sparse adjacency matrix, or an \code{igraph}
+graph object representing the cluster network.
 }
 \details{
 The clustering process is as follows:
 \enumerate{
 \item The function retrieves the relevant chain data from the input object.
-\item It calculates the edit distance between all sequences within each group
+\item It calculates the distance between all sequences within each group
 (or across the entire dataset if \code{group.by} is \code{NULL}).
 \item An edge list is constructed, connecting sequences that meet the similarity
 \code{threshold}.
 \item The \code{threshold} parameter behaves differently based on its value:
 \itemize{
-\item \strong{\code{threshold} < 1 (e.g., 0.85):} Interpreted as a \emph{normalized} edit
-distance or sequence similarity. A higher value means greater
-similarity is required. This is the default behavior.
+\item \strong{\code{threshold} < 1 (e.g., 0.85):} Interpreted as a \emph{normalized}
+distance. A higher value means greater similarity is required.
 \item \strong{\code{threshold} >= 1 (e.g., 2):} Interpreted as a maximum \emph{raw} edit
 distance. A lower value means greater similarity is required.
 }
+\item \strong{Distance Metrics:}
+\itemize{
+\item \strong{Levenshtein/Hamming/Damerau:} Standard edit distance calculations.
+\item \strong{Alignment (NW/SW):} If \code{dist_type} is "nw" (Needleman-Wunsch) or
+"sw" (Smith-Waterman), alignment scores are calculated using the
+specified substitution matrix (\code{dist_mat}). These scores are converted
+to a distance-like metric for clustering.
+}
 \item An \code{igraph} graph is built from the edge list.
-\item A clustering algorithm is run on the graph. The default
-\code{cluster.method = "components"} simply identifies the connected
-components (i.e., each cluster is a group of sequences connected by
-edges). Other methods from \code{igraph} can be used.
-\item The resulting cluster information is formatted and returned in the
-specified format.
+\item A clustering algorithm is run on the graph (default: connected components).
 }
 }
 \examples{
@@ -101,11 +126,18 @@ combined <- combineTCR(contig_list,
                        samples = c("P17B", "P17L", "P18B", "P18L",
                                    "P19B","P19L", "P20B", "P20L"))
 
-# Add cluster information to the list
+# Standard Levenshtein clustering (85\% similarity)
 sub_combined <- clonalCluster(combined[c(1,2)],
                               chain = "TRA",
                               sequence = "aa",
                               threshold = 0.85)
+
+# Alignment-based clustering using BLOSUM80
+sub_combined_nw <- clonalCluster(combined[c(1,2)],
+                                 chain = "TRA",
+                                 dist_type = "nw",
+                                 dist_mat = "BLOSUM80",
+                                 threshold = 0.85)
 
 # Export the graph object instead
 graph_obj <- clonalCluster(combined[c(1,2)],

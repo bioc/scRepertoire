@@ -45,8 +45,9 @@
 #'                    
 #' @param input.data The product of [combineTCR()], [combineBCR()], or 
 #' [combineExpression()]
-#' @param chain The TCR/BCR chain to use. Use Accepted values: `TRA`, `TRB`, 
-#' `TRG`, `TRD`, `IGH`, or `IGL` (for both light chains)..
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
+#' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param group.by A column header in the metadata or lists to group the analysis 
 #' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed 
 #' by list element or active identity in the case of single-cell objects.
@@ -171,7 +172,7 @@ positionalProperty <- function(input.data,
   mat[mat[["n"]] <= 2, cols_to_modify] <- 0
   
   if (!is.null(order.by)) {
-    mat <- .orderingFunction(mat, order.by, "group")
+    mat <- .orderingFunction(order.by, "group", mat)
   }
   mat$position <- as.integer(mat$position)
   

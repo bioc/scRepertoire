@@ -25,8 +25,8 @@
 #' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used. 
 #' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
-#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL` 
-#' (for both light chains), `both`.
+#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
+#' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param group.by A column header in the metadata or lists to group the analysis 
 #' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed 
 #' by list element or active identity in the case of single-cell objects.

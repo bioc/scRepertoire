@@ -28,8 +28,8 @@
 #' @param scale Converts the graphs into density plots in order to show 
 #' relative distributions.
 #' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
-#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL` 
-#' (for both light chains), `both`.
+#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
+#' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
 #' instead of a plot.
 #' @param palette Colors to use in visualization - input any 

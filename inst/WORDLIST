@@ -16,6 +16,7 @@ BPPARAM
 Barcode
 Barcodes
 BioC
+Bioc
 BiocParallel
 Biotechnologies
 Bormann
@@ -50,6 +51,7 @@ Convolutional
 Corvino
 Cruciani
 DESeq
+Damerau
 Deconvolute
 Dgene
 Directionality
@@ -98,7 +100,6 @@ Immunarch
 Inv
 JC
 JS
-JSON
 Jaccard
 Jgene
 KEGG
@@ -118,9 +119,11 @@ McPAS
 MiXCR
 Morisita
 Morisita's
+MultiUMAP
 NES
 NG
 Nebulosa
+Needleman
 Nicky
 Nikolaj
 Noonan
@@ -137,14 +140,11 @@ ParseBio
 Physicochemical
 Pielou
 Pielou's
-Precomputed
-Preprocessed
 ProjectTIL
 ProtFP
 Readded
 Rebasing
 Rebumping
-Repo
 SCE
 SHM
 SRA
@@ -202,6 +202,8 @@ Vrij
 WAT
 WNN
 Walktrap
+Waterman
+Wunsch
 Yu
 Zenodo
 Zhang
@@ -214,7 +216,6 @@ adjacencyMatrix
 airr
 al
 alakazam
-allelic
 alluvialClones
 alluvialClonotype
 alluvialClonotypes
@@ -290,14 +291,12 @@ createHTOContigList
 crucianiProperties
 csv
 cubature
-customizable
 dandelionR
 de
 densityEnrichment
 dev
 df
 dgCMatrix
-dir
 distanc
 doubletons
 downsample
@@ -383,6 +382,7 @@ latform
 leadingEdge
 lengthContigs
 lengthDF
+levenshtein
 ln
 loadContigs
 logFC
@@ -394,6 +394,7 @@ maTrex
 makeGenes
 markov
 matric
+maxlen
 mer
 migr
 milo
@@ -412,6 +413,7 @@ normalised
 nrichment
 nt
 nucleotides
+nw
 occupiedClonotype
 occupiedRepertoire
 occupiedscRepertoire
@@ -429,7 +431,6 @@ percentGenes
 percentKmer
 percentVJ
 performNormalization
-phenotypes
 physicochemical
 pielou
 pkgdown
@@ -451,7 +452,6 @@ readRDS
 reclustering
 regressClonotype
 relevel
-repo
 ridgeEnrichment
 runEscape
 runIbex
@@ -489,6 +489,7 @@ subgraphs
 subsetClones
 subtype
 subtypes
+sw
 tSNE
 tScales
 tcrpheno
@@ -507,7 +508,6 @@ umap
 unmutated
 unreturned
 variational
-viridis
 visVgene
 visualise
 vizGene

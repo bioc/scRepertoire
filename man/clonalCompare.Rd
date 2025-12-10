@@ -31,8 +31,8 @@ are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
 \item{chain}{The TCR/BCR chain to use. Use \code{both} to include both chains
-(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL}
-(for both light chains), \code{both}.}
+(e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL},
+\code{IGK}, \code{Light} (for both light chains), or \code{both} (for TRA/B and Heavy/Light).}
 
 \item{samples}{The specific samples to isolate for visualization.}
 

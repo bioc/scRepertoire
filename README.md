@@ -1,9 +1,11 @@
 # scRepertoire: A toolkit for single-cell immune profiling
 <!-- badges: start -->
-[![BioC status](http://www.bioconductor.org/shields/build/release/bioc/scRepertoire.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/scRepertoire)
 [![R-CMD-check](https://github.com/BorchLab/scRepertoire/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BorchLab/scRepertoire/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/BorchLab/scRepertoire/branch/master/graph/badge.svg)](https://app.codecov.io/gh/BorchLab/scRepertoire?branch=master)
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://www.borch.dev/uploads/screpertoire/)
+[![Bioc Release Build](http://www.bioconductor.org/shields/build/release/bioc/scRepertoire.svg)](http://www.bioconductor.org/checkResults/release/bioc-LATEST/scRepertoire)
+[![Bioc Devel Build](http://www.bioconductor.org/shields/build/devel/bioc/scRepertoire.svg)](http://www.bioconductor.org/checkResults/devel/bioc-LATEST/scRepertoire)
+[![Bioc Downloads](http://www.bioconductor.org/shields/downloads/release/scRepertoire.svg)](http://bioconductor.org/packages/stats/bioc/scRepertoire/)
 <!-- badges: end -->
 
 <img align="right" src="https://www.borch.dev/uploads/screpertoire/reference/figures/screpertoire_hex.png" width="305" height="352">

@@ -10,6 +10,11 @@ combineBCR(
   ID = NULL,
   chain = "both",
   sequence = "nt",
+  dist_type = "levenshtein",
+  dist_mat = "BLOSUM80",
+  normalize = "length",
+  gap_open = -10,
+  gap_extend = -1,
   call.related.clones = TRUE,
   group.by = NULL,
   threshold = 0.85,
@@ -36,6 +41,19 @@ Passed to \code{clonalCluster()}. Default is \code{"both"}.}
 
 \item{sequence}{The sequence type (\code{"nt"} or \code{"aa"}) to use for clustering.
 Passed to \code{clonalCluster()}. Default is \code{"nt"}.}
+
+\item{dist_type}{The distance metric to use. Options: \code{"levenshtein"} (default),
+\code{"hamming"}, \code{"damerau"}, \code{"nw"} (Needleman-Wunsch), or \code{"sw"} (Smith-Waterman).}
+
+\item{dist_mat}{The substitution matrix to use for alignment-based metrics
+(\code{"nw"} or \code{"sw"}). Options include \code{"BLOSUM62"}, \code{"PAM30"}, etc.}
+
+\item{normalize}{Method for normalizing distances. Options: \code{"none"} (default),
+\code{"maxlen"}, or \code{"length"}.}
+
+\item{gap_open}{Penalty for opening a gap in alignment metrics (default: -10).}
+
+\item{gap_extend}{Penalty for extending a gap in alignment metrics (default: -1).}
 
 \item{call.related.clones}{Logical. If \code{TRUE}, uses \code{clonalCluster()} to
 identify related clones based on sequence similarity. If \code{FALSE}, defines
@@ -77,10 +95,13 @@ This function consolidates a list of BCR sequencing results to the level
 of the individual cell barcodes. Using the samples and ID parameters,
 the function will add the strings as prefixes to prevent issues with
 repeated barcodes. The resulting new barcodes will need to match the
-Seurat or SCE object in order to use, \code{\link[=combineExpression]{combineExpression()}}.
-Unlike \code{\link[=combineTCR]{combineTCR()}}, combineBCR produces a column
-\code{CTstrict} of an index of nucleotide sequence and the
-corresponding V and J genes using \code{\link[=clonalCluster]{clonalCluster()}}.
+Seurat or SCE object in order to use, \code{\link[=combineExpression]{combineExpression()}}. Unlike
+\code{\link[=combineTCR]{combineTCR()}}, combineBCR produces a column \code{CTstrict} based on the
+edit distance clustering from \code{\link[=clonalCluster]{clonalCluster()}}. The \code{CTstrict} column
+is formatted as \code{Heavy_Light} (underscore-separated) for downstream
+compatibility. Connected clones are labeled with \code{cluster.X}, while
+unconnected clones (singlets) are labeled with the V gene and CDR3
+sequence (e.g., \verb{IGHV3-64.CAKSYS..._IGKV3-15.CQQYSN...}).
 }
 \examples{
 # Data derived from the 10x Genomics intratumoral NSCLC B cells

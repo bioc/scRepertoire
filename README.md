@@ -48,7 +48,7 @@ devtools::install_github("BorchLab/scRepertoire@v1")
 
 ### Getting Data
 
-Unfortunately, Github limits the size of individual files. In order to access the Seurat object paired with scRepertoire please download the .rda from [here](https://drive.google.com/file/d/1_YuRraDyg8UgF3oasjF0-jgPnwox-B24/view?usp=share_link).
+Unfortunately, Github limits the size of individual files. In order to access the Seurat object paired with scRepertoire please download the .rda from [here](https://zenodo.org/records/18187313).
 
 ### Bug Reports/New Features
 

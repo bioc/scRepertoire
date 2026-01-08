@@ -5,7 +5,7 @@
 [![Codecov test coverage](https://codecov.io/gh/ncborcherding/scRepertoire/branch/master/graph/badge.svg)](https://app.codecov.io/gh/ncborcherding/scRepertoire?branch=master)
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://www.borch.dev/uploads/vignette/vignette)
 <!-- badges: end -->
-<img src="man/figures/screpertoire_hex.png" align="right" width="150"/>
+<img src="https://www.borch.dev/uploads/screpertoire/reference/figures/screpertoire_hex.png" align="right" width="150"/>
 
 ### Introduction
 Single-cell sequencing is an emerging technology in the field of immunology and oncology that allows researchers to couple RNA quantification and other modalities, like immune cell receptor profiling at the level of an individual cell. A number of workflows and software packages have been created to process and analyze single-cell transcriptomic data. These packages allow users to take the vast dimensionality of the data generated in single-cell-based experiments and distill the data into novel insights. Unlike the transcriptomic field, there is a lack of options for software that allow for single-cell immune receptor profiling. Enabling users to easily combine RNA and immune profiling, the scRepertoire framework supports use of 10x, AIRR, BD, MiXCR, TRUST4, and WAT3R single-cell clonal formats and interaction with popular R-based single-cell data pipelines. 
@@ -39,7 +39,7 @@ devtools::install_github("ncborcherding/scRepertoire@v1")
 
 ## Getting Data
 
-Unfortunately, Github limits the size of individual files. In order to access the full Seurat object paired with scRepertoire please download the .rda from [here](https://drive.google.com/file/d/1_YuRraDyg8UgF3oasjF0-jgPnwox-B24/view?usp=share_link). There is a smaller version of the cohort built into scRepertoire called **scRep_example**.
+Unfortunately, Github limits the size of individual files. In order to access the full Seurat object paired with scRepertoire please download the .rda from [here](https://zenodo.org/records/18187313). There is a smaller version of the cohort built into scRepertoire called **scRep_example**.
 
 ## Please Cite
 

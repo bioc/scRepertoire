@@ -46,65 +46,76 @@
 #'                                    "P19B","P19L", "P20B", "P20L"))
 #'
 #' # Calculate Shannon diversity, grouped by sample
-#' clonalDiversity(combined, 
-#'                 cloneCall = "gene", 
+#' clonalDiversity(combined,
+#'                 clone.call = "gene",
 #'                 metric = "shannon")
 #'
 #' # Calculate Inverse Simpson without bootstrapping
-#' clonalDiversity(combined, 
-#'                 cloneCall = "aa", 
-#'                 metric = "inv.simpson", 
+#' clonalDiversity(combined,
+#'                 clone.call = "aa",
+#'                 metric = "inv.simpson",
 #'                 skip.boots = TRUE)
 #'
 #' @param input.data The product of [combineTCR()],
 #' [combineBCR()], or [combineExpression()].
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
 #' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
 #' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
-#' @param group.by A column header in the metadata or lists to group the analysis 
-#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed 
+#' @param group.by A column header in the metadata or lists to group the analysis
+#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed
 #' by list element or active identity in the case of single-cell objects.
-#' @param order.by A character vector defining the desired order of elements 
-#' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups 
+#' @param order.by A character vector defining the desired order of elements
+#' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups
 #' automatically.
 #' @param metric The diversity metric to calculate. Must be a single string from
 #' the list of available metrics (see Details).
 #' @param x.axis An additional metadata variable to group samples along the x-axis.
-#' @param return.boots If `TRUE`, returns all bootstrap values instead of the 
-#' mean. Automatically enables `exportTable`.
-#' @param skip.boots If `TRUE`, disables downsampling and bootstrapping. The 
+#' @param return.boots If `TRUE`, returns all bootstrap values instead of the
+#' mean. Automatically enables `export.table`.
+#' @param skip.boots If `TRUE`, disables downsampling and bootstrapping. The
 #' metric will be calculated on the full dataset for each group. Defaults to `FALSE`.
 #' @param n.boots The number of bootstrap iterations to perform (default is 100).
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
 #' @param palette Colors to use in visualization - input any
 #' [hcl.pals][grDevices::hcl.pals].
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
 #'
 #' @import ggplot2
 #' @export
 #' @concept Visualizing_Clones
 #' @return A ggplot object visualizing the diversity metric, or a data.frame if
-#' `exportTable = TRUE`.
+#' `export.table = TRUE`.
 #' @author Andrew Malone, Nick Borcherding, Nathan Vanderkraan
 clonalDiversity <- function(input.data,
-                            cloneCall = "strict",
+                            clone.call = NULL,
                             metric = "shannon",
                             chain = "both",
                             group.by = NULL,
                             order.by = NULL,
                             x.axis = NULL,
-                            exportTable = FALSE,
+                            export.table = NULL,
                             palette = "inferno",
                             n.boots = 100,
                             return.boots = FALSE,
                             skip.boots = FALSE,
+                            # Deprecated arguments
+                            cloneCall = NULL,
+                            exportTable = NULL,
                             ...) {
-  
-  #Argument and Data Validation 
+
+  # Handle deprecated arguments
+  clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                               "clonalDiversity", default = "strict")
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "clonalDiversity", default = FALSE)
+
+  #Argument and Data Validation
   if (length(metric) != 1 || !is.character(metric)) {
     stop("`metric` must be a single string.")
   }
@@ -112,13 +123,13 @@ clonalDiversity <- function(input.data,
     stop("Invalid `metric`. Please choose from: ", paste(names(.div.registry), collapse = ", "))
   }
   if(return.boots) {
-    exportTable <- TRUE
+    export.table <- TRUE
   }
-  
-  # Data Wrangling 
+
+  # Data Wrangling
   sco <- .is.seurat.or.se.object(input.data)
-  cloneCall <- .theCall(input.data, cloneCall, check.df = FALSE)
-  input.data <- .dataWrangle(input.data, group.by, cloneCall, chain)
+  clone.call <- .theCall(input.data, clone.call, check.df = FALSE)
+  input.data <- .dataWrangle(input.data, group.by, clone.call, chain)
   
   if(!is.null(group.by) && !sco) {
     grouping <- c(group.by, x.axis)
@@ -132,7 +143,7 @@ clonalDiversity <- function(input.data,
   # Efficiently process each group using lapply
   results_list <- lapply(names(input.data), function(group_name) {
     sub_data <- input.data[[group_name]]
-    clones <- sub_data[[cloneCall]]
+    clones <- sub_data[[clone.call]]
     
     if (skip.boots) {
       diversity_scores <- div_func(table(clones))
@@ -178,7 +189,7 @@ clonalDiversity <- function(input.data,
     output_df[,x.axis] <- 1
   }
   
-  if (exportTable) {
+  if (export.table) {
     return(output_df)
   }
   

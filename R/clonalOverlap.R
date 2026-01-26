@@ -37,30 +37,32 @@
 #'                                     "P19B","P19L", "P20B", "P20L"))
 #' 
 #' # Using clonalOverlap()
-#' clonalOverlap(combined, 
-#'               cloneCall = "aa", 
+#' clonalOverlap(combined,
+#'               clone.call = "aa",
 #'               method = "jaccard")
 #'
-#' @param input.data The product of [combineTCR()], 
+#' @param input.data The product of [combineTCR()],
 #' [combineBCR()], or [combineExpression()]
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
 #' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
 #' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
-#' @param method The method to calculate the `overlap`, `morisita`, 
+#' @param method The method to calculate the `overlap`, `morisita`,
 #' `jaccard`, `cosine` indices or `raw` for the base numbers
-#' @param group.by A column header in the metadata or lists to group the analysis 
-#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed 
+#' @param group.by A column header in the metadata or lists to group the analysis
+#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed
 #' by list element or active identity in the case of single-cell objects.
-#' @param order.by A character vector defining the desired order of elements 
-#' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups 
+#' @param order.by A character vector defining the desired order of elements
+#' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups
 #' automatically.
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
-#' @param palette Colors to use in visualization - input any 
+#' @param palette Colors to use in visualization - input any
 #' [hcl.pals][grDevices::hcl.pals]
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
 #' 
 #' @importFrom stats quantile
@@ -68,37 +70,47 @@
 #' @concept Visualizing_Clones
 #' @return A ggplot object visualizing clonal overlap or a data.frame if
 #'`exportTable = TRUE`.
-clonalOverlap <- function(input.data, 
-                          cloneCall = "strict", 
+clonalOverlap <- function(input.data,
+                          clone.call = NULL,
                           method = c("overlap", "morisita", "jaccard", "cosine", "raw"),
-                          chain = "both", 
+                          chain = "both",
                           group.by = NULL,
                           order.by = NULL,
-                          exportTable = FALSE,
+                          export.table = NULL,
                           palette = "inferno",
+                          # Deprecated arguments
+                          cloneCall = NULL,
+                          exportTable = NULL,
                           ...){
+
+    # Handle deprecated arguments
+    clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                                 "clonalOverlap", default = "strict")
+    export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                   "clonalOverlap", default = FALSE)
+
     method <- match.arg(method)
     if(method == "morisita") {
       return_type <- "freq"
     } else {
       return_type <- "unique"
     }
-    input.data <- .dataWrangle(input.data, 
-                               group.by, 
-                               .theCall(input.data, cloneCall, 
-                                        check.df = FALSE, silent = TRUE), 
+    input.data <- .dataWrangle(input.data,
+                               group.by,
+                               .theCall(input.data, clone.call,
+                                        check.df = FALSE, silent = TRUE),
                                chain)
     if(!is.null(order.by)) {
       if(length(order.by) == 1 && order.by == "alphanumeric") {
         input.data <- input.data[.alphanumericalSort(names(input.data))]
-        
+
       } else {
         input.data <- input.data[order.by]
       }
     }
-    
-    cloneCall <- .theCall(input.data, cloneCall)
-    
+
+    clone.call <- .theCall(input.data, clone.call)
+
     sco <- .is.seurat.or.se.object(input.data)
     if(!is.null(group.by) & !sco) {
       input.data <- .groupList(input.data, group.by)
@@ -107,7 +119,7 @@ clonalOverlap <- function(input.data,
     num_samples <- length(input.data[])
     names_samples <- names(input.data)
     length <- seq_len(num_samples)
-    
+
     #Selecting Index Function
     indexFunc <- switch(method,
                         "morisita" = .morisitaCalc,
@@ -116,22 +128,22 @@ clonalOverlap <- function(input.data,
                         "overlap"  = .overlapCalc,
                         "cosine"  =  .cosineCalc,
                         stop("Invalid method provided"))
-    
-    #Calculating Index 
+
+    #Calculating Index
     coef_matrix <- data.frame(matrix(NA, num_samples, num_samples))
-    coef_matrix <- .calculateIndex(input.data, 
-                                   length, 
-                                   cloneCall, 
-                                   coef_matrix, 
-                                   indexFunc, 
+    coef_matrix <- .calculateIndex(input.data,
+                                   length,
+                                   clone.call,
+                                   coef_matrix,
+                                   indexFunc,
                                    return_type)
-    
+
     #Data manipulation
     colnames(coef_matrix) <- names_samples
     rownames(coef_matrix) <- names_samples
 
-    if (exportTable == TRUE) { 
-      return(coef_matrix) 
+    if (export.table) {
+      return(coef_matrix)
     }
     
     coef_matrix_as_matrix <- as.matrix(coef_matrix)

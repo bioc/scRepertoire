@@ -40,16 +40,16 @@
 #' scRep_example$Patient <- substring(scRep_example$orig.ident, 1,3)
 #' 
 #' # Using alluvialClones()
-#' alluvialClones(scRep_example, 
-#'                    cloneCall = "gene", 
-#'                    y.axes = c("Patient", "ident"), 
+#' alluvialClones(scRep_example,
+#'                    clone.call = "gene",
+#'                    y.axes = c("Patient", "ident"),
 #'                    color = "ident")
 #' 
-#' @param sc.data The product of [combineExpression()]. 
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param sc.data The product of [combineExpression()].
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
 #' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
 #' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param y.axes The columns that will separate the proportional .
@@ -57,10 +57,12 @@
 #' @param color The column header or clone(s) to be highlighted.
 #' @param facet The column label to separate.
 #' @param alpha The column header to have gradated opacity.
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
-#' @param palette Colors to use in visualization - input any 
+#' @param palette Colors to use in visualization - input any
 #' [hcl.pals][grDevices::hcl.pals].
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
 #'
 #' @importFrom ggalluvial StatStratum geom_flow geom_stratum to_lodes_form geom_alluvium
@@ -69,53 +71,62 @@
 #' @concept SC_Functions
 #' @return A ggplot object visualizing categorical distribution of clones, or a
 #' data.frame if `exportTable = TRUE`.
-alluvialClones <- function(sc.data, 
-                           cloneCall = "strict", 
+alluvialClones <- function(sc.data,
+                           clone.call = NULL,
                            chain = "both",
-                           y.axes = NULL, 
-                           color = NULL, 
-                           alpha = NULL, 
-                           facet = NULL, 
-                           exportTable = FALSE,
+                           y.axes = NULL,
+                           color = NULL,
+                           alpha = NULL,
+                           facet = NULL,
+                           export.table = NULL,
                            palette = "inferno",
+                           # Deprecated arguments
+                           cloneCall = NULL,
+                           exportTable = NULL,
                            ...) {
-  
+
+  # Handle deprecated arguments
+  clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                               "alluvialClones", default = "strict")
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "alluvialClones", default = FALSE)
+
   x <- alluvium <- stratum <- NULL
   .checkSingleObject(sc.data)
-  cloneCall <- .theCall(.grabMeta(sc.data), cloneCall)
+  clone.call <- .theCall(.grabMeta(sc.data), clone.call)
   if (length(y.axes) == 0) {
     stop("Make sure you have selected the variable(s) to visualize") 
   }
   meta <- .grabMeta(sc.data)
   if (chain != "both") {
-    meta <- .offTheChain(meta, chain, cloneCall)
+    meta <- .offTheChain(meta, chain, clone.call)
   }
   meta$barcodes <- rownames(meta)
-  meta <- meta[!is.na(meta[,cloneCall]),]
+  meta <- meta[!is.na(meta[,clone.call]),]
   check <- colnames(meta) == color
-  if (length(unique(check)) == 1 & unique(check)[1] == FALSE & 
+  if (length(unique(check)) == 1 & unique(check)[1] == FALSE &
       !is.null(color)) {
-    meta <- meta %>% mutate("clone(s)" = ifelse(meta[,cloneCall] %in% 
+    meta <- meta %>% mutate("clone(s)" = ifelse(meta[,clone.call] %in%
                                                       color, "Selected", "Other"))
-    color <- "clone(s)" 
+    color <- "clone(s)"
   }
-  
+
   #Prepping the data for calculating lodes
   y.axes <- unique(c(y.axes, color, alpha, facet))
   set.axes <- seq_along(y.axes)
-  meta2 <- meta[,c(y.axes, cloneCall, "barcodes")]
+  meta2 <- meta[,c(y.axes, clone.call, "barcodes")]
   meta2 <- unique(na.omit(meta2[!duplicated(as.list(meta2))]))
-  
-  lodes <- .makingLodes(meta2, color, alpha, facet, set.axes) 
+
+  lodes <- .makingLodes(meta2, color, alpha, facet, set.axes)
   #Filtering the lodes
-  if(any(lodes[,cloneCall] != "")) {
-    lodes <- lodes[lodes[,cloneCall] != "",]
+  if(any(lodes[,clone.call] != "")) {
+    lodes <- lodes[lodes[,clone.call] != "",]
   }
-  if(any(is.na(lodes[,cloneCall]))) {
-    lodes <- lodes[!is.na(lodes[,cloneCall]),]
+  if(any(is.na(lodes[,clone.call]))) {
+    lodes <- lodes[!is.na(lodes[,clone.call]),]
   }
-  if (exportTable) { 
-    return(lodes) 
+  if (export.table) {
+    return(lodes)
   }
   #Plotting
   plot <- ggplot(data = lodes, aes(x = x, 

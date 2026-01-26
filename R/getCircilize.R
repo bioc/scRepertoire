@@ -27,30 +27,38 @@
 #' 
 #' 
 #' @param sc.data The single-cell object after [combineExpression()].
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
-#' @param group.by A column header in the metadata  to group the analysis 
-#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed by active 
+#' @param group.by A column header in the metadata  to group the analysis
+#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed by active
 #' identity.
-#' @param proportion Calculate the relationship unique 
-#' clones (proportion = FALSE) or normalized by 
+#' @param proportion Calculate the relationship unique
+#' clones (proportion = FALSE) or normalized by
 #' proportion (proportion = TRUE)
 #' @param include.self Include counting the clones within a single group.by
 #' comparison
-#' 
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#'
 #' @export
 #' @concept SC_Functions
 #' @return A data frame of shared clones between groups formatted for 
 #' [chordDiagram][circlize::chordDiagram]
 #' @author Dillon Corvino, Nick Borcherding
-getCirclize <- function(sc.data, 
-                        cloneCall = "strict", 
-                        group.by = NULL, 
+getCirclize <- function(sc.data,
+                        clone.call = NULL,
+                        group.by = NULL,
                         proportion = FALSE,
-                        include.self = TRUE) {
+                        include.self = TRUE,
+                        # Deprecated arguments
+                        cloneCall = NULL) {
+
+  # Handle deprecated arguments
+  clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                               "getCirclize", default = "strict")
+
   meta <- .grabMeta(sc.data)
-  cloneCall <- .theCall(meta, cloneCall)
+  clone.call <- .theCall(meta, clone.call)
   if(is.null(group.by)) {
     group.by <- "ident"
   }
@@ -66,36 +74,36 @@ getCirclize <- function(sc.data,
   }
   
   #Count clones across all identities
-  clone.table <- .cloneCounter(meta, group.by, cloneCall)
-  clone.table[[cloneCall]] <- as.character(clone.table[[cloneCall]])
-  
+  clone.table <- .cloneCounter(meta, group.by, clone.call)
+  clone.table[[clone.call]] <- as.character(clone.table[[clone.call]])
+
   group_pairs$value <- NA
-  
+
   for(i in seq_len(nrow(group_pairs))) {
     pair1 <- group_pairs[i,1]
     pair2 <- group_pairs[i,2]
-    
-    clone1 <- clone.table[clone.table[,1] == pair1 & clone.table[["n"]] > 0,][[cloneCall]]
-    clone2 <- clone.table[clone.table[,1] == pair2 & clone.table[["n"]] > 0,][[cloneCall]]
-    
+
+    clone1 <- clone.table[clone.table[,1] == pair1 & clone.table[["n"]] > 0,][[clone.call]]
+    clone2 <- clone.table[clone.table[,1] == pair2 & clone.table[["n"]] > 0,][[clone.call]]
+
     common <- intersect(clone1, clone2)
     value <- length(common)
-    
+
     if(pair1 == pair2) {
-      tmp <- clone.table[clone.table[,cloneCall] %in% common & clone.table[,1] != pair1,]
-      shared.clones <- unique(tmp[,cloneCall])
+      tmp <- clone.table[clone.table[,clone.call] %in% common & clone.table[,1] != pair1,]
+      shared.clones <- unique(tmp[,clone.call])
       value <- value - length(shared.clones)
     }
-    
+
     if (proportion) {
-      denominator <- length(unique(clone.table[clone.table[,1] == pair2, cloneCall]))
+      denominator <- length(unique(clone.table[clone.table[,1] == pair2, clone.call]))
       if (denominator > 0) {
         value <- value / denominator
       } else {
         value <- 0
       }
     }
-    
+
     group_pairs$value[i] <- value
   }
   return(group_pairs)

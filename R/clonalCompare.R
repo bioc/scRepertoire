@@ -1,8 +1,8 @@
 #' Compare Clonal Abundance Across Variables
 #'
-#' This function visualizes the relative abundance of specific clones across 
-#' different samples or groups. It is useful for tracking how the proportions 
-#' of top clones change between conditions. The output can be an alluvial plot 
+#' This function visualizes the relative abundance of specific clones across
+#' different samples or groups. It is useful for tracking how the proportions
+#' of top clones change between conditions. The output can be an alluvial plot
 #' to trace clonal dynamics or an area plot to show compositional changes.
 #'
 #' @examples
@@ -10,19 +10,19 @@
 #' combined <- combineTCR(contig_list,
 #'                        samples = c("P17B", "P17L", "P18B", "P18L",
 #'                                    "P19B","P19L", "P20B", "P20L"))
-#' 
+#'
 #' # Using clonalCompares()
 #' clonalCompare(combined,
 #'               top.clones = 5,
 #'               samples = c("P17B", "P17L"),
-#'               cloneCall="aa")
+#'               clone.call = "aa")
 #'
 #' @param input.data The product of \code{\link{combineTCR}},
 #' \code{\link{combineBCR}}, or \code{\link{combineExpression}}.
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
 #' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
 #' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param samples The specific samples to isolate for visualization.
@@ -33,30 +33,32 @@
 #' all other clones returned will be grey
 #' @param relabel.clones Simplify the legend of the graph by returning
 #' clones that are numerically indexed
-#' @param group.by A column header in the metadata or lists to group the analysis 
-#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed 
+#' @param group.by A column header in the metadata or lists to group the analysis
+#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed
 #' by list element or active identity in the case of single-cell objects.
-#' @param order.by A character vector defining the desired order of elements 
-#' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups 
+#' @param order.by A character vector defining the desired order of elements
+#' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups
 #' automatically.
-#' @param graph The type of plot to generate. Accepted values are `alluvial` 
+#' @param graph The type of plot to generate. Accepted values are `alluvial`
 #' (default) or `area`
-#' @param proportion If `TRUE` (default), the y-axis will represent the 
-#' proportional abundance of clones. If `FALSE`, the y-axis will represent 
+#' @param proportion If `TRUE` (default), the y-axis will represent the
+#' proportional abundance of clones. If `FALSE`, the y-axis will represent
 #' raw clone counts.`
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
 #' @param palette Colors to use in visualization - input any
 #' \link[grDevices]{hcl.pals}
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
-#' 
+#'
 #' @export
 #' @importFrom dplyr slice_max
 #' @concept Visualizing_Clones
 #' @return A ggplot object visualizing proportions of clones by groupings, or a
-#' data.frame if `exportTable = TRUE`.
+#' data.frame if `export.table = TRUE`.
 clonalCompare <- function(input.data,
-                          cloneCall = "strict",
+                          clone.call = NULL,
                           chain = "both",
                           samples = NULL,
                           clones = NULL,
@@ -67,9 +69,18 @@ clonalCompare <- function(input.data,
                           order.by = NULL,
                           graph = "alluvial",
                           proportion = TRUE,
-                          exportTable = FALSE,
+                          export.table = NULL,
                           palette = "inferno",
+                          # Deprecated arguments
+                          cloneCall = NULL,
+                          exportTable = NULL,
                           ...) {
+
+  # Handle deprecated arguments
+  clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                               "clonalCompare", default = "strict")
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "clonalCompare", default = FALSE)
 
   #Tie goes to indicated clones over top clones
   if(!is.null(top.clones) && !is.null(clones)) {
@@ -77,10 +88,10 @@ clonalCompare <- function(input.data,
   }
   input.data <- .dataWrangle(input.data,
                               group.by,
-                              .theCall(input.data, cloneCall, 
+                              .theCall(input.data, clone.call,
                                        check.df = FALSE, silent = TRUE),
                               chain)
-  cloneCall <- .theCall(input.data, cloneCall)
+  clone.call <- .theCall(input.data, clone.call)
 
   sco <- .is.seurat.or.se.object(input.data)
   if(!is.null(group.by) && !sco) {
@@ -92,7 +103,7 @@ clonalCompare <- function(input.data,
 
   Con.df <- input.data %>%
     purrr::imap(function(df, columnNames) {
-      tbl <- as.data.frame(table(df[, cloneCall]))
+      tbl <- as.data.frame(table(df[, clone.call]))
       if (proportion) {
         tbl[, 2] <- tbl[, 2] / normalizer(tbl[, 2])
       }
@@ -144,7 +155,7 @@ clonalCompare <- function(input.data,
                                 data.frame = Con.df)
   }
 
-  if (exportTable) {
+  if (export.table) {
     return(Con.df)
   }
 

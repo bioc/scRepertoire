@@ -1,7 +1,56 @@
 #-------------------------------------------
 #-------------Background Functions-----------
 #-------------------------------------------
-# utility functions use camelCase 
+# utility functions use camelCase
+
+#-------------------------------------------
+#---------Argument Deprecation Helper-------
+#-------------------------------------------
+# Helper function for soft-deprecating function arguments
+# This allows old argument names to still work while warning users
+# to switch to the new names
+#
+# @param old_arg The value passed to the deprecated argument (or NULL)
+# @param new_arg The value passed to the new argument (or NULL)
+# @param old_name Character string of the deprecated argument name
+# @param new_name Character string of the new argument name
+# @param func_name Character string of the function name
+# @param default The default value if neither argument is provided
+# @param version The version in which the argument was deprecated (default "2.10.0")
+# @return The value to use (from old_arg if provided, else new_arg, else default)
+# @keywords internal
+.deprecate_arg <- function(old_arg, new_arg, old_name, new_name,
+                           func_name, default = NULL, version = "2.10.0") {
+  # Check if old argument was explicitly provided (not NULL/missing)
+  old_provided <- !is.null(old_arg)
+  new_provided <- !is.null(new_arg)
+
+  if (old_provided && new_provided) {
+    # Both provided - warn and use new
+    lifecycle::deprecate_warn(
+      version,
+      paste0(func_name, "(", old_name, ")"),
+      paste0(func_name, "(", new_name, ")"),
+      details = paste0("Both `", old_name, "` and `", new_name,
+                       "` were provided. Using `", new_name, "`.")
+    )
+    return(new_arg)
+  } else if (old_provided) {
+    # Only old provided - warn and use old
+    lifecycle::deprecate_soft(
+      version,
+      paste0(func_name, "(", old_name, ")"),
+      paste0(func_name, "(", new_name, ")")
+    )
+    return(old_arg)
+  } else if (new_provided) {
+    # Only new provided - use it
+    return(new_arg)
+  } else {
+    # Neither provided - use default
+    return(default)
+  }
+} 
 
 .themeRepertoire <- function(base_size = 12,
                              base_family = "sans",

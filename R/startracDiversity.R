@@ -61,28 +61,30 @@
 #'                   pairwise = "cluster") 
 #'
 #' @param sc.data The single-cell object after [combineExpression()].
-#' For SCE objects, the cluster variable must be in the meta data under 
+#' For SCE objects, the cluster variable must be in the meta data under
 #' "cluster".
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
 #' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
 #' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
-#' @param index A character vector specifying which indices to calculate. 
+#' @param index A character vector specifying which indices to calculate.
 #' Options: "expa", "migr", "tran". Default is all three.
-#' @param type The metadata variable that specifies tissue type for migration 
+#' @param type The metadata variable that specifies tissue type for migration
 #' analysis.
-#' @param group.by A column header in the metadata or lists to group the analysis 
-#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed as 
+#' @param group.by A column header in the metadata or lists to group the analysis
+#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed as
 #' by list element or active identity in the case of single-cell objects.
-#' @param pairwise The metadata column to be used for pairwise comparisons. 
-#' Set to the `type` variable for pairwise migration or "cluster" for 
+#' @param pairwise The metadata column to be used for pairwise comparisons.
+#' Set to the `type` variable for pairwise migration or "cluster" for
 #' pairwise transition.
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
-#' @param palette Colors to use in visualization - input any 
+#' @param palette Colors to use in visualization - input any
 #' [hcl.pals][grDevices::hcl.pals].
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
 #' @importFrom stats reshape
 #' @export
@@ -91,16 +93,25 @@
 #'`exportTable = TRUE`.
 #' @author Liangtao Zheng
 StartracDiversity <- function(sc.data,
-                              cloneCall = "strict", 
+                              clone.call = NULL,
                               chain = "both",
                               index = c("expa", "migr", "tran"),
                               type = NULL,
-                              group.by = NULL, 
+                              group.by = NULL,
                               pairwise = NULL,
-                              exportTable = FALSE, 
+                              export.table = NULL,
                               palette = "inferno",
+                              # Deprecated arguments
+                              cloneCall = NULL,
+                              exportTable = NULL,
                               ...) {
-  
+
+  # Handle deprecated arguments
+  clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                               "StartracDiversity", default = "strict")
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "StartracDiversity", default = FALSE)
+
   if(!all(index %in% c("expa", "migr", "tran"))) {
     stop("Please select 'expa', 'migr', and/or 'tran' for index.")
   }
@@ -114,7 +125,7 @@ StartracDiversity <- function(sc.data,
   
   # Prepare data
   df <- .grabMeta(sc.data)
-  cloneCall <- .theCall(df, cloneCall)
+  clone.call <- .theCall(df, clone.call)
   barcodes <- rownames(df)
   colnames(df)[ncol(df)] <- "cluster"
     
@@ -127,24 +138,24 @@ StartracDiversity <- function(sc.data,
   group.levels <- unique(df[,group.by])
   
   if (chain != "both") {
-    df <- .offTheChain(df, chain, cloneCall)
+    df <- .offTheChain(df, chain, clone.call)
   }
 
   # Process clonotypes
   df <- df %>%
-    group_by(across(all_of(c(group.by, cloneCall)))) %>%
+    group_by(across(all_of(c(group.by, clone.call)))) %>%
     dplyr::mutate(n = n()) %>%
     as.data.frame()
-  
+
   rownames(df) <- barcodes
-  remove.pos <- which(is.na(df[,cloneCall]) | df[,cloneCall] == "")
+  remove.pos <- which(is.na(df[,clone.call]) | df[,clone.call] == "")
   if (length(remove.pos) > 0) {
     df <- df[-remove.pos,]
   }
-  
+
   processed <- data.frame(
     Cell_Name = rownames(df),
-    clone.id = df[,cloneCall],
+    clone.id = df[,clone.call],
     patient = df[,group.by],
     cluster = df[,"cluster"],
     loc = df[,type],
@@ -179,8 +190,8 @@ StartracDiversity <- function(sc.data,
     mat <- mat[!is.nan(mat$value),]
   }
   
-  if (exportTable) { 
-    return(mat) 
+  if (export.table) {
+    return(mat)
   }
   # Plotting logic
   if (!is.null(pairwise)) {

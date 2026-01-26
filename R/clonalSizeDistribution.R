@@ -35,28 +35,30 @@
 #'                                    "P19B","P19L", "P20B", "P20L"))
 #' 
 #' # Using clonalSizeDistribution()
-#' clonalSizeDistribution(combined, 
-#'                        cloneCall = "strict", 
+#' clonalSizeDistribution(combined,
+#'                        clone.call = "strict",
 #'                        method="ward.D2")
 #'
 #' @param input.data The product of [combineTCR()],
 #' [combineBCR()], or [combineExpression()].
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
 #' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
 #' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param threshold Numerical vector containing the thresholds
 #' the grid search was performed over.
 #' @param method The clustering parameter for the dendrogram.
-#' @param group.by A column header in the metadata or lists to group the analysis 
-#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed as 
+#' @param group.by A column header in the metadata or lists to group the analysis
+#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed as
 #' by list element or active identity in the case of single-cell objects.
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
 #' @param palette Colors to use in visualization - input any
 #' [hcl.pals][grDevices::hcl.pals].
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
 #'
 #' @importFrom ggdendro dendro_data segment label
@@ -68,38 +70,48 @@
 #' @author Hillary Koch
 #'
 clonalSizeDistribution <- function(input.data,
-                                   cloneCall ="strict", 
-                                   chain = "both", 
-                                   method = "ward.D2", 
-                                   threshold = 1, 
+                                   clone.call = NULL,
+                                   chain = "both",
+                                   method = "ward.D2",
+                                   threshold = 1,
                                    group.by = NULL,
-                                   exportTable = FALSE, 
+                                   export.table = NULL,
                                    palette = "inferno",
+                                   # Deprecated arguments
+                                   cloneCall = NULL,
+                                   exportTable = NULL,
                                    ...) {
+
+  # Handle deprecated arguments
+  clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                               "clonalSizeDistribution", default = "strict")
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "clonalSizeDistribution", default = FALSE)
+
   x <- xend <- yend <- mpg_div_hp <- NULL
-  input.data <- .dataWrangle(input.data, 
-                             group.by, 
-                             .theCall(input.data, cloneCall, 
-                                      check.df = FALSE, silent = TRUE), 
+  input.data <- .dataWrangle(input.data,
+                             group.by,
+                             .theCall(input.data, clone.call,
+                                      check.df = FALSE, silent = TRUE),
                              chain)
-  cloneCall <- .theCall(input.data, cloneCall)
+  clone.call <- .theCall(input.data, clone.call)
   sco <- .is.seurat.or.se.object(input.data)
   if(!is.null(group.by) & !sco) {
     input.data <- .groupList(input.data, group.by)
   }
   data <- bind_rows(input.data)
-  unique_df<- unique(data[,cloneCall])
-  
+  unique_df<- unique(data[,clone.call])
+
   # Create long-format summary table
   summary_df <- dplyr::bind_rows(input.data, .id = "sample") %>%
-    dplyr::group_by(sample, .data[[cloneCall]]) %>%
+    dplyr::group_by(sample, .data[[clone.call]]) %>%
     dplyr::summarise(Freq = dplyr::n(), .groups = 'drop')
-  wide_matrix <- xtabs(as.formula(paste("Freq ~", cloneCall, "+ sample")), 
+  wide_matrix <- xtabs(as.formula(paste("Freq ~", clone.call, "+ sample")),
                        data = summary_df)
   Con.df <- as.data.frame.matrix(wide_matrix)
-  Con.df[[cloneCall]] <- rownames(Con.df)
+  Con.df[[clone.call]] <- rownames(Con.df)
   rownames(Con.df) <- NULL
-  Con.df <- Con.df[, c(cloneCall, setdiff(names(Con.df), cloneCall))]
+  Con.df <- Con.df[, c(clone.call, setdiff(names(Con.df), clone.call))]
   
   # Fit models
   list <- lapply(seq_len(ncol(Con.df))[-1], function(x) {
@@ -138,8 +150,8 @@ clonalSizeDistribution <- function(input.data,
                   axis.ticks.y = element_blank(), 
                   axis.text.y = element_blank()) 
   
-  if (exportTable) { 
-    return(distances) 
+  if (export.table) {
+    return(distances)
   }
   return(plot)
 }

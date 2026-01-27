@@ -259,7 +259,7 @@ test_that(".lengthDF works correctly", {
   expect_equal(ldf_both$length, c(6, 6))
   
   # Test with specific chain
-  ldf_chain <- .lengthDF(df_list, clone.call = "CTnt", chain = "TRA", group = "group")
+  ldf_chain <- .lengthDF(df_list, cloneCall = "CTnt", chain = "TRA", group = "group")
   expect_equal(names(ldf_chain), c("length", "CT", "values", "chain", "group"))
   expect_equal(ldf_chain$length, c(7, 7)) # Length of first part of the string
 })

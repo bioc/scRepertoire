@@ -146,28 +146,10 @@ combineExpression <- function(input.data,
         Con.df <- data[, conDfColnamesNoCloneSize]
     }
 
-    #Detect if largest clone.size category is too small for experiment and amend
-    #this prevents a ton of NA values in the data
-    if(!proportion && max(na.omit(Con.df[,"clonalFrequency"])) > clone.size[length(clone.size)]) {
-      clone.size[length(clone.size)] <- max(na.omit(Con.df[,"clonalFrequency"]))
-    }
-
-    #Creating the bins for cloneSize
-    Con.df$cloneSize <- NA
-    for (x in seq_along(clone.size)) {
-      names(clone.size)[x] <- paste0(names(clone.size[x]), ' (', clone.size[x-1],
-        ' < X <= ', clone.size[x], ')')
-    }
-
-    cloneRatioColname <- ifelse(proportion, "clonalProportion", "clonalFrequency")
-
-    #Assigning cloneSize
-    for (i in 2:length(clone.size)) {
-        Con.df$cloneSize <- ifelse(Con.df[, cloneRatioColname] > clone.size[i-1] &
-                                   Con.df[, cloneRatioColname] <= clone.size[i],
-                                   names(clone.size[i]),
-                                   Con.df$cloneSize)
-    }
+    #Use shared helper to assign cloneSize bins
+    bin_result <- .assignCloneSizeBins(Con.df, clone.size, proportion)
+    Con.df <- bin_result$df
+    clone.size <- bin_result$clone.size
 
     #Formating the meta data to add and removing any duplicate barcodes
     PreMeta <- unique(Con.df[, c(conDfColnamesNoCloneSize, "cloneSize")])

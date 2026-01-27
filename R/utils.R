@@ -19,12 +19,13 @@
 # @param version The version in which the argument was deprecated (default "2.10.0")
 # @return The value to use (from old_arg if provided, else new_arg, else default)
 # @keywords internal
+
 .deprecate_arg <- function(old_arg, new_arg, old_name, new_name,
                            func_name, default = NULL, version = "2.10.0") {
   # Check if old argument was explicitly provided (not NULL/missing)
   old_provided <- !is.null(old_arg)
   new_provided <- !is.null(new_arg)
-
+  
   if (old_provided && new_provided) {
     # Both provided - warn and use new
     lifecycle::deprecate_warn(
@@ -51,6 +52,68 @@
     return(default)
   }
 } 
+
+#-------------------------------------------
+#---------Clone Size Binning Helper--------
+#-------------------------------------------
+# Internal helper function to assign cloneSize bins to a data frame
+# Used by both clonalBin() and combineExpression() to ensure DRY principles
+#
+# @param df Data frame containing clonalProportion and/or clonalFrequency columns
+# @param clone.size Named numeric vector of bin thresholds (should already include None = 0)
+# @param proportion Logical; if TRUE use clonalProportion, if FALSE use clonalFrequency
+# @param format.names Logical; if TRUE, format bin names with ranges. Set to FALSE
+#   when clone.size names are already formatted (e.g., when calling on subsets)
+# @return A list with two elements:
+#   - df: The data frame with cloneSize column added
+#   - clone.size: The clone.size vector with formatted names (for factor level creation)
+# @keywords internal
+.assignCloneSizeBins <- function(df, clone.size, proportion, format.names = TRUE) {
+
+  # Check if names are already formatted (contain " < X <= ")
+  names_already_formatted <- any(grepl(" < X <= ", names(clone.size)))
+
+  # Determine which column to use for binning
+  cloneRatioColname <- ifelse(proportion, "clonalProportion", "clonalFrequency")
+
+ # Verify the required column exists
+  if (!cloneRatioColname %in% colnames(df)) {
+    stop(paste0("Column '", cloneRatioColname, "' not found in data frame. ",
+                "Ensure clonal frequency/proportion has been calculated."))
+  }
+
+  # Auto-adjust upper bin limit if using frequency and max exceeds threshold
+  # Only do this if names aren't already formatted (first call)
+  if (!names_already_formatted && !proportion) {
+    max_freq <- max(na.omit(df[, "clonalFrequency"]))
+    if (max_freq > clone.size[length(clone.size)]) {
+      clone.size[length(clone.size)] <- max_freq
+    }
+  }
+
+  # Format bin names with ranges (only if not already formatted)
+  if (format.names && !names_already_formatted) {
+    for (x in seq_along(clone.size)) {
+      names(clone.size)[x] <- paste0(names(clone.size[x]), ' (', clone.size[x - 1],
+                                     ' < X <= ', clone.size[x], ')')
+    }
+  }
+
+  # Initialize cloneSize column
+  df$cloneSize <- NA
+
+  # Assign cloneSize bins
+  for (i in 2:length(clone.size)) {
+    df$cloneSize <- ifelse(
+      df[, cloneRatioColname] > clone.size[i - 1] &
+        df[, cloneRatioColname] <= clone.size[i],
+      names(clone.size[i]),
+      df$cloneSize
+    )
+  }
+
+  return(list(df = df, clone.size = clone.size))
+}
 
 .themeRepertoire <- function(base_size = 12,
                              base_family = "sans",

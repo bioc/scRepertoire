@@ -122,6 +122,72 @@ immunarch <- exportClones(combined.TCR,
 head(immunarch[[1]][[1]])
 ```
 
+## clonalBin: Bin Clones by Frequency or Proportion
+
+The `clonalBin()` function adds a clonal grouping variable (`cloneSize`) to the output of `combineTCR()`, `combineBCR()`, or `combineExpression()`. This function calculates the clonal frequency and proportion, then bins clones into categories based on customizable thresholds. This is useful for categorizing clones prior to downstream analysis or visualization, without needing to attach the data to a single-cell object.
+
+Key Parameter(s) for `clonalBin()`
+
+* `clone.call`: Defines the clonal sequence grouping (`gene`, `nt`, `aa`, or `strict`).
+* `chain`: The TCR/BCR chain to use (`both`, `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`).
+* `group.by`: A column header in the metadata to group the analysis by (e.g., "sample", "Type").
+* `proportion`: Whether to use proportion (`TRUE`) or total frequency (`FALSE`) for binning.
+* `clone.size`: The bins for grouping based on proportion or frequency.
+
+### Basic Usage with Proportion
+
+By default, `clonalBin()` uses proportion-based binning with the following default bins: `c(Rare = 1e-4, Small = 0.001, Medium = 0.01, Large = 0.1, Hyperexpanded = 1)`.
+
+```{r}
+combined.TCR <- clonalBin(combined.TCR, clone.call = "strict")
+
+# Check the cloneSize column
+head(combined.TCR[[1]][, c("barcode", "CTstrict", "clonalProportion", "clonalFrequency", "cloneSize")])
+
+# View the distribution of clone sizes
+table(combined.TCR[[1]]$cloneSize)
+```
+
+### Using Frequency-Based Binning
+
+When using frequency-based binning (`proportion = FALSE`), the `clone.size` values must be integers. If the maximum frequency exceeds the upper bin limit, it will be automatically adjusted.
+
+```{r}
+combined.TCR.freq <- combineTCR(contig_list,
+                                samples = c("P17B", "P17L", "P18B", "P18L",
+                                            "P19B","P19L", "P20B", "P20L"))
+
+combined.TCR.freq <- clonalBin(combined.TCR.freq,
+                               clone.call = "strict",
+                               proportion = FALSE,
+                               clone.size = c(Rare = 1, Small = 5, Medium = 20,
+                                              Large = 100, Hyperexpanded = 500))
+
+# Check the frequency-based binning
+head(combined.TCR.freq[[1]][, c("barcode", "clonalFrequency", "cloneSize")])
+```
+
+### Grouping by a Variable
+
+You can calculate clonal frequency and proportion across samples grouped by a variable (e.g., "Type" or "sample"). This is particularly useful when you want consistent binning across experimental conditions.
+
+```{r}
+combined.TCR.grouped <- combineTCR(contig_list,
+                                   samples = c("P17B", "P17L", "P18B", "P18L",
+                                               "P19B","P19L", "P20B", "P20L"))
+
+combined.TCR.grouped <- addVariable(combined.TCR.grouped,
+                                    variable.name = "Type",
+                                    variables = rep(c("B", "L"), 4))
+
+combined.TCR.grouped <- clonalBin(combined.TCR.grouped,
+                                  clone.call = "strict",
+                                  group.by = "Type")
+
+# Check grouped binning
+head(combined.TCR.grouped[[1]][, c("barcode", "Type", "clonalProportion", "cloneSize")])
+```
+
 ## annotateInvariant
 
 The `annotateInvariant()` function enables the identification of mucosal-associated invariant T (`MAIT`) cells and invariant natural killer T (`iNKT`) cells in single-cell sequencing datasets. These specialized T-cell subsets are defined by their characteristic TCR usage, making them distinguishable within single-cell immune profiling data. The function extracts TCR chain information from the provided single-cell dataset and evaluates it against known invariant TCR criteria for either MAIT or iNKT cells. Each cell is assigned a score indicating the presence (1) or absence (0) of the specified invariant T-cell population.

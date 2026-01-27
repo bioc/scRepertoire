@@ -2,6 +2,15 @@
 
 ## NEW FEATURES
 
+### New `clonalBin()` Function
+* **`clonalBin()`** - A new standalone function to bin clones by frequency or proportion:
+  * Adds `clonalFrequency`, `clonalProportion`, and `cloneSize` columns to the output of `combineTCR()`, `combineBCR()`, or `combineExpression()`
+  * Supports proportion-based (default) or frequency-based binning via the `proportion` parameter
+  * Custom bin thresholds via `clone.size` parameter with automatic upper limit adjustment
+  * Optional grouping by metadata variable via `group.by` parameter
+  * Chain filtering support via `chain` parameter
+  * Useful for categorizing clones prior to downstream analysis without requiring a single-cell object
+
 ### Enhanced Chord Diagram Visualization
 * **`getCirclize()` major enhancements:**
   * Multi-level hierarchical grouping: `group.by` now accepts a vector of columns (e.g., `c("Patient", "seurat_clusters")`) for creating compound sector labels

@@ -2,64 +2,103 @@
 % Please edit documentation in R/getCircilize.R
 \name{getCirclize}
 \alias{getCirclize}
-\title{Generate Data Frame to Plot Cord Diagram}
+\title{Generate Data Frame to Plot Chord Diagram}
 \usage{
 getCirclize(
   sc.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   group.by = NULL,
+  method = c("unique", "abundance", "jaccard", "overlap"),
   proportion = FALSE,
-  include.self = TRUE
+  symmetric = TRUE,
+  include.self = TRUE,
+  include.metadata = FALSE,
+  min.shared = 0,
+  top.links = NULL,
+  filter.sectors = NULL,
+  palette = "inferno",
+  cloneCall = NULL
 )
 }
 \arguments{
 \item{sc.data}{The single-cell object after \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
-\item{group.by}{A column header in the metadata  to group the analysis
-by (e.g., "sample", "treatment"). If \code{NULL}, data will be analyzed by active
-identity.}
+\item{group.by}{A column header (or vector of column headers for hierarchical
+grouping) in the metadata to group the analysis by (e.g., "sample", "treatment").
+If \code{NULL}, data will be analyzed by active identity. When multiple columns are
+provided, they are combined with "_" separator for multi-level annotations.}
 
-\item{proportion}{Calculate the relationship unique
-clones (proportion = FALSE) or normalized by
-proportion (proportion = TRUE)}
+\item{method}{The method for calculating link values: \code{"unique"} (default) counts
+unique shared clones, \code{"abundance"} sums clone frequencies, \code{"jaccard"} calculates
+Jaccard similarity, \code{"overlap"} calculates overlap coefficient.}
 
-\item{include.self}{Include counting the clones within a single group.by
-comparison}
+\item{proportion}{Calculate the relationship by unique clones (\code{FALSE}, default)
+or normalized by proportion (\code{TRUE}).}
+
+\item{symmetric}{If \code{TRUE} (default), returns symmetric relationships. If \code{FALSE},
+returns directional flow showing proportion of source's clones found in destination.}
+
+\item{include.self}{Include counting the clones within a single group.by comparison.}
+
+\item{include.metadata}{If \code{TRUE}, returns a list with links data frame and
+sector-level metadata including cell counts, clone counts, and expansion metrics.}
+
+\item{min.shared}{Minimum number of shared clones to include a link (default 0).}
+
+\item{top.links}{Keep only the top N links by value. If \code{NULL} (default), keep all.}
+
+\item{filter.sectors}{Character vector of sectors to include. If \code{NULL}, include all.}
+
+\item{palette}{Colors to use for sector color suggestions - input any
+\link[grDevices:palettes]{hcl.pals}.}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
 }
 \value{
 A data frame of shared clones between groups formatted for
-\link[circlize:chordDiagram]{chordDiagram}
+\link[circlize:chordDiagram]{chordDiagram}. If \code{include.metadata = TRUE}, returns
+a list with \code{links} (the edge data frame), \code{sectors} (sector-level statistics),
+and \code{colors} (suggested colors for each sector).
 }
 \description{
 This function will take the meta data from the product of
 \code{\link[=combineExpression]{combineExpression()}} and generate a relational data frame to
-be used for a chord diagram. Each cord will represent the number of
-clone unique and shared across the multiple \code{group.by} variable.
+be used for a chord diagram. Each chord will represent the number of
+clones unique and shared across the multiple \code{group.by} variable.
 If using the downstream circlize R package, please read and cite the
 following \href{https://pubmed.ncbi.nlm.nih.gov/24930139/}{manuscript}.
-If looking for more advance ways for circular visualizations, there
+If looking for more advanced ways for circular visualizations, there
 is a great \href{https://jokergoo.github.io/circlize_book/book/}{cookbook}
 for the circlize package.
 }
 \examples{
 # Getting the combined contigs
-combined <- combineTCR(contig_list, 
-                        samples = c("P17B", "P17L", "P18B", "P18L", 
+combined <- combineTCR(contig_list,
+                        samples = c("P17B", "P17L", "P18B", "P18L",
                                     "P19B","P19L", "P20B", "P20L"))
 
 # Getting a sample of a Seurat object
 scRep_example <- get(data("scRep_example"))
-scRep_example <- combineExpression(combined, 
+scRep_example <- combineExpression(combined,
                                    scRep_example)
 
 # Getting data frame output for Circlize
-circles <- getCirclize(scRep_example, 
+circles <- getCirclize(scRep_example,
                        group.by = "seurat_clusters")
 
+# Multi-level grouping for hierarchical chord diagrams
+scRep_example$Patient <- substring(scRep_example$orig.ident, 1, 3)
+circles <- getCirclize(scRep_example,
+                       group.by = c("Patient", "seurat_clusters"))
+
+# Get rich output with sector metadata
+result <- getCirclize(scRep_example,
+                      group.by = "seurat_clusters",
+                      include.metadata = TRUE)
 
 }
 \author{

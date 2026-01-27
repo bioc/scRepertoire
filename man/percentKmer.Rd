@@ -7,14 +7,16 @@
 percentKmer(
   input.data,
   chain = "TRB",
-  cloneCall = "aa",
+  clone.call = NULL,
   group.by = NULL,
   order.by = NULL,
   motif.length = 3,
   min.depth = 3,
   top.motifs = 30,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
@@ -26,7 +28,7 @@ percentKmer(
 (e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL},
 \code{IGK}, \code{Light} (for both light chains), or \code{both} (for TRA/B and Heavy/Light).}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{nt} (CDR3 nucleotide sequence) or \code{aa} (CDR3 amino acid sequence).}
 
 \item{group.by}{A column header in the metadata or lists to group the analysis
@@ -45,11 +47,15 @@ output (\verb{>= 1}). \strong{Default:} \code{3}.}
 \item{top.motifs}{Return the n most variable motifs as a function of
 median absolute deviation}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }

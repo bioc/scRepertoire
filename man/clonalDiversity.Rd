@@ -6,17 +6,19 @@
 \usage{
 clonalDiversity(
   input.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   metric = "shannon",
   chain = "both",
   group.by = NULL,
   order.by = NULL,
   x.axis = NULL,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
   n.boots = 100,
   return.boots = FALSE,
   skip.boots = FALSE,
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
@@ -24,7 +26,7 @@ clonalDiversity(
 \item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}},
 \code{\link[=combineBCR]{combineBCR()}}, or \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -45,7 +47,7 @@ automatically.}
 
 \item{x.axis}{An additional metadata variable to group samples along the x-axis.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
@@ -54,16 +56,20 @@ instead of a plot.}
 \item{n.boots}{The number of bootstrap iterations to perform (default is 100).}
 
 \item{return.boots}{If \code{TRUE}, returns all bootstrap values instead of the
-mean. Automatically enables \code{exportTable}.}
+mean. Automatically enables \code{export.table}.}
 
 \item{skip.boots}{If \code{TRUE}, disables downsampling and bootstrapping. The
 metric will be calculated on the full dataset for each group. Defaults to \code{FALSE}.}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }
 \value{
 A ggplot object visualizing the diversity metric, or a data.frame if
-\code{exportTable = TRUE}.
+\code{export.table = TRUE}.
 }
 \description{
 This function calculates a specified diversity metric for samples or groups
@@ -114,14 +120,14 @@ combined <- combineTCR(contig_list,
                                    "P19B","P19L", "P20B", "P20L"))
 
 # Calculate Shannon diversity, grouped by sample
-clonalDiversity(combined, 
-                cloneCall = "gene", 
+clonalDiversity(combined,
+                clone.call = "gene",
                 metric = "shannon")
 
 # Calculate Inverse Simpson without bootstrapping
-clonalDiversity(combined, 
-                cloneCall = "aa", 
-                metric = "inv.simpson", 
+clonalDiversity(combined,
+                clone.call = "aa",
+                metric = "inv.simpson",
                 skip.boots = TRUE)
 
 }

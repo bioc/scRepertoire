@@ -10,8 +10,9 @@ percentAA(
   group.by = NULL,
   order.by = NULL,
   aa.length = 20,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  exportTable = NULL,
   ...
 )
 }
@@ -33,10 +34,12 @@ automatically.}
 
 \item{aa.length}{The maximum length of the CDR3 amino acid sequence.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any \link[grDevices:palettes]{hcl.pals}.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }

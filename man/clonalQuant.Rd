@@ -6,13 +6,15 @@
 \usage{
 clonalQuant(
   input.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   chain = "both",
   scale = FALSE,
   group.by = NULL,
   order.by = NULL,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
@@ -20,7 +22,7 @@ clonalQuant(
 \item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}},
 \code{\link[=combineBCR]{combineBCR()}}, or \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -38,11 +40,15 @@ by list element or active identity in the case of single-cell objects.}
 of the \code{group.by} variable. Alternatively, use \code{alphanumeric} to sort groups
 automatically.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }
@@ -62,8 +68,8 @@ combined <- combineTCR(contig_list,
                                     "P19B","P19L", "P20B", "P20L"))
 
 # Using clonalQuant()
-clonalQuant(combined, 
-            cloneCall="strict", 
+clonalQuant(combined,
+            clone.call="strict",
             scale = TRUE)
 
 }

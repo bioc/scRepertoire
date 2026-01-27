@@ -6,13 +6,16 @@
 \usage{
 clonalProportion(
   input.data,
-  clonalSplit = c(10, 100, 1000, 10000, 30000, 1e+05),
-  cloneCall = "strict",
+  clonal.split = NULL,
+  clone.call = NULL,
   chain = "both",
   group.by = NULL,
   order.by = NULL,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  clonalSplit = NULL,
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
@@ -20,10 +23,10 @@ clonalProportion(
 \item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}},
 \code{\link[=combineBCR]{combineBCR()}}, or \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{clonalSplit}{The cut points for the specific clones, default = c(10,
+\item{clonal.split}{The cut points for the specific clones, default = c(10,
 100, 1000, 10000, 30000, 1e+05)}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -39,11 +42,17 @@ by list element or active identity in the case of single-cell objects.}
 of the \code{group.by} variable. Alternatively, use \code{alphanumeric} to sort groups
 automatically.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}}
+
+\item{clonalSplit}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clonal.split} instead.}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }
@@ -65,7 +74,7 @@ combined <- combineTCR(contig_list,
                         samples = c("P17B", "P17L", "P18B", "P18L", 
                                     "P19B","P19L", "P20B", "P20L"))
 # Using clonalProportion()
-clonalProportion(combined, cloneCall = "gene")
+clonalProportion(combined, clone.call = "gene")
 
 }
 \concept{Visualizing_Clones}

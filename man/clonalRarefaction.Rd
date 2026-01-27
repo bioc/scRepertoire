@@ -6,14 +6,16 @@
 \usage{
 clonalRarefaction(
   input.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   chain = "both",
   group.by = NULL,
   plot.type = 1,
   hill.numbers = 0,
   n.boots = 20,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
@@ -21,7 +23,7 @@ clonalRarefaction(
 \item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}}, \code{\link[=combineBCR]{combineBCR()}}, or
 \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -44,11 +46,15 @@ coverage-based rarefaction/extrapolation curve (\code{type = 3}).}
 intervals for the diversity estimates. More replicates can provide a more
 reliable measure of statistical variability.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}.}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }
@@ -69,7 +75,7 @@ combined <- combineTCR(contig_list,
                                     "P19B","P19L", "P20B", "P20L"))
                                     
 # Using clonalRarefaction()
-clonalRarefaction(combined[c(1,2)], cloneCall = "gene", n.boots = 3)
+clonalRarefaction(combined[c(1,2)], clone.call = "gene", n.boots = 3)
 
 
 }

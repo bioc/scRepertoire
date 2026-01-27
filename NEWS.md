@@ -1,8 +1,47 @@
+# scRepertoire VERSION 2.7.0
+
+## NEW FEATURES
+
+### Enhanced Chord Diagram Visualization
+* **`getCirclize()` major enhancements:**
+  * Multi-level hierarchical grouping: `group.by` now accepts a vector of columns (e.g., `c("Patient", "seurat_clusters")`) for creating compound sector labels
+  * New `method` parameter with options: `"unique"` (default), `"abundance"`, `"jaccard"`, `"overlap"` - aligning with `clonalOverlap()` methods
+  * New `symmetric` parameter: when `FALSE`, returns directional flow data for migration analysis
+  * New `include.metadata` parameter: when `TRUE`, returns a list with links, sector statistics (n.cells, n.clones, n.shared, expansion), and suggested colors
+  * New filtering options: `min.shared`, `top.links`, `filter.sectors`
+  * Built-in color palette generation with `palette` parameter
+
+* **New `vizCirclize()` function:**
+  * Convenient wrapper for quick chord diagram visualization without manual circlize code
+  * Supports directional arrows, custom colors, and sector annotations
+  * Gracefully handles missing circlize package by returning data for manual plotting
+
+### Enhanced Alluvial Plot Visualization
+* **`alluvialClones()` major enhancements:**
+  * New `top.clones` parameter: filter to show only the top N clones by frequency
+  * New `min.freq` parameter: minimum frequency threshold for displaying flows
+  * New `highlight.clones` parameter: highlight specific clone sequences with distinct coloring while showing others in gray
+  * New `highlight.color` parameter: customize the color for highlighted clones
+  * Visual customization: `stratum.width`, `flow.alpha`, `show.labels`, `label.size`
+  * New `order.strata` parameter: named list to control the ordering of levels within each stratum
+  * Enhanced `export.table` output: now includes `freq`, `prop`, and `rank` columns
+
+## API CHANGES
+* Soft-deprecated camelCase arguments across all exported functions in favor of dot.notation:
+  * `cloneCall` → `clone.call`
+  * `exportTable` → `export.table`
+  * `cloneSize` → `clone.size`
+  * `filterNA` → `filter.na`
+  * `addLabel` → `add.label`
+  * `clonalSplit` → `clonal.split`
+  * And others following the same pattern
+* All deprecated arguments will continue to work with a deprecation warning until version 3.0.0
+
 # scRepertoire VERSION 2.6.2
 
 ## UNDERLYING CHANGES
 * Adding expanded functionality to `combineBCR()` and `clonalCluster()`
-	* Add new metrics beyond normalized Levenshtein edit distances 
+	* Add new metrics beyond normalized Levenshtein edit distances
 	* Allow for raw and normalized-based calculations
 	* Allow for distance matrices to allow for alignment
 * Added support for declaring chains = "IGL", "IGK" or "Light" to get all light chains in downstream quantification

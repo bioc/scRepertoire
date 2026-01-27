@@ -8,10 +8,14 @@ combineTCR(
   input.data,
   samples = NULL,
   ID = NULL,
-  removeNA = FALSE,
-  removeMulti = FALSE,
-  filterMulti = FALSE,
-  filterNonproductive = TRUE
+  remove.na = NULL,
+  remove.multi = NULL,
+  filter.multi = NULL,
+  filter.nonproductive = NULL,
+  removeNA = NULL,
+  removeMulti = NULL,
+  filterMulti = NULL,
+  filterNonproductive = NULL
 )
 }
 \arguments{
@@ -22,16 +26,24 @@ outputs from \code{\link[=loadContigs]{loadContigs()}}.}
 
 \item{ID}{The additional sample labeling (optional).}
 
-\item{removeNA}{This will remove any chain without values.}
+\item{remove.na}{This will remove any chain without values.}
 
-\item{removeMulti}{This will remove barcodes with greater than 2 chains.}
+\item{remove.multi}{This will remove barcodes with greater than 2 chains.}
 
-\item{filterMulti}{This option will allow for the selection of the 2
+\item{filter.multi}{This option will allow for the selection of the 2
 corresponding chains with the highest expression for a single barcode.}
 
-\item{filterNonproductive}{This option will allow for the removal of
+\item{filter.nonproductive}{This option will allow for the removal of
 nonproductive chains if the variable exists in the contig data. Default
 is set to TRUE to remove nonproductive contigs.}
+
+\item{removeNA}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{remove.na} instead.}
+
+\item{removeMulti}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{remove.multi} instead.}
+
+\item{filterMulti}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{filter.multi} instead.}
+
+\item{filterNonproductive}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{filter.nonproductive} instead.}
 }
 \value{
 List of clones for individual cell barcodes
@@ -43,7 +55,7 @@ the level of  the individual cell barcodes. Using the \code{samples} and
 prevent issues with repeated  barcodes. The resulting new barcodes will
 need to match the Seurat or SCE object in order to use,
 \code{\link[=combineExpression]{combineExpression()}}. Several levels of filtering exist -
-\code{removeNA}, \code{removeMulti}, or \code{filterMulti} are parameters
+\code{remove.na}, \code{remove.multi}, or \code{filter.multi} are parameters
 that control how the function deals with barcodes with multiple chains
 recovered.
 }

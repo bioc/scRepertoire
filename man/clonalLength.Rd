@@ -6,13 +6,15 @@
 \usage{
 clonalLength(
   input.data,
-  cloneCall = "aa",
+  clone.call = NULL,
   chain = "both",
   group.by = NULL,
   order.by = NULL,
   scale = FALSE,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
@@ -20,7 +22,7 @@ clonalLength(
 \item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}},
 \code{\link[=combineBCR]{combineBCR()}}, or \code{\link[=combineExpression]{combineExpression()}}}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{nt} (CDR3 nucleotide sequence) or \code{aa} (CDR3 amino acid sequence)}
 
 \item{chain}{The TCR/BCR chain to use. Use \code{both} to include both chains
@@ -38,17 +40,21 @@ automatically.}
 \item{scale}{Converts the graphs into density plots in order to show
 relative distributions.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}}
 
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
+
 \item{...}{Additional arguments passed to the ggplot theme}
 }
 \value{
 A ggplot object visualizing the distributions by length, or a data.frame if
-\code{exportTable = TRUE}.
+\code{export.table = TRUE}.
 }
 \description{
 This function displays either the nucleotide \code{nt} or amino
@@ -61,10 +67,10 @@ using the group.by parameter.
 }
 \examples{
 # Making combined contig data
-combined <- combineTCR(contig_list, 
-                        samples = c("P17B", "P17L", "P18B", "P18L", 
+combined <- combineTCR(contig_list,
+                        samples = c("P17B", "P17L", "P18B", "P18L",
                                     "P19B","P19L", "P20B", "P20L"))
-clonalLength(combined, cloneCall="aa", chain = "both")
+clonalLength(combined, clone.call = "aa", chain = "both")
 
 }
 \concept{Visualizing_Clones}

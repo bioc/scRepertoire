@@ -6,14 +6,16 @@
 \usage{
 clonalHomeostasis(
   input.data,
-  cloneSize = c(Rare = 1e-04, Small = 0.001, Medium = 0.01, Large = 0.1, Hyperexpanded =
-    1),
-  cloneCall = "strict",
+  clone.size = NULL,
+  clone.call = NULL,
   chain = "both",
   group.by = NULL,
   order.by = NULL,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  cloneSize = NULL,
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
@@ -21,9 +23,9 @@ clonalHomeostasis(
 \item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}}, \code{\link[=combineBCR]{combineBCR()}}, or
 \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{cloneSize}{The cut points of the proportions.}
+\item{clone.size}{The cut points of the proportions.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -39,32 +41,38 @@ by list element or active identity in the case of single-cell objects.}
 of the \code{group.by} variable. Alternatively, use \code{alphanumeric} to sort groups
 automatically.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}.}
 
+\item{cloneSize}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.size} instead.}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
+
 \item{...}{Additional arguments passed to the ggplot theme}
 }
 \value{
 A ggplot object visualizing clonal homeostasis, or a data.frame if
-\code{exportTable = TRUE}.
+\code{export.table = TRUE}.
 }
 \description{
 This function calculates the space occupied by clone proportions.
-The grouping of these clones is based on the parameter \code{cloneSize},
-at default, \code{cloneSize} will group the clones into bins of Rare = 0
+The grouping of these clones is based on the parameter \code{clone.size},
+at default, \code{clone.size} will group the clones into bins of Rare = 0
 to 0.0001, Small = 0.0001 to 0.001, etc. To adjust the proportions,
-change the number or labeling of the cloneSize parameter. If a matrix
-output for the data is preferred, set \code{exportTable} = TRUE.
+change the number or labeling of the clone.size parameter. If a matrix
+output for the data is preferred, set \code{export.table} = TRUE.
 }
 \examples{
 # Making combined contig data
-combined <- combineTCR(contig_list, 
-                        samples = c("P17B", "P17L", "P18B", "P18L", 
+combined <- combineTCR(contig_list,
+                        samples = c("P17B", "P17L", "P18B", "P18L",
                                     "P19B","P19L", "P20B", "P20L"))
-clonalHomeostasis(combined, cloneCall = "gene")
+clonalHomeostasis(combined, clone.call = "gene")
 
 }
 \concept{Visualizing_Clones}

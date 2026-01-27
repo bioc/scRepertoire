@@ -6,13 +6,15 @@
 \usage{
 clonalSizeDistribution(
   input.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   chain = "both",
   method = "ward.D2",
   threshold = 1,
   group.by = NULL,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
@@ -20,7 +22,7 @@ clonalSizeDistribution(
 \item{input.data}{The product of \code{\link[=combineTCR]{combineTCR()}},
 \code{\link[=combineBCR]{combineBCR()}}, or \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -37,11 +39,15 @@ the grid search was performed over.}
 by (e.g., "sample", "treatment"). If \code{NULL}, data will be analyzed as
 by list element or active identity in the case of single-cell objects.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}.}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }
@@ -85,8 +91,8 @@ combined <- combineTCR(contig_list,
                                    "P19B","P19L", "P20B", "P20L"))
 
 # Using clonalSizeDistribution()
-clonalSizeDistribution(combined, 
-                       cloneCall = "strict", 
+clonalSizeDistribution(combined,
+                       clone.call = "strict",
                        method="ward.D2")
 
 }

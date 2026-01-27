@@ -4,21 +4,19 @@
 \alias{highlightClones}
 \title{Highlighting Specific Clones}
 \usage{
-highlightClones(
-  sc.data,
-  cloneCall = c("gene", "nt", "aa", "strict"),
-  sequence = NULL
-)
+highlightClones(sc.data, clone.call = NULL, sequence = NULL, cloneCall = NULL)
 }
 \arguments{
 \item{sc.data}{The single-cell object to attach after
 \code{\link[=combineExpression]{combineExpression()}}}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
 \item{sequence}{The specific sequence or sequence to highlight}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
 }
 \value{
 Single-cell object object with new meta data column
@@ -42,8 +40,8 @@ scRep_example  <- combineExpression(combined,
                                     scRep_example)
 
 # Using highlightClones()
-scRep_example   <- highlightClones(scRep_example, 
-                                   cloneCall= "aa", 
+scRep_example   <- highlightClones(scRep_example,
+                                   clone.call= "aa",
                                    sequence = c("CVVSDNTGGFKTIF_CASSVRRERANTGELFF"))
 
 }

@@ -1304,7 +1304,7 @@ clonalOccupy(scRep_example,
 
 ## alluvialClones
 
-After the metadata has been modified with clonal information, `alluvialClones()` allows you to look at clones across multiple categorical variables, enabling the examination of the interchange between these variables. Because this function produces a graph with each clone arranged by called stratification, it may take some time depending on the size of the repertoire.  
+After the metadata has been modified with clonal information, `alluvialClones()` allows you to look at clones across multiple categorical variables, enabling the examination of the interchange between these variables. Because this function produces a graph with each clone arranged by called stratification, it may take some time depending on the size of the repertoire.
 
 Key Parameters for `alluvialClones()`
 
@@ -1312,46 +1312,108 @@ Key Parameters for `alluvialClones()`
 * `color`: The column header or clone(s) to be highlighted.
 * `facet`: The column label to separate facets.
 * `alpha`: The column header to have gradated opacity.
+* `top.clones`: Show only the top N clones by frequency.
+* `min.freq`: Minimum frequency threshold for displaying flows.
+* `highlight.clones`: Character vector of specific clone sequences to highlight.
+* `highlight.color`: Color to use for highlighted clones (default: "red").
+
+### Basic Alluvial Plot
 
 To visualize clonal flow across "Patient", "ident", and "Type", highlighting specific amino acid clones:
 
 ```{r tidy = FALSE}
-alluvialClones(scRep_example, 
-               cloneCall = "aa", 
-               y.axes = c("Patient", "ident", "Type"), 
-               color = c("CVVSDNTGGFKTIF_CASSVRRERANTGELFF", "NA_CASSVRRERANTGELFF")) + 
+alluvialClones(scRep_example,
+               clone.call = "aa",
+               y.axes = c("Patient", "ident", "Type"),
+               color = c("CVVSDNTGGFKTIF_CASSVRRERANTGELFF", "NA_CASSVRRERANTGELFF")) +
     scale_fill_manual(values = c("grey", colorblind_vector[3]))
 ```
 
 To visualize clonal flow across "Patient", "ident", and "Type", coloring by "ident":
 
 ```{r tidy = FALSE}
-alluvialClones(scRep_example, 
-                   cloneCall = "gene", 
-                   y.axes = c("Patient", "ident", "Type"), 
-                   color = "ident") 
+alluvialClones(scRep_example,
+               clone.call = "gene",
+               y.axes = c("Patient", "ident", "Type"),
+               color = "ident")
+```
+
+### Filtering to Top Clones
+
+When working with large repertoires, it can be helpful to focus on the most frequent clones. The `top.clones` parameter allows you to filter to the top N clones:
+
+```{r tidy = FALSE}
+alluvialClones(scRep_example,
+               clone.call = "aa",
+               y.axes = c("Patient", "ident"),
+               top.clones = 25,
+               color = "ident")
+```
+
+### Highlighting Specific Clones
+
+Use `highlight.clones` to call out specific clones of interest while showing the context of other clones:
+
+```{r tidy = FALSE}
+alluvialClones(scRep_example,
+               clone.call = "aa",
+               y.axes = c("Patient", "ident", "Type"),
+               highlight.clones = c("CVVSDNTGGFKTIF_CASSVRRERANTGELFF"),
+               highlight.color = "red")
+```
+
+### Visual Customization
+
+Fine-tune the appearance with parameters like `stratum.width`, `flow.alpha`, and `label.size`:
+
+```{r tidy = FALSE}
+alluvialClones(scRep_example,
+               clone.call = "gene",
+               y.axes = c("Patient", "ident"),
+               color = "ident",
+               stratum.width = 0.3,
+               flow.alpha = 0.7,
+               label.size = 3)
 ```
 
 `alluvialClones()` provides a visual representation of clonal distribution and movement across multiple categorical annotations. It is particularly effective for tracking how specific clones or clonal groups transition between different states, tissues, or cell types, offering a dynamic perspective on immune repertoire evolution and function.
 
-## getCirclize
+## getCirclize and vizCirclize
 
-Like alluvial graphs, we can also visualize the interconnection of clusters using chord diagrams from the [circlize R package](https://jokergoo.github.io/circlize_book/book/). The first step is to get the data frame output to feed into the` chordDiagram()` function in `circlize`, which can be done using `getCirclize()`.
+Like alluvial graphs, we can also visualize the interconnection of clusters using chord diagrams from the [circlize R package](https://jokergoo.github.io/circlize_book/book/). scRepertoire provides two functions for this:
 
-This function calculates the relative number of unique and shared clones based on the `group.by` variable using the product of `combineExpression()`. It creates a matrix the size of the `group.by` variable and then simplifies it into instructions readable by the `circlize` R package. The output represents the total number of unique and shared clones by the group.by variable. If using the downstream `circlize` R package, please read and cite the following [manuscript](https://pubmed.ncbi.nlm.nih.gov/24930139/). 
+* `getCirclize()` - Generates data for use with the circlize package
+* `vizCirclize()` - A convenient wrapper that handles the circlize plotting automatically
 
-Key Parameters for getCirclize()
+These functions calculate the relative number of unique and shared clones based on the `group.by` variable using the product of `combineExpression()`. If using the downstream `circlize` R package, please read and cite the following [manuscript](https://pubmed.ncbi.nlm.nih.gov/24930139/).
 
+Key Parameters for `getCirclize()` and `vizCirclize()`
+
+* `group.by`: A column header (or vector of column headers for hierarchical grouping).
+* `method`: The method for calculating link values: `"unique"` (default), `"jaccard"`, or `"overlap"`.
 * `proportion`: If `TRUE`, normalizes the relationship by proportion; if `FALSE` (default), uses unique clone counts.
-* `include.self`: If `TRUE`, includes counting clones within a single group.by comparison.
+* `include.self`: If `TRUE`, includes counting clones within a single group comparison.
+* `min.shared`: Minimum number of shared clones to include a link.
 
-To get data for a chord diagram showing shared clones between `seurat_clusters`:
+### Quick Visualization with vizCirclize
+
+The simplest way to create a chord diagram is using `vizCirclize()`:
 
 ```{r tidy = FALSE}
 library(circlize)
 library(scales)
 
-circles <- getCirclize(scRep_example, 
+vizCirclize(scRep_example,
+            group.by = "seurat_clusters",
+            clone.call = "aa")
+```
+
+### Manual Control with getCirclize
+
+For more control over the visualization, use `getCirclize()` to generate the data and then plot with circlize directly. By default, `getCirclize()` returns a simple data frame:
+
+```{r tidy = FALSE}
+circles <- getCirclize(scRep_example,
                        group.by = "seurat_clusters")
 
 #Just assigning the normal colors to each cluster
@@ -1361,6 +1423,45 @@ names(grid.cols) <- unique(scRep_example$seurat_clusters)
 #Graphing the chord diagram
 chordDiagram(circles, self.link = 1, grid.col = grid.cols)
 ```
+
+### Multi-Level Hierarchical Grouping
+
+A powerful feature is the ability to create hierarchical groupings by passing a vector of column names to `group.by`. This creates compound sector labels:
+
+```{r tidy = FALSE}
+vizCirclize(scRep_example,
+            group.by = c("Patient", "Type"),
+            clone.call = "aa",
+            min.shared = 1)
+```
+
+### Directional Flow
+
+Show the direction of clonal sharing with arrows:
+
+```{r tidy = FALSE}
+vizCirclize(scRep_example,
+            group.by = "seurat_clusters",
+            clone.call = "aa",
+            directional = TRUE)
+```
+
+### Different Similarity Methods
+
+Use different methods for calculating link values:
+
+```{r tidy = FALSE}
+# Jaccard similarity
+circles.jaccard <- getCirclize(scRep_example,
+                               group.by = "seurat_clusters",
+                               method = "jaccard",
+                               include.metadata = TRUE)
+
+# The include.metadata option returns sector statistics
+head(circles.jaccard$sector.stats)
+```
+
+### Subsetting and Proportion
 
 This can also be used if we want to explore just the lung-specific T cells by subsetting the single-cell object. For the sake of this vignette, we can also look at setting `proportion = TRUE` to get a scaled output.
 
@@ -1372,15 +1473,15 @@ circles <- getCirclize(subset, group.by = "ident", proportion = TRUE)
 grid.cols <- scales::hue_pal()(length(unique(subset@active.ident)))
 names(grid.cols) <- levels(subset@active.ident)
 
-chordDiagram(circles, 
-             self.link = 1, 
-             grid.col = grid.cols, 
-             directional = 1, 
-             direction.type =  "arrows",
+chordDiagram(circles,
+             self.link = 1,
+             grid.col = grid.cols,
+             directional = 1,
+             direction.type = "arrows",
              link.arr.type = "big.arrow")
 ```
 
-`getCirclize()` facilitates the creation of visually striking and informative chord diagrams to represent shared clonal relationships between distinct groups within your single-cell data. By providing a flexible way to quantify and format clonal overlap, it enables researchers to effectively illustrate complex clonal connectivity patterns, which are crucial for understanding immune communication and migration.
+`getCirclize()` and `vizCirclize()` facilitate the creation of visually striking and informative chord diagrams to represent shared clonal relationships between distinct groups within your single-cell data. By providing a flexible way to quantify and format clonal overlap, they enable researchers to effectively illustrate complex clonal connectivity patterns, which are crucial for understanding immune communication and migration.
 
 ***
 

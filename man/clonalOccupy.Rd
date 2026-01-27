@@ -12,8 +12,9 @@ clonalOccupy(
   order.by = NULL,
   proportion = FALSE,
   na.include = FALSE,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  exportTable = NULL,
   ...
 )
 }
@@ -34,11 +35,13 @@ automatically.}
 
 \item{na.include}{Visualize NA values or not}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }
@@ -55,8 +58,8 @@ and Andreatta and their work with \href{https://github.com/carmonalab/ProjecTILs
 }
 \examples{
 # Getting the combined contigs
-combined <- combineTCR(contig_list, 
-                        samples = c("P17B", "P17L", "P18B", "P18L", 
+combined <- combineTCR(contig_list,
+                        samples = c("P17B", "P17L", "P18B", "P18L",
                                     "P19B","P19L", "P20B", "P20L"))
 
 # Getting a sample of a Seurat object
@@ -67,7 +70,7 @@ scRep_example <- combineExpression(combined, scRep_example)
 
 # Using clonalOccupy
 clonalOccupy(scRep_example, x.axis = "ident")
-table <- clonalOccupy(scRep_example, x.axis = "ident", exportTable = TRUE)
+table <- clonalOccupy(scRep_example, x.axis = "ident", export.table = TRUE)
 
 }
 \concept{SC_Functions}

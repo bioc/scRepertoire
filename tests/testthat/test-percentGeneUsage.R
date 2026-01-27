@@ -36,22 +36,22 @@ test_that("percentGeneUsage returns a ggplot object for paired gene heatmap", {
   expect_true("GeomTile" %in% class(p$layers[[1]]$geom))
 })
 
-test_that("percentGeneUsage returns a matrix when exportTable = TRUE (single gene)", {
+test_that("percentGeneUsage returns a matrix when export.table = TRUE (single gene)", {
   mat <- percentGeneUsage(combined, 
                           genes = "TRBV", 
                           group.by = "sample", 
-                          exportTable = TRUE)
+                          export.table = TRUE)
   expect_type(mat, "double")
   expect_true(is.matrix(mat))
   expect_equal(colnames(mat), c("P17B", "P17L", "P18B", "P18L", "P19B", "P19L", "P20B", "P20L"))
   expect_true(any(rownames(mat) %in% c("TRBV7-2", "TRBV6-5")))
 })
 
-test_that("percentGeneUsage returns a matrix when exportTable = TRUE (paired genes)", {
+test_that("percentGeneUsage returns a matrix when export.table = TRUE (paired genes)", {
   mat <- percentGeneUsage(combined, 
                           genes = c("TRBV", "TRBJ"), 
                           group.by = "sample", 
-                          exportTable = TRUE)
+                          export.table = TRUE)
   expect_type(mat, "double")
   expect_true(is.matrix(mat))
   expect_equal(colnames(mat), c("P17B", "P17L", "P18B", "P18L", "P19B", "P19L", "P20B", "P20L"))
@@ -62,17 +62,17 @@ test_that("percentGeneUsage handles different summary.fun (percent, proportion, 
                                   genes = "TRBV",
                                   group.by = "sample",
                                   summary.fun = "percent", 
-                                  exportTable = TRUE)
+                                  export.table = TRUE)
   mat_proportion <- percentGeneUsage(combined, 
                                      genes = "TRBV", 
                                      group.by = "sample",
                                      summary.fun = "proportion", 
-                                     exportTable = TRUE)
+                                     export.table = TRUE)
   mat_count <- percentGeneUsage(combined, 
                                 genes = "TRBV", 
                                 group.by = "sample",
                                 summary.fun = "count", 
-                                exportTable = TRUE)
+                                export.table = TRUE)
   
   # Check sums for percentages and proportions
   expect_equal(colSums(mat_percent)[1], c(P17B = 100), tolerance = 1e-6)

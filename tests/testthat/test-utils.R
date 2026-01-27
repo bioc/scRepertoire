@@ -21,7 +21,7 @@ mock_meta <- data.frame(
   barcode = paste0("cell", 1:10),
   group = rep(c("group1", "group2"), each = 5),
   CTnt = c("AAA", "AAA", "GGG", "CCC", NA, "AAA", "GGG", "GGG", "TTT", "TTT"),
-  cloneSize = c(3, 3, 2, 1, NA, 3, 2, 2, 2, 2)
+  clone.size = c(3, 3, 2, 1, NA, 3, 2, 2, 2, 2)
 )
 
 # Mock list of data frames
@@ -90,16 +90,16 @@ test_that(".offTheChain works correctly", {
   )
   
   # Test TRA chain extraction
-  df_tra <- .offTheChain(df, chain = "TRA", cloneCall = "CTaa", check = FALSE)
+  df_tra <- .offTheChain(df, chain = "TRA", clone.call = "CTaa", check = FALSE)
   expect_equal(df_tra$CTaa, c("K", "G", "P"))
   
   # Test TRB chain extraction
-  df_trb <- .offTheChain(df, chain = "TRB", cloneCall = "CTaa", check = FALSE)
+  df_trb <- .offTheChain(df, chain = "TRB", clone.call = "CTaa", check = FALSE)
   expect_equal(df_trb$CTaa, c("C", "F", NA))
 })
 
 test_that(".cloneCounter works correctly", {
-  counts <- .cloneCounter(mock_meta, group.by = "group", cloneCall = "CTnt")
+  counts <- .cloneCounter(mock_meta, group.by = "group", clone.call = "CTnt")
   
   # Check dimensions
   expect_equal(nrow(counts), 8)
@@ -126,7 +126,7 @@ test_that(".colorizer works correctly", {
 })
 
 test_that(".checkBlanks works correctly", {
-  filtered_list <- .checkBlanks(mock_df_list, cloneCall = "CTnt")
+  filtered_list <- .checkBlanks(mock_df_list, clone.call = "CTnt")
   
   # Expecting sample3 (all NA) and sample4 (empty) to be removed
   expect_length(filtered_list, 2)
@@ -254,12 +254,12 @@ test_that(".lengthDF works correctly", {
   df_list <- list(sample1 = data.frame(CTnt = c("AAA_CCC", "GGG_TTT"), group = c("A", "B")))
   
   # Test with chain = "both"
-  ldf_both <- .lengthDF(df_list, cloneCall = "CTnt", chain = "both", group = "group")
+  ldf_both <- .lengthDF(df_list, clone.call = "CTnt", chain = "both", group = "group")
   expect_equal(names(ldf_both), c("length", "CT", "group", "values"))
   expect_equal(ldf_both$length, c(6, 6))
   
   # Test with specific chain
-  ldf_chain <- .lengthDF(df_list, cloneCall = "CTnt", chain = "TRA", group = "group")
+  ldf_chain <- .lengthDF(df_list, clone.call = "CTnt", chain = "TRA", group = "group")
   expect_equal(names(ldf_chain), c("length", "CT", "values", "chain", "group"))
   expect_equal(ldf_chain$length, c(7, 7)) # Length of first part of the string
 })

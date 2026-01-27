@@ -13,8 +13,8 @@ test_that("Input validation for `method` works", {
 })
 
 test_that("Output formats (data.frame vs. plot) are correct", {
-  # Test that exportTable = TRUE returns a data.frame
-  df_output <- clonalOverlap(combined, method = "raw", exportTable = TRUE)
+  # Test that export.table = TRUE returns a data.frame
+  df_output <- clonalOverlap(combined, method = "raw", export.table = TRUE)
   expect_true(is.data.frame(df_output))
   
   # Test that the default behavior returns a ggplot object
@@ -26,7 +26,7 @@ methods <- c("raw", "jaccard", "overlap", "morisita", "cosine")
 for (m in methods) {
     # Create a unique test name for each method
     test_that(paste("Method '", m, "' produces a valid matrix"), {
-      mat <- clonalOverlap(combined, method = m, exportTable = TRUE)
+      mat <- clonalOverlap(combined, method = m, export.table = TRUE)
       
       # Matrix should be square
       expect_equal(nrow(mat), ncol(mat))
@@ -52,7 +52,7 @@ for (m in methods) {
 methods <- c("raw", "jaccard", "morisita") 
 for (m in methods) {
     test_that(paste("Grouping works for method '", m, "'"), {
-      mat_grouped <- clonalOverlap(combined, group.by = "Type", method = m, exportTable = TRUE)
+      mat_grouped <- clonalOverlap(combined, group.by = "Type", method = m, export.table = TRUE)
       
       # Matrix dimensions should match the number of groups
       expect_equal(nrow(mat_grouped), 2)
@@ -74,12 +74,12 @@ test_that("Calculations are correct (sanity check)", {
   )
   
   # Test raw count
-  mat_raw <- clonalOverlap(list_for_testing, cloneCall = "aa", method = "raw", exportTable = TRUE)
+  mat_raw <- clonalOverlap(list_for_testing, clone.call = "aa", method = "raw", export.table = TRUE)
   expect_equal(mat_raw["A", "B"], 2) # Overlap is "b", "c"
   expect_equal(mat_raw["A", "C"], 0) # No overlap
   
   # Test Jaccard index
-  mat_jaccard <- clonalOverlap(list_for_testing, cloneCall = "aa", method = "jaccard", exportTable = TRUE)
+  mat_jaccard <- clonalOverlap(list_for_testing, clone.call = "aa", method = "jaccard", export.table = TRUE)
   # Jaccard(A,B) = |A intersect B| / |A union B| = 2 / (3 + 4 - 2) = 2/5 = 0.4
   expect_equal(mat_jaccard["A", "B"], 0.4)
 })

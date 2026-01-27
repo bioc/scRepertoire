@@ -12,8 +12,8 @@ test_that("Function returns a ggplot object by default", {
   expect_s3_class(p, "ggplot")
 })
 
-test_that("Function returns a data.frame when exportTable is TRUE", {
-  df_out <- percentAA(combined, exportTable = TRUE)
+test_that("Function returns a data.frame when export.table is TRUE", {
+  df_out <- percentAA(combined, export.table = TRUE)
   expect_s3_class(df_out, "data.frame")
   # Check for expected columns
   expected_cols <- c("AminoAcid", "Position", "Frequency", "group")
@@ -22,7 +22,7 @@ test_that("Function returns a data.frame when exportTable is TRUE", {
 
 test_that("Grouping with 'group.by' works correctly", {
   p_grouped <- percentAA(combined, group.by = "Type")
-  df_grouped <- percentAA(combined, group.by = "Type", exportTable = TRUE)
+  df_grouped <- percentAA(combined, group.by = "Type", export.table = TRUE)
   
   # Check data.frame for correct groups
   expect_equal(sort(unique(df_grouped$group)), c("B", "L"))
@@ -37,7 +37,7 @@ test_that("Grouping with 'group.by' works correctly", {
 test_that("Ordering with 'order.by' works correctly", {
   # Groups are B, L. Default order is alphabetical. We want L, B.
   order_vec <- c("L", "B")
-  df_ordered <- percentAA(combined, group.by = "Type", order.by = order_vec, exportTable = TRUE)
+  df_ordered <- percentAA(combined, group.by = "Type", order.by = order_vec, export.table = TRUE)
   
   # Check if the 'group' column is a factor with the specified levels
   expect_s3_class(df_ordered$group, "factor")

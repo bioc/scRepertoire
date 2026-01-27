@@ -10,8 +10,8 @@ combined <- addVariable(combined,
                         variables = rep(c("B", "L"), 4))
 
 
-test_that("exportTable = TRUE returns a data.frame", {
-  table_output <- clonalCompare(combined, top.clones = 5, exportTable = TRUE)
+test_that("export.table = TRUE returns a data.frame", {
+  table_output <- clonalCompare(combined, top.clones = 5, export.table = TRUE)
   expect_s3_class(table_output, "data.frame")
   expect_true(all(c("clones", "Proportion", "Sample") %in% names(table_output)))
 })
@@ -33,14 +33,14 @@ test_that("graph = 'area' produces an area plot", {
 
 test_that("proportion = FALSE uses 'Count' and proportion = TRUE uses 'Proportion'", {
   # Test with proportion = FALSE (raw counts)
-  table_count <- clonalCompare(combined, top.clones = 5, proportion = FALSE, exportTable = TRUE)
+  table_count <- clonalCompare(combined, top.clones = 5, proportion = FALSE, export.table = TRUE)
   expect_true("Count" %in% names(table_count))
   expect_false("Proportion" %in% names(table_count))
   expect_true(all(table_count$Count >= 1))
   expect_type(table_count$Count, "integer")
   
   # Test with proportion = TRUE (relative proportions)
-  table_prop <- clonalCompare(combined, top.clones = 5, proportion = TRUE, exportTable = TRUE)
+  table_prop <- clonalCompare(combined, top.clones = 5, proportion = TRUE, export.table = TRUE)
   expect_true("Proportion" %in% names(table_prop))
   expect_false("Count" %in% names(table_prop))
   expect_true(all(table_prop$Proportion > 0 & table_prop$Proportion <= 1))
@@ -48,20 +48,20 @@ test_that("proportion = FALSE uses 'Count' and proportion = TRUE uses 'Proportio
 
 test_that("Filtering by `samples`, `clones`, and `top.clones` works", {
   # Get a list of top clones to use for the `clones` parameter test
-  all_clones <- clonalCompare(combined, exportTable = TRUE, top.clones = 2)
+  all_clones <- clonalCompare(combined, export.table = TRUE, top.clones = 2)
   clones_to_filter <- unique(all_clones$clones)
   
   # Test filtering by specific clones
-  table_clones <- clonalCompare(combined, clones = as.character(clones_to_filter), exportTable = TRUE)
+  table_clones <- clonalCompare(combined, clones = as.character(clones_to_filter), export.table = TRUE)
   expect_true(all(unique(table_clones$clones) %in% clones_to_filter))
   
   # Test filtering by specific samples
   samples_to_filter <- c("P17B", "P18L")
-  table_samples <- clonalCompare(combined, top.clones = 5, samples = samples_to_filter, exportTable = TRUE)
+  table_samples <- clonalCompare(combined, top.clones = 5, samples = samples_to_filter, export.table = TRUE)
   expect_true(all(unique(table_samples$Sample) %in% samples_to_filter))
   
   # Test that `clones` takes precedence over `top.clones`
-  table_precedence <- clonalCompare(combined, clones = as.character(clones_to_filter), top.clones = 10, exportTable = TRUE)
+  table_precedence <- clonalCompare(combined, clones = as.character(clones_to_filter), top.clones = 10, export.table = TRUE)
   expect_true(all(unique(table_precedence$clones) %in% clones_to_filter))
   expect_length(unique(table_precedence$clones), length(clones_to_filter))
   
@@ -72,20 +72,20 @@ test_that("Filtering by `samples`, `clones`, and `top.clones` works", {
 })
 
 test_that("group.by correctly groups the data", {
-  table_grouped <- clonalCompare(combined, top.clones = 3, group.by = "Type", exportTable = TRUE)
+  table_grouped <- clonalCompare(combined, top.clones = 3, group.by = "Type", export.table = TRUE)
   expect_s3_class(table_grouped, "data.frame")
   expect_true(all(unique(table_grouped$Sample) %in% c("B", "L")))
 })
 
 test_that("relabel.clones = TRUE renames clones numerically", {
-  table_relabel <- clonalCompare(combined, top.clones = 4, relabel.clones = TRUE, exportTable = TRUE)
+  table_relabel <- clonalCompare(combined, top.clones = 4, relabel.clones = TRUE, export.table = TRUE)
   expect_true(all(grepl("^Clone: \\d+$", unique(table_relabel$clones))))
   expect_true("original.clones" %in% names(table_relabel))
 })
 
 test_that("highlight.clones modifies colors correctly", {
   # Get top clones to use for highlighting
-  clones_to_highlight <- clonalCompare(combined, top.clones = 2, exportTable = TRUE)$clones
+  clones_to_highlight <- clonalCompare(combined, top.clones = 2, export.table = TRUE)$clones
   plot_highlight <- clonalCompare(combined, top.clones = 10, highlight.clones = clones_to_highlight)
   
   # Build the plot to inspect its components

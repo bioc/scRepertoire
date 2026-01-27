@@ -21,17 +21,17 @@ test_that("Basic functionality with Seurat object and default parameters", {
 })
 
 
-test_that("`cloneCall` parameter works correctly", {
-  # Test with cloneCall = "nt"
-  sc_nt <- combineExpression(combined, scRep_example, cloneCall = "nt")
+test_that("`clone.call` parameter works correctly", {
+  # Test with clone.call = "nt"
+  sc_nt <- combineExpression(combined, scRep_example, clone.call = "nt")
   expect_true("CTnt" %in% colnames(sc_nt[[]]))
   
-  # Test with cloneCall = "aa"
-  sc_aa <- combineExpression(combined, scRep_example, cloneCall = "aa")
+  # Test with clone.call = "aa"
+  sc_aa <- combineExpression(combined, scRep_example, clone.call = "aa")
   expect_true("CTaa" %in% colnames(sc_aa[[]]))
   
-  # Test with cloneCall = "gene"
-  sc_gene <- combineExpression(combined, scRep_example, cloneCall = "gene")
+  # Test with clone.call = "gene"
+  sc_gene <- combineExpression(combined, scRep_example, clone.call = "gene")
   expect_true("CTgene" %in% colnames(sc_gene[[]]))
 })
 
@@ -41,7 +41,7 @@ test_that("`proportion` and `cloneSize` parameters work as expected", {
   sc_freq <- combineExpression(combined, 
                                scRep_example, 
                                proportion = FALSE, 
-                               cloneSize = c(1,2,5,10))
+                               clone.size = c(1,2,5,10))
   meta_freq <- sc_freq[[]]
   max_freq <- max(meta_freq$clonalFrequency, na.rm = TRUE)
   clone_id_max_freq <- meta_freq$CTstrict[which.max(meta_freq$clonalFrequency)]
@@ -52,13 +52,13 @@ test_that("`proportion` and `cloneSize` parameters work as expected", {
   # Test error when proportion = FALSE and cloneSize bins are < 1
   bad_cloneSize <- c(Rare = 0.1, Small = 0.5)
   expect_error(
-    combineExpression(combined, scRep_example, proportion = FALSE, cloneSize = bad_cloneSize),
+    combineExpression(combined, scRep_example, proportion = FALSE, clone.size = bad_cloneSize),
     "Adjust the cloneSize parameter - there are groupings < 1"
   )
 })
 
-test_that("`filterNA` parameter correctly subsets the object", {
-  sc_filtered <- combineExpression(combined, scRep_example, filterNA = TRUE)
+test_that("`filter.na` parameter correctly subsets the object", {
+  sc_filtered <- combineExpression(combined, scRep_example, filter.na = TRUE)
   expect_lt(ncol(sc_filtered), ncol(scRep_example))
   expect_false(any(is.na(sc_filtered$CTstrict)))
   non_na_barcodes <- rownames(scRep_example[[]])[!is.na(combineExpression(combined, scRep_example)$CTstrict)]

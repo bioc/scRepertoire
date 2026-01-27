@@ -9,8 +9,8 @@ combined <- addVariable(combined,
                         variables = rep(c("B", "L"), 4))
 
 test_that("Output formats (table vs. plot) are correct", {
-  # Test that exportTable = TRUE returns a data.frame
-  table_output <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", exportTable = TRUE)
+  # Test that export.table = TRUE returns a data.frame
+  table_output <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", export.table = TRUE)
   expect_s3_class(table_output, "data.frame")
   
   # Test that the default behavior returns a ggplot object
@@ -20,7 +20,7 @@ test_that("Output formats (table vs. plot) are correct", {
 
 test_that("`graph` parameter correctly sets up data and plot", {
   plot_prop <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", graph = "proportion")
-  table_prop <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", graph = "proportion", exportTable = TRUE)
+  table_prop <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", graph = "proportion", export.table = TRUE)
   expect_true(all(c("P17B.fraction", "P17L.fraction") %in% names(table_prop)))
   expect_true(any(sapply(plot_prop$layers, function(x) inherits(x$geom, "GeomAbline"))))
   expect_s3_class(plot_prop$scales$scales[[2]], "ScaleContinuous") # x-axis scale
@@ -29,7 +29,7 @@ test_that("`graph` parameter correctly sets up data and plot", {
   
   # Test with graph = "count"
   plot_count <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", graph = "count")
-  table_count <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", graph = "count", exportTable = TRUE)
+  table_count <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", graph = "count", export.table = TRUE)
   expect_true(all(c("P17B.fraction", "P17L.fraction") %in% names(table_count)))
   expect_false(any(sapply(plot_count$layers, function(x) inherits(x$geom, "GeomAbline"))))
 })
@@ -41,7 +41,7 @@ test_that("Clone classification logic is correct", {
     X3 = data.frame(CTaa = c("E"))
   )
   
-  df <- clonalScatter(list_for_testing, cloneCall = "aa", x.axis = "X1", y.axis = "X2", exportTable = TRUE)
+  df <- clonalScatter(list_for_testing, clone.call = "aa", x.axis = "X1", y.axis = "X2", export.table = TRUE)
   clone_A <- df[df$Var1 == "A", ]
   clone_B <- df[df$Var1 == "B", ]
   clone_C <- df[df$Var1 == "C", ]
@@ -54,12 +54,12 @@ test_that("Clone classification logic is correct", {
 
 test_that("`dot.size` parameter works correctly", {
   # Test with default dot.size = "total"
-  df_total <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", dot.size = "total", exportTable = TRUE)
+  df_total <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", dot.size = "total", export.table = TRUE)
   expect_true("size" %in% names(df_total))
   expect_equal(df_total$size, df_total$P17B + df_total$P17L)
   
   # Test with a third sample for dot size
-  df_third <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", dot.size = "P18B", exportTable = TRUE)
+  df_third <- clonalScatter(combined, x.axis = "P17B", y.axis = "P17L", dot.size = "P18B", export.table = TRUE)
   expect_true("P18B" %in% names(df_third))
 })
 

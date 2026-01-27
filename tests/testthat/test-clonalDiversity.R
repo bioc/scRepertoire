@@ -24,10 +24,10 @@ test_that("clonalDiversity: skip.boots = TRUE calculates correct values", {
   # Test with a list input
   result <- clonalDiversity(
     combined,
-    cloneCall = "CTaa",
+    clone.call = "CTaa",
     metric = "shannon",
     skip.boots = TRUE,
-    exportTable = TRUE
+    export.table = TRUE
   )
   
   expect_s3_class(result, "data.frame")
@@ -38,10 +38,10 @@ test_that("clonalDiversity: skip.boots = TRUE calculates correct values", {
   # Test with a data.frame input
   result_df <- clonalDiversity(
     combined,
-    cloneCall = "CTaa",
+    clone.call = "CTaa",
     metric = "inv.simpson",,
     skip.boots = TRUE,
-    exportTable = TRUE
+    export.table = TRUE
   )
   
   expect_equal(result_df$value[result_df$Group == "P17B"], 8.029998, tolerance = 1e-6)
@@ -56,11 +56,11 @@ test_that("clonalDiversity: Bootstrapping returns correct structure", {
   # Test with mean of bootstraps (default)
   result <- clonalDiversity(
     combined,
-    cloneCall = "CTaa",
+    clone.call = "CTaa",
     metric = "shannon",
     n.boots = n_boots,
     skip.boots = FALSE,
-    exportTable = TRUE
+    export.table = TRUE
   )
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 8)
@@ -71,10 +71,10 @@ test_that("clonalDiversity: Bootstrapping returns correct structure", {
   # Test with return.boots = TRUE
   result_all_boots <- clonalDiversity(
     combined,
-    cloneCall = "CTaa",
+    clone.call = "CTaa",
     metric = "shannon",
     n.boots = n_boots,
-    return.boots = TRUE # This also sets exportTable = TRUE
+    return.boots = TRUE # This also sets export.table = TRUE
   )
   expect_s3_class(result_all_boots, "data.frame")
   # Should have n.boots rows for each group
@@ -84,18 +84,18 @@ test_that("clonalDiversity: Bootstrapping returns correct structure", {
 })
 
 
-test_that("clonalDiversity: exportTable and plotting works", {
-  # Returns a data.frame when exportTable = TRUE
+test_that("clonalDiversity: export.table and plotting works", {
+  # Returns a data.frame when export.table = TRUE
   result_table <- clonalDiversity(
     combined,
-    exportTable = TRUE
+    export.table = TRUE
   )
   expect_s3_class(result_table, "data.frame")
   
-  # Returns a ggplot object when exportTable = FALSE (default)
+  # Returns a ggplot object when export.table = FALSE (default)
   result_plot <- clonalDiversity(
     combined,
-    exportTable = FALSE
+    export.table = FALSE
   )
   expect_s3_class(result_plot, "ggplot")
   
@@ -103,7 +103,7 @@ test_that("clonalDiversity: exportTable and plotting works", {
   result_plot_xaxis <- clonalDiversity(
     combined,
     x.axis = "Type",
-    exportTable = FALSE
+    export.table = FALSE
   )
   expect_s3_class(result_plot_xaxis, "ggplot")
 })

@@ -8,8 +8,8 @@ combined <- addVariable(combined,
                         variable.name = "Type", 
                         variables = rep(c("B", "L"), 4))
 
-test_that("exportTable = TRUE returns a data.frame", {
-  table_output <- clonalAbundance(combined, exportTable = TRUE)
+test_that("export.table = TRUE returns a data.frame", {
+  table_output <- clonalAbundance(combined, export.table = TRUE)
   expect_s3_class(table_output, "data.frame")
   expect_true(all(c("Abundance", "values") %in% names(table_output)))
 })
@@ -34,7 +34,7 @@ test_that("scale = FALSE produces a line plot", {
 })
 
 test_that("group.by correctly groups the data", {
-  table_output_grouped <- clonalAbundance(combined, group.by = "Type", exportTable = TRUE)
+  table_output_grouped <- clonalAbundance(combined, group.by = "Type", export.table = TRUE)
   expect_s3_class(table_output_grouped, "data.frame")
   expect_true("Type" %in% names(table_output_grouped))
   expect_lt(length(unique(table_output_grouped$patient)), length(combined))
@@ -44,30 +44,30 @@ test_that("group.by correctly groups the data", {
   expect_equal(plot_output_grouped$labels$colour, "Type")
 })
 
-test_that("cloneCall handles different arguments", {
-  # Test with cloneCall = "gene"
-  expect_s3_class(clonalAbundance(combined, cloneCall = "gene", exportTable = TRUE), "data.frame")
-  expect_s3_class(clonalAbundance(combined, cloneCall = "gene"), "ggplot")
+test_that("clone.call handles different arguments", {
+  # Test with clone.call = "gene"
+  expect_s3_class(clonalAbundance(combined, clone.call = "gene", export.table = TRUE), "data.frame")
+  expect_s3_class(clonalAbundance(combined, clone.call = "gene"), "ggplot")
   
-  # Test with cloneCall = "nt"
-  expect_s3_class(clonalAbundance(combined, cloneCall = "nt", exportTable = TRUE), "data.frame")
-  expect_s3_class(clonalAbundance(combined, cloneCall = "nt"), "ggplot")
+  # Test with clone.call = "nt"
+  expect_s3_class(clonalAbundance(combined, clone.call = "nt", export.table = TRUE), "data.frame")
+  expect_s3_class(clonalAbundance(combined, clone.call = "nt"), "ggplot")
   
-  # Test with cloneCall = "aa"
-  expect_s3_class(clonalAbundance(combined, cloneCall = "aa", exportTable = TRUE), "data.frame")
-  expect_s3_class(clonalAbundance(combined, cloneCall = "aa"), "ggplot")
+  # Test with clone.call = "aa"
+  expect_s3_class(clonalAbundance(combined, clone.call = "aa", export.table = TRUE), "data.frame")
+  expect_s3_class(clonalAbundance(combined, clone.call = "aa"), "ggplot")
 })
 
 test_that("chain selection works correctly", {
-  table_TRA <- clonalAbundance(combined, chain = "TRA", exportTable = TRUE)
+  table_TRA <- clonalAbundance(combined, chain = "TRA", export.table = TRUE)
   expect_s3_class(table_TRA, "data.frame")
   
   # Test with chain = "TRB"
-  table_TRB <- clonalAbundance(combined, chain = "TRB", exportTable = TRUE)
+  table_TRB <- clonalAbundance(combined, chain = "TRB", export.table = TRUE)
   expect_s3_class(table_TRB, "data.frame")
   
   # Test with chain = "both" (default)
-  table_both <- clonalAbundance(combined, chain = "both", exportTable = TRUE)
+  table_both <- clonalAbundance(combined, chain = "both", export.table = TRUE)
   expect_s3_class(table_both, "data.frame")
   
   expect_lte(nrow(table_TRA), nrow(table_both))

@@ -88,7 +88,7 @@ clonalSizeDistribution <- function(input.data,
   export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
                                  "clonalSizeDistribution", default = FALSE)
 
-  x <- xend <- yend <- mpg_div_hp <- NULL
+  x <- y <- xend <- yend <- NULL
   input.data <- .dataWrangle(input.data,
                              group.by,
                              .theCall(input.data, clone.call,

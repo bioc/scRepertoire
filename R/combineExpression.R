@@ -81,6 +81,7 @@ combineExpression <- function(input.data,
   add.label <- .deprecate_arg(addLabel, add.label, "addLabel", "add.label",
                               "combineExpression", default = FALSE)
 
+  clonalFrequency <- NULL
   call_time <- Sys.time()
     options( dplyr.summarise.inform = FALSE )
     if (!proportion && any(clone.size < 1)) {

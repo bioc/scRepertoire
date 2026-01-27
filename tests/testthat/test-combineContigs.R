@@ -15,23 +15,23 @@ test_that("combineTCR `samples` and `ID` parameters work", {
   expect_true(startsWith(combined[[1]]$barcode[1], "S1_A_"))
 })
 
-test_that("combineTCR `filterNonproductive = FALSE` keeps non-productive chains", {
+test_that("combineTCR `filter.nonproductive = FALSE` keeps non-productive chains", {
   contig_mock <- contig_list[[1]]
   contig_mock$productive[1:50] <- "False"
   combined_filtered <- combineTCR(list(contig_mock), samples="S1")
-  combined_unfiltered <- combineTCR(list(contig_mock), samples="S1", filterNonproductive = FALSE)
+  combined_unfiltered <- combineTCR(list(contig_mock), samples="S1", filter.nonproductive = FALSE)
   expect_lt(nrow(combined_filtered[[1]]), nrow(combined_unfiltered[[1]]))
 })
 
-test_that("combineTCR `removeNA` and `removeMulti` work", {
+test_that("combineTCR `remove.na` and `remove.multi` work", {
   contig_mock <- contig_list[[1]]
-  combined_removeNA <- combineTCR(list(contig_mock), samples="S1", removeNA = TRUE)[[1]]
-  expect_true(all(!grepl("NA_", combined_removeNA$CTaa)))
-  expect_true(all(!grepl("_NA", combined_removeNA$CTnt)))
+  combined_remove.na <- combineTCR(list(contig_mock), samples="S1", remove.na = TRUE)[[1]]
+  expect_true(all(!grepl("NA_", combined_remove.na$CTaa)))
+  expect_true(all(!grepl("_NA", combined_remove.na$CTnt)))
   
-  combined_removeMulti <- combineTCR(list(contig_mock), samples="S1", removeMulti = TRUE)
-  expect_true(all(!grepl(";", combined_removeMulti$CTaa)))
-  expect_true(all(!grepl(";", combined_removeMulti$CTnt)))
+  combined_remove.multi <- combineTCR(list(contig_mock), samples="S1", remove.multi = TRUE)
+  expect_true(all(!grepl(";", combined_remove.multi$CTaa)))
+  expect_true(all(!grepl(";", combined_remove.multi$CTnt)))
 })
 
 # --- combineBCR testing -------------------------------------------------------
@@ -102,8 +102,8 @@ test_that("combineBCR with Alignment Metrics", {
   # Test Needleman-Wunsch (Global Alignment)
   combined_nw <- combineBCR(BCR_LIST[1], 
                             samples = "Patient1",
-                            dist_type = "nw", 
-                            dist_mat = "BLOSUM62",
+                            dist.type = "nw", 
+                            dist.mat = "BLOSUM62",
                             threshold = 0.85,
                             normalize = "length")
   
@@ -113,8 +113,8 @@ test_that("combineBCR with Alignment Metrics", {
   # Test Smith-Waterman (Local Alignment)
   combined_sw <- combineBCR(BCR_LIST[1], 
                             samples = "Patient1",
-                            dist_type = "sw", 
-                            dist_mat = "PAM30",
+                            dist.type = "sw", 
+                            dist.mat = "PAM30",
                             threshold = 2,
                             normalize = "none")
   
@@ -125,13 +125,13 @@ test_that("combineBCR with different distance metrics", {
   # Levenshtein (default)
   combined_lev <- combineBCR(BCR_LIST[1], 
                              samples = "Patient1",
-                             dist_type = "levenshtein")
+                             dist.type = "levenshtein")
   expect_true("CTstrict" %in% colnames(combined_lev[[1]]))
   
   # Damerau-Levenshtein
   combined_dam <- combineBCR(BCR_LIST[1], 
                              samples = "Patient1",
-                             dist_type = "damerau")
+                             dist.type = "damerau")
   expect_true("CTstrict" %in% colnames(combined_dam[[1]]))
 })
 
@@ -382,56 +382,56 @@ test_that("CTstrict format: Consistency with sequence parameter (aa vs nt)", {
 # FILTERING PARAMETER TESTS
 # =============================================================================
 
-test_that("combineBCR removeNA parameter", {
+test_that("combineBCR remove.na parameter", {
   combined_with_na <- combineBCR(BCR_SOURCE, 
                                  samples = "Patient1",
-                                 removeNA = FALSE)
+                                 remove.na = FALSE)
   
   combined_no_na <- combineBCR(BCR_SOURCE, 
                                samples = "Patient1",
-                               removeNA = TRUE)
+                               remove.na = TRUE)
   
-  # removeNA=TRUE should have fewer or equal rows
+  # remove.na=TRUE should have fewer or equal rows
   expect_lte(nrow(combined_no_na[[1]]), nrow(combined_with_na[[1]]))
 })
 
-test_that("combineBCR removeMulti parameter", {
+test_that("combineBCR remove.multi parameter", {
   combined_with_multi <- combineBCR(BCR_SOURCE, 
                                     samples = "Patient1",
-                                    removeMulti = FALSE)
+                                    remove.multi = FALSE)
   
   combined_no_multi <- combineBCR(BCR_SOURCE, 
                                   samples = "Patient1",
-                                  removeMulti = TRUE)
+                                  remove.multi = TRUE)
   
-  # removeMulti=TRUE should have fewer or equal rows
+  # remove.multi=TRUE should have fewer or equal rows
   expect_lte(nrow(combined_no_multi[[1]]), nrow(combined_with_multi[[1]]))
 })
 
-test_that("combineBCR filterMulti parameter", {
+test_that("combineBCR filter.multi parameter", {
   combined_filter <- combineBCR(BCR_SOURCE, 
                                 samples = "Patient1",
-                                filterMulti = TRUE)
+                                filter.multi = TRUE)
   
   combined_no_filter <- combineBCR(BCR_SOURCE, 
                                    samples = "Patient1",
-                                   filterMulti = FALSE)
+                                   filter.multi = FALSE)
   
   # Both should produce valid output
   expect_s3_class(combined_filter[[1]], "data.frame")
   expect_s3_class(combined_no_filter[[1]], "data.frame")
 })
 
-test_that("combineBCR filterNonproductive parameter", {
+test_that("combineBCR filter.nonproductive parameter", {
   combined_productive <- combineBCR(BCR_SOURCE, 
                                     samples = "Patient1",
-                                    filterNonproductive = TRUE)
+                                    filter.nonproductive = TRUE)
   
   combined_all <- combineBCR(BCR_SOURCE, 
                              samples = "Patient1",
-                             filterNonproductive = FALSE)
+                             filter.nonproductive = FALSE)
   
-  # filterNonproductive=TRUE should have fewer or equal rows
+  # filter.nonproductive=TRUE should have fewer or equal rows
   expect_lte(nrow(combined_productive[[1]]), nrow(combined_all[[1]]))
 })
 

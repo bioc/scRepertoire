@@ -30,8 +30,8 @@ test_that("Basic functionality and default output structure", {
   expect_false(all(is.na(clustered_list[[1]]$TRB.Cluster)))
 })
 
-test_that("exportGraph = TRUE returns a valid igraph object", {
-  graph_obj <- clonalCluster(combined[1:2], exportGraph = TRUE)
+test_that("export.graph  = TRUE returns a valid igraph object", {
+  graph_obj <- clonalCluster(combined[1:2], export.graph = TRUE)
   expect_s3_class(graph_obj, "igraph")
   expect_gt(vcount(graph_obj), 0)
   expect_gt(ecount(graph_obj), 0)
@@ -39,8 +39,8 @@ test_that("exportGraph = TRUE returns a valid igraph object", {
   expect_true("weight" %in% igraph::edge_attr_names(graph_obj))
 })
 
-test_that("exportAdjMatrix = TRUE returns a valid sparse matrix", {
-  adj_matrix <- clonalCluster(combined[3:4], exportAdjMatrix = TRUE)
+test_that("export.adj.matrix = TRUE returns a valid sparse matrix", {
+  adj_matrix <- clonalCluster(combined[3:4], export.adj.matrix  = TRUE)
   all_barcodes <- unique(do.call(rbind, combined[3:4])[["barcode"]])
   num_barcodes <- length(all_barcodes)
   expect_s4_class(adj_matrix, "dgCMatrix")
@@ -66,15 +66,15 @@ test_that("group.by parameter functions without error", {
 test_that("Different `cluster.method` options work", {
   louvain_graph <- clonalCluster(combined[5:6], 
                                  cluster.method = "louvain", 
-                                 exportGraph = TRUE)
+                                 export.graph  = TRUE)
   expect_s3_class(louvain_graph, "igraph")
   expect_true("cluster" %in% igraph::vertex_attr_names(louvain_graph))
 })
 
 test_that("Input validation and error handling", {
   expect_error(
-    clonalCluster(combined, exportGraph = TRUE, exportAdjMatrix = TRUE),
-    "Please set only one of `exportGraph` or `exportAdjMatrix` to TRUE."
+    clonalCluster(combined, export.graph  = TRUE, export.adj.matrix = TRUE),
+    "Please set only one of `export.graph` or `export.adj.matrix` to TRUE."
   )
   expect_error(
     clonalCluster(combined, cluster.method = "invalid_method"),
@@ -89,13 +89,13 @@ test_that("Alignment (NW/SW) and Matrix selection", {
   
   # Test Needleman-Wunsch with BLOSUM62
   res_nw <- clonalCluster(toy_data, 
-                          dist_type = "nw", 
-                          dist_mat = "BLOSUM62", 
+                          dist.type = "nw", 
+                          dist.mat = "BLOSUM62", 
                           threshold = 0.8) 
   expect_true("TRB.Cluster" %in% names(res_nw[[1]]))
   
   # Test Damerau (Transposition)
-  res_dam <- clonalCluster(toy_data, dist_type = "damerau")
+  res_dam <- clonalCluster(toy_data, dist.type = "damerau")
   expect_true("TRB.Cluster" %in% names(res_dam[[1]]))
 })
 

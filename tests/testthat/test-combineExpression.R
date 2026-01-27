@@ -53,7 +53,7 @@ test_that("`proportion` and `cloneSize` parameters work as expected", {
   bad_cloneSize <- c(Rare = 0.1, Small = 0.5)
   expect_error(
     combineExpression(combined, scRep_example, proportion = FALSE, clone.size = bad_cloneSize),
-    "Adjust the cloneSize parameter - there are groupings < 1"
+    "Adjust the clone.size parameter - there are groupings < 1"
   )
 })
 

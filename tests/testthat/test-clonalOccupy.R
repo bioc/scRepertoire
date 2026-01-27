@@ -18,11 +18,11 @@ test_that("Output formats (table vs. plot) are correct", {
 
 test_that("Data aggregation and counting are correct", {
   table_output <- clonalOccupy(scRep_example, x.axis = "seurat_clusters", export.table = TRUE)
-  c1_single_count <- table_output[table_output$seurat_clusters == "1" & table_output$clone.size == "Large (0.01 < X <= 0.1)", "n"]
-  c1_small_count <- table_output[table_output$seurat_clusters == "1" & table_output$clone.size == "Medium (0.001 < X <= 0.01)", "n"]
+  c1_single_count <- table_output[table_output$seurat_clusters == "1" & table_output$cloneSize == "Large (0.01 < X <= 0.1)", "n"]
+  c1_small_count <- table_output[table_output$seurat_clusters == "1" & table_output$cloneSize == "Medium (0.001 < X <= 0.01)", "n"]
   expect_equal(c1_single_count, 34)
   expect_equal(c1_small_count, 41)
-  
+
 })
 
 test_that("`proportion` parameter works correctly", {

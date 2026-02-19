@@ -56,12 +56,16 @@ navbar:
       href: articles/Trex.html
     - text: Combining Deep Learning and BCRs with Ibex
       href: articles/Ibex.html
+    - text: Bridging Python TCR Tools with immLynx
+      href: articles/immLynx.html
     - text: Single-cell Gene Set Enrichment Analysis
       href: articles/Running_Escape.html
     - text: '-------'
     - text: "Other Workflow Integrations"
     - text: "Combining Immcantation and scRepertoire"
       href: articles/immcantation.html
+    - text: TCR Specificity Grouping with immGLIPH
+      href: articles/immGLIPH.html
     - text: TCRpheno applied to T cell fate
       href: articles/tcrpheno.html
     - text: Using scRepertoire with immunarch

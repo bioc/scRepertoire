@@ -1,7 +1,8 @@
 url: https://www.borch.dev/uploads/scRepertoire/
-Template:
-  params:
-    bootswatch: flatly
+
+template:
+  bootswatch: flatly
+
 home:
   sidebar:
     structure:
@@ -14,31 +15,33 @@ home:
       custom:
         title: Citation
         text: '[Citing scRepertoire](https://pubmed.ncbi.nlm.nih.gov/40577285/)'
+
 navbar:
   left:
   - text: Getting Started
     href: index.html
-  - text: Install
-    href: articles/Installation.html
   - text: Vignettes
     menu:
-    - text: Loading Data
+    - text: "Getting Set Up"
+    - text: Installation Instructions
+      href: articles/Installation.html
+    - text: Loading Data into scRepertoire
       href: articles/Loading.html
     - text: Combining Contigs into Clones
       href: articles/Combining_Contigs.html
-    - text: Additional Processing
+    - text: Additional Processing Steps
       href: articles/Processing.html
     - text: '-------'
     - text: "Repertoire Analysis"
-    - text: Basic Clonal Analysis
+    - text: Basic Clonal Visualizations
       href: articles/Clonal_Visualizations.html
     - text: Visualizing Clonal Dynamics
       href: articles/Clonal_Dynamics.html
     - text: Summarizing Repertoires
       href: articles/Repertoire_Summary.html
-    - text: Clonal Diversity, Rarefaction, and Overlap
+    - text: Comparing Clonal Diversity and Overlap
       href: articles/Clonal_Diversity.html
-    - text: Clustering Sequences by Edit Distance
+    - text: Clustering by Edit Distance
       href: articles/Clonal_Cluster.html
     - text: '-------'
     - text: "Working with Single-Cell Objects"
@@ -48,8 +51,9 @@ navbar:
       href: articles/SC_Visualizations.html
     - text: Quantifying Clonal Bias
       href: articles/Clonal_Bias.html
-    - text: '-------'
-    - text: "Deep Learning Integrations"
+  - text: Extensions
+    menu:
+    - text: "Related Packages"
     - text: Making Deep Learning Models with immApex
       href: articles/immApex.html
     - text: Combining Deep Learning and TCRs with Trex
@@ -58,44 +62,92 @@ navbar:
       href: articles/Ibex.html
     - text: Bridging Python TCR Tools with immLynx
       href: articles/immLynx.html
-    - text: Single-cell Gene Set Enrichment Analysis
-      href: articles/Running_Escape.html
-    - text: '-------'
-    - text: "Other Workflow Integrations"
-    - text: "Combining Immcantation and scRepertoire"
-      href: articles/immcantation.html
     - text: TCR Specificity Grouping with immGLIPH
       href: articles/immGLIPH.html
-    - text: TCRpheno applied to T cell fate
+    - text: Single-cell Gene Set Enrichment with escape
+      href: articles/Running_Escape.html
+  - text: Compatible Packages
+    menu:
+    - text: "Third-Party Integrations"
+    - text: Combining Immcantation and scRepertoire
+      href: articles/immcantation.html
+    - text: TCRpheno Applied to T Cell Fate
       href: articles/tcrpheno.html
-    - text: Using scRepertoire with immunarch
+    - text: Downstream Analysis with immunarch
       href: articles/immunarch.html
     - text: VDJ Trajectory Analysis with dandelionR
       href: articles/dandelionR.html
-  - text: News/Changelog
-    href: news/index.html
   - text: Reference
     href: reference/index.html
+  - text: News
+    href: news/index.html
   - text: FAQ
     href: articles/FAQ.html
+  right:
+  - icon: fa-github
+    href: https://github.com/BorchLab/scRepertoire
+    aria-label: GitHub
+
+articles:
+- title: Getting Set Up
+  navbar: ~
+  contents:
+  - Installation
+  - Loading
+  - Combining_Contigs
+  - Processing
+- title: Repertoire Analysis
+  navbar: ~
+  contents:
+  - Clonal_Visualizations
+  - Clonal_Dynamics
+  - Repertoire_Summary
+  - Clonal_Diversity
+  - Clonal_Cluster
+- title: Working with Single-Cell Objects
+  navbar: ~
+  contents:
+  - Attaching_SC
+  - SC_Visualizations
+  - Clonal_Bias
+- title: Extensions (BorchLab Packages)
+  navbar: ~
+  contents:
+  - immApex
+  - Trex
+  - Ibex
+  - immLynx
+  - immGLIPH
+  - Running_Escape
+- title: Compatible Packages
+  navbar: ~
+  contents:
+  - immcantation
+  - tcrpheno
+  - immunarch
+  - dandelionR
+- title: Help
+  navbar: ~
+  contents:
+  - FAQ
+
 reference:
 - title: Loading and Processing Contigs
   desc: Functions that load, combine, and process the single-cell contig information.
 - contents:
-  - addVariable
-  - combineBCR
+  - loadContigs
   - combineTCR
+  - combineBCR
+  - addVariable
+  - subsetClones
+  - exportClones
   - createHTOContigList
   - getContigDoublets
-  - exportClones
-  - loadContigs
-  - subsetClones
   - annotateInvariant
 - title: Visualizing Clones
-  desc: Functions plotting clonal data.
+  desc: Functions for visualizing clonal data across samples and groups.
 - contents:
   - clonalAbundance
-  - clonalCluster
   - clonalCompare
   - clonalDiversity
   - clonalHomeostasis
@@ -106,6 +158,7 @@ reference:
   - clonalRarefaction
   - clonalScatter
   - clonalSizeDistribution
+  - clonalCluster
   - vizGenes
 - title: Summarizing Repertoire
   desc: Functions to summarize clonal sequences across the repertoire.
@@ -119,23 +172,23 @@ reference:
 - title: Single-Cell Object Processing and Visualizations
   desc: Functions to add or visualize clonal information along a single-cell object.
 - contents:
+  - combineExpression
   - alluvialClones
   - clonalBias
   - clonalNetwork
   - clonalOccupy
   - clonalOverlay
-  - combineExpression
   - getCirclize
   - highlightClones
+  - StartracDiversity
   - quietVDJgenes
   - quietBCRgenes
   - quietTCRgenes
-  - StartracDiversity
 - title: Data
   desc: Reference data for package functions.
 - contents:
   - contig_list
   - scRep_example
+
 deploy:
   install_metadata: yes
-

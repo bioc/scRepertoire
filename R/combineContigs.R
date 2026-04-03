@@ -203,7 +203,7 @@ combineTCR <- function(input.data,
 #' @param threshold The similarity threshold passed to `clonalCluster()` if
 #' `call.related.clones = TRUE`. See `?clonalCluster` for details.
 #' @param chain The chain to use for clustering when `call.related.clones = TRUE`.
-#' Passed to `clonalCluster()`. Default is `"both"`.
+#' Passed to `clonalCluster()`. Default is `"IGH"`.
 #' @param sequence The sequence type (`"nt"` or `"aa"`) to use for clustering.
 #' Passed to `clonalCluster()`. Default is `"nt"`.
 #' @param dist.type The distance metric to use. Options: `"levenshtein"` (default),
@@ -244,7 +244,7 @@ combineTCR <- function(input.data,
 combineBCR <- function(input.data,
                        samples = NULL,
                        ID = NULL,
-                       chain = "both",
+                       chain = "IGH",
                        sequence = "nt",
                        dist.type = NULL,
                        dist.mat = NULL,

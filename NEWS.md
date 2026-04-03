@@ -16,6 +16,7 @@
   * Visual customization: `stratum.width`, `flow.alpha`, `show.labels`, `label.size`
   * New `order.strata` parameter for controlling level ordering within each stratum
   * Enhanced `export.table` output now includes `freq`, `prop`, and `rank` columns
+* `combineBCR()` defaults the clustering call to "IGH" instead of "both"
 
 ## API CHANGES
 

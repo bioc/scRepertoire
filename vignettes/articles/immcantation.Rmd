@@ -266,13 +266,18 @@ The distribution of nearest-neighbor distances is typically bimodal. There is a 
 
 ```{r}
 # Find threshold for cloning automatically
-threshold_output <- findThreshold(dist_heavy$dist_nearest, 
-                                  progress = TRUE,
-                                  method = "gmm", 
-                                  model = "gamma-norm",
-                                  cutoff = "user", 
-                                  spc = 0.995)
-threshold_auto <- threshold_output@threshold
+# Note: GMM fitting can occasionally fail to converge depending on the data.
+# If this occurs, a manual threshold (e.g., 0.15) can be used instead.
+threshold_output <- tryCatch(
+  findThreshold(dist_heavy$dist_nearest,
+                progress = TRUE,
+                method = "gmm",
+                model = "gamma-norm",
+                cutoff = "user",
+                spc = 0.995),
+  error = function(e) NULL
+)
+threshold_auto <- if (!is.null(threshold_output)) threshold_output@threshold else 0.15
 ```
 
 This function fits a Gaussian Mixture Model (`method = "gmm"`) to the distance distribution. It assumes the distribution is a mix of a gamma distribution (for the clonally-related distances) and a normal distribution (for the unrelated distances).

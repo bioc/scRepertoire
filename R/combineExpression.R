@@ -102,6 +102,15 @@ combineExpression <- function(input.data,
     }
     input.data <- .checkList(input.data)
 
+    # Remove any existing clonal columns to allow recalculation
+    cols_to_remove <- c("clonalFrequency", "clonalProportion", "cloneSize")
+    for (i in seq_along(input.data)) {
+      existing_cols <- intersect(cols_to_remove, colnames(input.data[[i]]))
+      if (length(existing_cols) > 0) {
+        input.data[[i]] <- input.data[[i]][, !colnames(input.data[[i]]) %in% existing_cols, drop = FALSE]
+      }
+    }
+
     #Getting Summaries of clones from combineTCR() or combineBCR()
     Con.df <- NULL
     meta <- .grabMeta(sc.data)

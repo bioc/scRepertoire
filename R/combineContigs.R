@@ -30,7 +30,7 @@ utils::globalVariables(c(
 #' prevent issues with repeated  barcodes. The resulting new barcodes will
 #' need to match the Seurat or SCE object in order to use,
 #' [combineExpression()]. Several levels of filtering exist -
-#' `removeNA`, `removeMulti`, or `filterMulti` are parameters
+#' `remove.na`, `remove.multi`, or `filter.multi` are parameters
 #' that control how the function deals with barcodes with multiple chains
 #' recovered.
 #'
@@ -43,13 +43,17 @@ utils::globalVariables(c(
 #' outputs from [loadContigs()].
 #' @param samples The labels of samples (recommended).
 #' @param ID The additional sample labeling (optional).
-#' @param removeNA This will remove any chain without values.
-#' @param removeMulti This will remove barcodes with greater than 2 chains.
-#' @param filterMulti This option will allow for the selection of the 2
+#' @param remove.na This will remove any chain without values.
+#' @param remove.multi This will remove barcodes with greater than 2 chains.
+#' @param filter.multi This option will allow for the selection of the 2
 #' corresponding chains with the highest expression for a single barcode.
-#' @param filterNonproductive This option will allow for the removal of
+#' @param filter.nonproductive This option will allow for the removal of
 #' nonproductive chains if the variable exists in the contig data. Default
 #' is set to TRUE to remove nonproductive contigs.
+#' @param removeNA \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `remove.na` instead.
+#' @param removeMulti \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `remove.multi` instead.
+#' @param filterMulti \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `filter.multi` instead.
+#' @param filterNonproductive \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `filter.nonproductive` instead.
 #'
 #' @export
 #' @concept Loading_and_Processing_Contigs
@@ -58,10 +62,26 @@ utils::globalVariables(c(
 combineTCR <- function(input.data,
                        samples = NULL,
                        ID = NULL,
-                       removeNA = FALSE,
-                       removeMulti = FALSE,
-                       filterMulti = FALSE,
-                       filterNonproductive = TRUE) {
+                       remove.na = NULL,
+                       remove.multi = NULL,
+                       filter.multi = NULL,
+                       filter.nonproductive = NULL,
+                       # Deprecated arguments
+                       removeNA = NULL,
+                       removeMulti = NULL,
+                       filterMulti = NULL,
+                       filterNonproductive = NULL) {
+
+    # Handle deprecated arguments
+    remove.na <- .deprecate_arg(removeNA, remove.na, "removeNA", "remove.na",
+                                "combineTCR", default = FALSE)
+    remove.multi <- .deprecate_arg(removeMulti, remove.multi, "removeMulti", "remove.multi",
+                                   "combineTCR", default = FALSE)
+    filter.multi <- .deprecate_arg(filterMulti, filter.multi, "filterMulti", "filter.multi",
+                                   "combineTCR", default = FALSE)
+    filter.nonproductive <- .deprecate_arg(filterNonproductive, filter.nonproductive,
+                                           "filterNonproductive", "filter.nonproductive",
+                                           "combineTCR", default = TRUE)
 
     input.data <- .checkList(input.data)
     input.data <- .checkContigs(input.data)
@@ -71,12 +91,12 @@ combineTCR <- function(input.data,
         if(c("chain") %in% colnames(input.data[[i]])) {
           input.data[[i]] <- subset(input.data[[i]], chain != "Multi")
         }
-        if(c("productive") %in% colnames(input.data[[i]]) & filterNonproductive) {
+        if(c("productive") %in% colnames(input.data[[i]]) & filter.nonproductive) {
           input.data[[i]] <- subset(input.data[[i]], productive %in% c(TRUE, "TRUE", "True", "true"))
         }
         input.data[[i]]$sample <- samples[i]
         input.data[[i]]$ID <- ID[i]
-        if (filterMulti) {
+        if (filter.multi) {
           input.data[[i]] <- .filteringMulti(input.data[[i]])
         }
     }
@@ -136,10 +156,10 @@ combineTCR <- function(input.data,
       final[[i]]<-final[[i]][rowSums(is.na(final[[i]])) < 10, ]
       final[[i]][final[[i]] == "NA"] <- NA
     }
-    if (removeNA) {
+    if (remove.na) {
       final <- .removingNA(final)
     }
-    if (removeMulti) {
+    if (remove.multi) {
       final <- .removingMulti(final)
     }
     #Adding list element names to output if samples NULL
@@ -155,12 +175,12 @@ combineTCR <- function(input.data,
 #' of the individual cell barcodes. Using the samples and ID parameters,
 #' the function will add the strings as prefixes to prevent issues with
 #' repeated barcodes. The resulting new barcodes will need to match the
-#' Seurat or SCE object in order to use, [combineExpression()]. Unlike 
-#' [combineTCR()], combineBCR produces a column `CTstrict` based on the 
-#' edit distance clustering from [clonalCluster()]. The `CTstrict` column 
+#' Seurat or SCE object in order to use, [combineExpression()]. Unlike
+#' [combineTCR()], combineBCR produces a column `CTstrict` based on the
+#' edit distance clustering from [clonalCluster()]. The `CTstrict` column
 #' is formatted as `Heavy_Light` (underscore-separated) for downstream
 #' compatibility. Connected clones are labeled with `cluster.X`, while
-#' unconnected clones (singlets) are labeled with the V gene and CDR3 
+#' unconnected clones (singlets) are labeled with the V gene and CDR3
 #' sequence (e.g., `IGHV3-64.CAKSYS..._IGKV3-15.CQQYSN...`).
 #'
 #' @examples
@@ -183,30 +203,38 @@ combineTCR <- function(input.data,
 #' @param threshold The similarity threshold passed to `clonalCluster()` if
 #' `call.related.clones = TRUE`. See `?clonalCluster` for details.
 #' @param chain The chain to use for clustering when `call.related.clones = TRUE`.
-#' Passed to `clonalCluster()`. Default is `"both"`.
+#' Passed to `clonalCluster()`. Default is `"IGH"`.
 #' @param sequence The sequence type (`"nt"` or `"aa"`) to use for clustering.
 #' Passed to `clonalCluster()`. Default is `"nt"`.
-#' @param dist_type The distance metric to use. Options: `"levenshtein"` (default),
+#' @param dist.type The distance metric to use. Options: `"levenshtein"` (default),
 #' `"hamming"`, `"damerau"`, `"nw"` (Needleman-Wunsch), or `"sw"` (Smith-Waterman).
-#' @param dist_mat The substitution matrix to use for alignment-based metrics 
+#' @param dist.mat The substitution matrix to use for alignment-based metrics
 #' (`"nw"` or `"sw"`). Options include `"BLOSUM62"`, `"PAM30"`, etc.
 #' @param normalize Method for normalizing distances. Options: `"none"` (default),
 #' `"maxlen"`, or `"length"`.
-#' @param gap_open Penalty for opening a gap in alignment metrics (default: -10).
-#' @param gap_extend Penalty for extending a gap in alignment metrics (default: -1).
+#' @param gap.open Penalty for opening a gap in alignment metrics (default: -10).
+#' @param gap.extend Penalty for extending a gap in alignment metrics (default: -1).
 #' @param use.V Logical. If `TRUE`, sequences must share the same V gene to be
 #' clustered together.
 #' @param use.J Logical. If `TRUE`, sequences must share the same J gene to be
 #' clustered together.
-#' @param cluster.method The clustering algorithm to use. Defaults to `"components"`, 
+#' @param cluster.method The clustering algorithm to use. Defaults to `"components"`,
 #' which finds connected subgraphs.
-#' @param removeMulti Logical. If `TRUE`, removes cells that have more than
+#' @param remove.multi Logical. If `TRUE`, removes cells that have more than
 #' one distinct heavy or light chain after processing.
-#' @param filterMulti Logical. If `TRUE`, filters multi-chain cells to retain
+#' @param filter.multi Logical. If `TRUE`, filters multi-chain cells to retain
 #' only the most abundant IGH and IGL/IGK chains.
-#' @param removeNA This will remove any chain without values.
-#' @param filterNonproductive Logical. If `TRUE`, removes non-productive contigs
+#' @param remove.na This will remove any chain without values.
+#' @param filter.nonproductive Logical. If `TRUE`, removes non-productive contigs
 #' from the analysis.
+#' @param removeNA \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `remove.na` instead.
+#' @param removeMulti \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `remove.multi` instead.
+#' @param filterMulti \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `filter.multi` instead.
+#' @param filterNonproductive \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `filter.nonproductive` instead.
+#' @param dist_type \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `dist.type` instead.
+#' @param dist_mat \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `dist.mat` instead.
+#' @param gap_open \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `gap.open` instead.
+#' @param gap_extend \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `gap.extend` instead.
 #'
 #' @export
 #' @concept Loading_and_Processing_Contigs
@@ -216,25 +244,53 @@ combineTCR <- function(input.data,
 combineBCR <- function(input.data,
                        samples = NULL,
                        ID = NULL,
-                       chain = "both",
+                       chain = "IGH",
                        sequence = "nt",
-                       dist_type = "levenshtein",
-                       dist_mat = "BLOSUM80",
+                       dist.type = NULL,
+                       dist.mat = NULL,
                        normalize = "length",
-                       gap_open = -10,
-                       gap_extend = -1,
+                       gap.open = NULL,
+                       gap.extend = NULL,
                        call.related.clones = TRUE,
                        group.by = NULL,
                        threshold = 0.85,
                        cluster.method = "components",
                        use.V = TRUE,
                        use.J = TRUE,
-                       removeNA = FALSE,
-                       removeMulti = FALSE,
-                       filterMulti = TRUE,
-                       filterNonproductive = TRUE) {
+                       remove.na = NULL,
+                       remove.multi = NULL,
+                       filter.multi = NULL,
+                       filter.nonproductive = NULL,
+                       # Deprecated arguments
+                       removeNA = NULL,
+                       removeMulti = NULL,
+                       filterMulti = NULL,
+                       filterNonproductive = NULL,
+                       dist_type = NULL,
+                       dist_mat = NULL,
+                       gap_open = NULL,
+                       gap_extend = NULL) {
+
+  # Handle deprecated arguments
+  remove.na <- .deprecate_arg(removeNA, remove.na, "removeNA", "remove.na",
+                              "combineBCR", default = FALSE)
+  remove.multi <- .deprecate_arg(removeMulti, remove.multi, "removeMulti", "remove.multi",
+                                 "combineBCR", default = FALSE)
+  filter.multi <- .deprecate_arg(filterMulti, filter.multi, "filterMulti", "filter.multi",
+                                 "combineBCR", default = TRUE)
+  filter.nonproductive <- .deprecate_arg(filterNonproductive, filter.nonproductive,
+                                         "filterNonproductive", "filter.nonproductive",
+                                         "combineBCR", default = TRUE)
+  dist.type <- .deprecate_arg(dist_type, dist.type, "dist_type", "dist.type",
+                              "combineBCR", default = "levenshtein")
+  dist.mat <- .deprecate_arg(dist_mat, dist.mat, "dist_mat", "dist.mat",
+                             "combineBCR", default = "BLOSUM80")
+  gap.open <- .deprecate_arg(gap_open, gap.open, "gap_open", "gap.open",
+                             "combineBCR", default = -10)
+  gap.extend <- .deprecate_arg(gap_extend, gap.extend, "gap_extend", "gap.extend",
+                               "combineBCR", default = -1)
   
-  # Initial Contig Processing and Filtering 
+  # Initial Contig Processing and Filtering
   processed_list <- input.data %>%
     .checkList() %>%
     .checkContigs() %>%
@@ -242,10 +298,10 @@ combineBCR <- function(input.data,
     purrr::imap(function(x, i) {
       x <- subset(x, chain %in% c("IGH", "IGK", "IGL"))
       if (!is.null(ID)) x$ID <- ID[i]
-      if (filterNonproductive && "productive" %in% colnames(x)) {
+      if (filter.nonproductive && "productive" %in% colnames(x)) {
         x <- subset(x, tolower(productive) == "true")
       }
-      if (filterMulti) {
+      if (filter.multi) {
         # Keep IGH / IGK / IGL info in save_chain
         x$save_chain <- x$chain
         # Collapse IGK and IGL chains
@@ -285,19 +341,19 @@ combineBCR <- function(input.data,
   
   # Getting CTstrict based on clusters
   if (call.related.clones) {
-    clusters <- clonalCluster(processed_list, 
+    clusters <- clonalCluster(processed_list,
                               sequence = sequence,
-                              chain = chain, 
-                              threshold = threshold, 
-                              group.by = group.by, 
-                              use.V = use.V, 
-                              use.J = use.J, 
+                              chain = chain,
+                              threshold = threshold,
+                              group.by = group.by,
+                              use.V = use.V,
+                              use.J = use.J,
                               cluster.method = cluster.method,
-                              dist_type = dist_type,
-                              dist_mat = dist_mat,
+                              dist.type = dist.type,
+                              dist.mat = dist.mat,
                               normalize = normalize,
-                              gap_open = gap_open,
-                              gap_extend = gap_extend)
+                              gap.open = gap.open,
+                              gap.extend = gap.extend)
   }
   
   # Defining element names for the final output
@@ -380,8 +436,8 @@ combineBCR <- function(input.data,
   names(final_list) <- list_names
   
   # Final Optional Filtering
-  if (removeNA) final_list <- .removingNA(final_list)
-  if (removeMulti) final_list <- .removingMulti(final_list)
+  if (remove.na) final_list <- .removingNA(final_list)
+  if (remove.multi) final_list <- .removingMulti(final_list)
   
   return(final_list)
 }

@@ -6,7 +6,7 @@
 \usage{
 clonalNetwork(
   sc.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   chain = "both",
   reduction = "umap",
   group.by = "ident",
@@ -14,16 +14,19 @@ clonalNetwork(
   filter.identity = NULL,
   filter.proportion = NULL,
   filter.graph = FALSE,
-  exportClones = FALSE,
-  exportTable = FALSE,
+  export.clones = NULL,
+  export.table = NULL,
   palette = "inferno",
+  cloneCall = NULL,
+  exportClones = NULL,
+  exportTable = NULL,
   ...
 )
 }
 \arguments{
 \item{sc.data}{The single-cell object after \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -37,7 +40,7 @@ single-cell object.}
 \item{group.by}{A column header in the metadata or lists to group the analysis
 by (e.g., "sample", "treatment"). This will be the nodes overlaid onto the graph.}
 
-\item{filter.clones}{Use to select the top n clones (e.g., \verb{filter.clones`**`  = 2000) or n of clones based on the minimum number of all the comparators  (e.g., `filter.clone} = "min").}
+\item{filter.clones}{Use to select the top n clones (e.g., \verb{filter.clones`**` = 2000) or n of clones based on the minimum number of all the comparators (e.g., `filter.clone} = "min").}
 
 \item{filter.identity}{Display the network for a specific level of the
 indicated identity.}
@@ -48,15 +51,21 @@ proportion.}
 \item{filter.graph}{Remove the reciprocal edges from the half of the graph,
 allowing for cleaner visualization.}
 
-\item{exportClones}{Exports a table of clones that are shared
+\item{export.clones}{Exports a table of clones that are shared
 across multiple identity groups and ordered by the total number
 of clone copies.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}.}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportClones}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.clones} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }
@@ -72,8 +81,8 @@ plot.
 \examples{
 \dontrun{
 # Getting the combined contigs
-combined <- combineTCR(contig_list, 
-                        samples = c("P17B", "P17L", "P18B", "P18L", 
+combined <- combineTCR(contig_list,
+                        samples = c("P17B", "P17L", "P18B", "P18L",
                                     "P19B","P19L", "P20B", "P20L"))
 
 # Getting a sample of a Seurat object
@@ -83,10 +92,10 @@ scRep_example  <- get(data("scRep_example"))
 scRep_example  <- combineExpression(combined, scRep_example)
 
 # Using clonalNetwork()
-clonalNetwork(scRep_example, 
+clonalNetwork(scRep_example,
               reduction = "umap",
               group.by = "seurat_clusters")
 }
-              
+
 }
 \concept{SC_Functions}

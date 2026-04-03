@@ -17,33 +17,41 @@
 #'                                     scRep_example)
 #' 
 #' # Using highlightClones()
-#' scRep_example   <- highlightClones(scRep_example, 
-#'                                    cloneCall= "aa", 
+#' scRep_example   <- highlightClones(scRep_example,
+#'                                    clone.call= "aa",
 #'                                    sequence = c("CVVSDNTGGFKTIF_CASSVRRERANTGELFF"))
 #' 
-#' @param sc.data The single-cell object to attach after 
+#' @param sc.data The single-cell object to attach after
 #' [combineExpression()]
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
 #' @param sequence The specific sequence or sequence to highlight
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
 #' @importFrom S4Vectors DataFrame
 #' @export
 #' @concept SC_Functions
-#' @return Single-cell object object with new meta data column 
+#' @return Single-cell object object with new meta data column
 #' for indicated clones
-highlightClones <- function(sc.data, 
-                            cloneCall = c("gene", "nt", "aa", "strict"), 
-                            sequence = NULL){
+highlightClones <- function(sc.data,
+                            clone.call = NULL,
+                            sequence = NULL,
+                            # Deprecated arguments
+                            cloneCall = NULL){
+
+  # Handle deprecated arguments
+  clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                               "highlightClones", default = "strict")
+
   if (!.is.seurat.or.se.object(sc.data)) {
-    stop("Please select a single-cell object") 
+    stop("Please select a single-cell object")
   }
-  
-  cloneCall <- .theCall(.grabMeta(sc.data), cloneCall)
+
+  clone.call <- .theCall(.grabMeta(sc.data), clone.call)
   meta <- .grabMeta(sc.data)
   meta$highlight <- NA
   for(i in seq_along(sequence)) {
-    meta$highlight <-  ifelse(meta[,cloneCall] == sequence[i], 
+    meta$highlight <-  ifelse(meta[,clone.call] == sequence[i],
                               sequence[i], meta$highlight)
   }
   

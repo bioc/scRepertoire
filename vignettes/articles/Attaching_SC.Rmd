@@ -166,3 +166,9 @@ seurat <- combineExpression(list.receptors,
 ```
 
 `combineExpression()` is a core function in `scRepertoire` that bridges the immune repertoire data with single-cell gene expression data. It enriches your Seurat or SCE object with crucial clonal information, including calculated frequencies and proportions, allowing for integrated analysis of cellular identity and clonal dynamics. Its flexibility in defining `cloneSize` and handling various grouping scenarios makes it adaptable to diverse experimental designs, even accommodating the integration of both TCR and BCR data.
+
+## Next Steps
+
+- [Visualizations for Single-Cell Objects](SC_Visualizations.html) - Alluvial plots, chord diagrams, clonal networks, and UMAP overlays.
+- [Quantifying Clonal Bias](Clonal_Bias.html) - Measure clonal expansion bias across clusters.
+- [Basic Clonal Visualizations](Clonal_Visualizations.html) - Clonal abundance, length distributions, and scatter plots.

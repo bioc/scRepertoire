@@ -11,7 +11,7 @@ combined <- addVariable(combined,
 combined <- combined[1:4] #subset to reduce size
 
 test_that("Output formats (data.frame vs. plot) are correct", {
-  table_output_list <- clonalRarefaction(combined, exportTable = TRUE, n.boots = 2)
+  table_output_list <- clonalRarefaction(combined, export.table = TRUE, n.boots = 2)
   expect_type(table_output_list, "list")
   expect_s3_class(table_output_list$data, "data.frame")
   
@@ -30,27 +30,27 @@ test_that("`plot.type` parameter correctly generates plots", {
 })
 
 test_that("`hill.numbers` parameter is passed to iNEXT correctly", {
-  df_q0 <- clonalRarefaction(combined, hill.numbers = 0, n.boots = 2, exportTable = TRUE)$data
+  df_q0 <- clonalRarefaction(combined, hill.numbers = 0, n.boots = 2, export.table = TRUE)$data
   expect_true(all(df_q0$Order.q == 0))
-  df_q01 <- clonalRarefaction(combined, hill.numbers = c(0, 1), n.boots = 2, exportTable = TRUE)$data
+  df_q01 <- clonalRarefaction(combined, hill.numbers = c(0, 1), n.boots = 2, export.table = TRUE)$data
   expect_true(all(unique(df_q01$Order.q) %in% c(0, 1)))
 })
 
 test_that("`group.by` parameter correctly aggregates data", {
   # Group by the "Type" variable
-  df_grouped <- clonalRarefaction(combined, group.by = "Type", n.boots = 2, exportTable = TRUE)$data
+  df_grouped <- clonalRarefaction(combined, group.by = "Type", n.boots = 2, export.table = TRUE)$data
   num_groups <- 2
   expect_equal(length(unique(df_grouped$Assemblage)), num_groups)
   expect_true(all(unique(df_grouped$Assemblage) %in% c("B", "L")))
 })
 
-test_that("`cloneCall` and `chain` parameters execute correctly", {
+test_that("`clone.call` and `chain` parameters execute correctly", {
   expect_silent(
-    res_aa <- clonalRarefaction(combined, cloneCall = "aa", n.boots = 2, exportTable = TRUE)
+    res_aa <- clonalRarefaction(combined, clone.call = "aa", n.boots = 2, export.table = TRUE)
   )
   expect_type(res_aa, "list")
   expect_silent(
-    res_tra <- clonalRarefaction(combined, chain = "TRA", n.boots = 2, exportTable = TRUE)
+    res_tra <- clonalRarefaction(combined, chain = "TRA", n.boots = 2, export.table = TRUE)
   )
   expect_type(res_tra, "list")
 })

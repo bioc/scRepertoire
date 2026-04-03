@@ -21,7 +21,7 @@ mock_meta <- data.frame(
   barcode = paste0("cell", 1:10),
   group = rep(c("group1", "group2"), each = 5),
   CTnt = c("AAA", "AAA", "GGG", "CCC", NA, "AAA", "GGG", "GGG", "TTT", "TTT"),
-  cloneSize = c(3, 3, 2, 1, NA, 3, 2, 2, 2, 2)
+  clone.size = c(3, 3, 2, 1, NA, 3, 2, 2, 2, 2)
 )
 
 # Mock list of data frames

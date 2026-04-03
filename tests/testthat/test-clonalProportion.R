@@ -9,14 +9,14 @@ combined <- addVariable(combined,
                         variables = rep(c("B", "L"), 4))
 
 test_that("Output formats (matrix vs. plot) are correct", {
-  mat_output <- clonalProportion(combined, exportTable = TRUE)
+  mat_output <- clonalProportion(combined, export.table = TRUE)
   expect_true(is.matrix(mat_output))
   plot_output <- clonalProportion(combined)
   expect_s3_class(plot_output, "ggplot")
 })
 
 test_that("The returned matrix has correct dimensions and properties", {
-  mat_output <- clonalProportion(combined, exportTable = TRUE)
+  mat_output <- clonalProportion(combined, export.table = TRUE)
   expect_equal(nrow(mat_output), length(combined)) # Rows should equal number of samples
   expect_equal(ncol(mat_output), 6)               # Default has 6 bins
   total_clones_per_sample <- sapply(combined, function(x) nrow(x[!is.na(x$CTstrict),]))
@@ -25,10 +25,10 @@ test_that("The returned matrix has correct dimensions and properties", {
   expect_equal(colnames(mat_output), expected_colnames)
 })
 
-test_that("Custom `clonalSplit` parameter works as expected", {
+test_that("Custom `clonal.split` parameter works as expected", {
   # Define custom bins
   custom_bins <- c(5, 50, 500)
-  mat_custom <- clonalProportion(combined, clonalSplit = custom_bins, exportTable = TRUE)
+  mat_custom <- clonalProportion(combined, clonal.split = custom_bins, export.table = TRUE)
   
   # Check dimensions with custom bins
   expect_equal(ncol(mat_custom), 3)
@@ -39,7 +39,7 @@ test_that("Custom `clonalSplit` parameter works as expected", {
 })
 
 test_that("`group.by` parameter correctly aggregates the data", {
-  mat_grouped <- clonalProportion(combined, group.by = "Type", exportTable = TRUE)
+  mat_grouped <- clonalProportion(combined, group.by = "Type", export.table = TRUE)
   expect_equal(nrow(mat_grouped), 2)
   expect_true(all(rownames(mat_grouped) %in% c("B", "L")))
   grouped_list <- scRepertoire:::.groupList(combined, "Type")
@@ -47,11 +47,11 @@ test_that("`group.by` parameter correctly aggregates the data", {
   expect_equal(rowSums(mat_grouped), total_clones_per_group, tolerance = 1e-9)
 })
 
-test_that("`cloneCall` and `chain` parameters execute correctly", {
-  mat_gene <- clonalProportion(combined, cloneCall = "gene", exportTable = TRUE)
+test_that("`clone.call` and `chain` parameters execute correctly", {
+  mat_gene <- clonalProportion(combined, clone.call = "gene", export.table = TRUE)
   expect_true(is.matrix(mat_gene))
   expect_equal(nrow(mat_gene), length(combined))
-  mat_tra <- clonalProportion(combined, chain = "TRA", exportTable = TRUE)
+  mat_tra <- clonalProportion(combined, chain = "TRA", export.table = TRUE)
   expect_true(is.matrix(mat_tra))
   expect_equal(nrow(mat_tra), length(combined))
 })

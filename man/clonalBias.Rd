@@ -6,20 +6,22 @@
 \usage{
 clonalBias(
   sc.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   split.by = NULL,
   group.by = NULL,
   n.boots = 20,
   min.expand = 10,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
 \arguments{
 \item{sc.data}{The single-cell object after \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -32,11 +34,15 @@ For example, "Type" for lung vs peripheral blood comparison}
 
 \item{min.expand}{clone frequency cut off for the purpose of comparison.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}.}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }
@@ -54,8 +60,8 @@ if using \code{\link[=clonalBias]{clonalBias()}}.
 }
 \examples{
 # Making combined contig data
-combined <- combineTCR(contig_list, 
-                        samples = c("P17B", "P17L", "P18B", "P18L", 
+combined <- combineTCR(contig_list,
+                        samples = c("P17B", "P17L", "P18B", "P18L",
                                     "P19B","P19L", "P20B", "P20L"))
 
 # Getting a sample of a Seurat object
@@ -66,11 +72,11 @@ scRep_example <- combineExpression(combined, scRep_example)
 scRep_example$Patient <- substring(scRep_example$orig.ident,1,3)
 
 # Using clonalBias()
-clonalBias(scRep_example, 
-              cloneCall = "aa", 
-              split.by = "Patient", 
+clonalBias(scRep_example,
+              clone.call = "aa",
+              split.by = "Patient",
               group.by = "seurat_clusters",
-              n.boots = 5, 
+              n.boots = 5,
               min.expand = 2)
 
 

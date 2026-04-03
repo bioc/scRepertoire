@@ -1,0 +1,220 @@
+---
+title: "Immune Reference Data with immReferent"
+date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
+output: rmarkdown::html_vignette
+theme: united
+df_print: kable
+vignette: >
+  %\VignetteIndexEntry{Immune Reference Data with immReferent}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+p.caption {
+  font-size: 0.9em;
+}
+</style>
+
+```{r, include = FALSE}
+all_times <- list()
+knitr::knit_hooks$set(time_it = local({
+  now <- NULL
+  function(before, options) {
+    if (before) {
+      now <<- Sys.time()
+    } else {
+      res <- difftime(Sys.time(), now, units = "secs")
+      all_times[[options$label]] <<- res
+    }
+  }
+}))
+knitr::opts_chunk$set(
+  tidy = FALSE,
+  tidy.opts = list(width.cutoff = 95),
+  message = FALSE,
+  warning = FALSE,
+  time_it = TRUE
+)
+
+has_immReferent <- requireNamespace("immReferent", quietly = TRUE)
+
+if (has_immReferent) {
+  library(immReferent)
+  imgt_ok  <- try(is_imgt_available(),  silent = TRUE)
+  ogrdb_ok <- try(is_ogrdb_available(), silent = TRUE)
+  imgt_ok  <- if (inherits(imgt_ok,  "try-error")) FALSE else isTRUE(imgt_ok)
+  ogrdb_ok <- if (inherits(ogrdb_ok, "try-error")) FALSE else isTRUE(ogrdb_ok)
+} else {
+  imgt_ok  <- FALSE
+  ogrdb_ok <- FALSE
+}
+
+can_run <- has_immReferent & imgt_ok
+
+set.seed(42)
+```
+
+## Introduction
+
+The [immReferent](https://github.com/BorchLab/immReferent) package provides a centralized interface for downloading, managing, and loading immune repertoire and HLA reference sequences from [IMGT](https://www.imgt.org/), [IPD-IMGT/HLA](https://www.ebi.ac.uk/ipd/imgt/hla/), and [OGRDB](https://ogrdb.airr-community.org/). It serves as a core dependency for immunogenomics packages, ensuring reliable and high-quality sequence access with local caching for reproducibility.
+
+In the context of scRepertoire, immReferent is useful for:
+
+* Obtaining the reference gene sequences used in TCR/BCR analysis
+* Exporting formatted references for tools like MiXCR, TRUST4, Cell Ranger, and IgBLAST
+* Ensuring offline reproducibility through its caching system
+
+## Installation
+
+```{r eval = FALSE}
+devtools::install_github("BorchLab/immReferent")
+```
+
+Or via Bioconductor:
+
+```{r eval = FALSE}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("immReferent")
+```
+
+## Downloading Reference Sequences
+
+```{r setup, eval = can_run}
+library(immReferent)
+```
+
+### HLA Sequences (IPD-IMGT/HLA)
+
+The IPD-IMGT/HLA database provides reference sequences for the Human Leukocyte Antigen (HLA) system.
+
+```{r get_hla, eval = can_run}
+hla_prot <- getIMGT(gene = "HLA",
+                    type = "PROT")
+
+print(hla_prot)
+cat("Number of sequences:", length(hla_prot), "\n")
+```
+
+### TCR/BCR Sequences (IMGT)
+
+For T-cell receptor (TCR) and B-cell receptor (BCR) genes, specify the species and gene or gene family.
+
+```{r get_ighv, eval = can_run}
+# Download human IGHV nucleotide sequences
+ighv_nuc <- getIMGT(species = "human",
+                    gene = "IGHV",
+                    type = "NUC")
+print(ighv_nuc)
+```
+
+You can also download entire families of genes at once:
+
+```{r get_trb, eval = can_run}
+# Download all mouse TRB genes (V, D, J, and C)
+trb_mouse <- getIMGT(species = "mouse",
+                     gene = "TRB",
+                     type = "NUC")
+print(trb_mouse)
+```
+
+### Germline Sets from OGRDB (AIRR)
+
+OGRDB provides AIRR-compliant germline sets for immunoglobulin loci.
+
+```{r ogrdb_igh, eval = has_immReferent & ogrdb_ok}
+# Human IGH nucleotide sequences (gapped FASTA)
+igh_ogrdb <- getOGRDB(
+  species = "human",
+  locus   = "IGH",
+  type    = "NUC",
+  format  = "FASTA_GAPPED"
+)
+igh_ogrdb
+```
+
+## Exporting for External Tools
+
+immReferent can export reference sequences formatted for popular analysis tools.
+
+```{r export_setup, eval = can_run}
+igh_seqs <- getIMGT(species = "human",
+                    gene = "IGH",
+                    type = "NUC",
+                    suppressMessages = TRUE)
+```
+
+### MiXCR
+
+```{r export_mixcr, eval = can_run}
+mixcr_dir <- tempdir()
+mixcr_files <- exportMiXCR(igh_seqs,
+                           mixcr_dir,
+                           chain = "IGH")
+print(mixcr_files)
+```
+
+### TRUST4
+
+```{r export_trust4, eval = can_run}
+trust4_file <- tempfile(fileext = ".fa")
+exportTRUST4(igh_seqs, trust4_file)
+cat(head(readLines(trust4_file), 4), sep = "\n")
+```
+
+### Cell Ranger VDJ
+
+```{r export_cellranger, eval = can_run}
+cellranger_file <- tempfile(fileext = ".fa")
+exportCellRanger(igh_seqs, cellranger_file)
+cat(head(readLines(cellranger_file), 4), sep = "\n")
+```
+
+### IgBLAST
+
+```{r export_igblast, eval = can_run}
+igblast_dir <- tempdir()
+igblast_files <- exportIgBLAST(igh_seqs, igblast_dir,
+                               organism = "human",
+                               receptor_type = "ig")
+print(igblast_files)
+```
+
+## Caching and Offline Usage
+
+immReferent automatically caches all downloaded data locally. On subsequent requests, the cached copy is loaded without network access.
+
+```{r list_cache, eval = can_run}
+# List all cached IMGT files
+listIMGT()
+```
+
+To load strictly from cache (no downloads):
+
+```{r load_cache, eval = can_run}
+cached <- loadIMGT(species = "human",
+                   gene = "IGHV",
+                   type = "NUC")
+```
+
+To force a re-download when the online data has been updated:
+
+```{r refresh, eval = can_run}
+fresh <- refreshIMGT(species = "human",
+                     gene = "IGHV",
+                     type = "NUC")
+```
+
+You can change the cache location for a session or permanently via `.Rprofile`:
+
+```{r eval = FALSE}
+options(immReferent.cache = "/path/to/shared/cache")
+```
+
+## Session Info
+
+```{r}
+sessionInfo()
+```

@@ -7,10 +7,10 @@ combined <- combineTCR(contig_list,
 
 test_that("positionalProperty: Output structure is correct", {
   
-  # Test with exportTable = TRUE
+  # Test with export.table = TRUE
   df_output <- positionalProperty(combined, 
                                   method = "kideraFactors", 
-                                  exportTable = TRUE)
+                                  export.table = TRUE)
   
   expect_s3_class(df_output, "data.frame")
   
@@ -40,7 +40,7 @@ test_that("positionalProperty: Core calculations are plausible", {
   df_output <- positionalProperty(combined, 
                                   chain = "TRB",
                                   aa.length = 15, 
-                                  exportTable = TRUE)
+                                  export.table = TRUE)
   
   p17_b_subset <- df_output[df_output$group == "P17B", ]
   expect_true(all(p17_b_subset$n <= 2851)) 
@@ -51,12 +51,12 @@ test_that("positionalProperty: Parameters behave as expected", {
   # `aa.length` parameter
   df_len10 <- positionalProperty(combined, 
                                  aa.length = 10, 
-                                 exportTable = TRUE)
+                                 export.table = TRUE)
   expect_equal(max(df_len10$position), 10)
   
   df_len25 <- positionalProperty(combined, 
                                  aa.length = 25, 
-                                 exportTable = TRUE)
+                                 export.table = TRUE)
   expect_equal(max(df_len25$position), 25)
 })
 

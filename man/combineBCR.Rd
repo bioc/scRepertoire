@@ -10,21 +10,29 @@ combineBCR(
   ID = NULL,
   chain = "both",
   sequence = "nt",
-  dist_type = "levenshtein",
-  dist_mat = "BLOSUM80",
+  dist.type = NULL,
+  dist.mat = NULL,
   normalize = "length",
-  gap_open = -10,
-  gap_extend = -1,
+  gap.open = NULL,
+  gap.extend = NULL,
   call.related.clones = TRUE,
   group.by = NULL,
   threshold = 0.85,
   cluster.method = "components",
   use.V = TRUE,
   use.J = TRUE,
-  removeNA = FALSE,
-  removeMulti = FALSE,
-  filterMulti = TRUE,
-  filterNonproductive = TRUE
+  remove.na = NULL,
+  remove.multi = NULL,
+  filter.multi = NULL,
+  filter.nonproductive = NULL,
+  removeNA = NULL,
+  removeMulti = NULL,
+  filterMulti = NULL,
+  filterNonproductive = NULL,
+  dist_type = NULL,
+  dist_mat = NULL,
+  gap_open = NULL,
+  gap_extend = NULL
 )
 }
 \arguments{
@@ -42,18 +50,18 @@ Passed to \code{clonalCluster()}. Default is \code{"both"}.}
 \item{sequence}{The sequence type (\code{"nt"} or \code{"aa"}) to use for clustering.
 Passed to \code{clonalCluster()}. Default is \code{"nt"}.}
 
-\item{dist_type}{The distance metric to use. Options: \code{"levenshtein"} (default),
+\item{dist.type}{The distance metric to use. Options: \code{"levenshtein"} (default),
 \code{"hamming"}, \code{"damerau"}, \code{"nw"} (Needleman-Wunsch), or \code{"sw"} (Smith-Waterman).}
 
-\item{dist_mat}{The substitution matrix to use for alignment-based metrics
+\item{dist.mat}{The substitution matrix to use for alignment-based metrics
 (\code{"nw"} or \code{"sw"}). Options include \code{"BLOSUM62"}, \code{"PAM30"}, etc.}
 
 \item{normalize}{Method for normalizing distances. Options: \code{"none"} (default),
 \code{"maxlen"}, or \code{"length"}.}
 
-\item{gap_open}{Penalty for opening a gap in alignment metrics (default: -10).}
+\item{gap.open}{Penalty for opening a gap in alignment metrics (default: -10).}
 
-\item{gap_extend}{Penalty for extending a gap in alignment metrics (default: -1).}
+\item{gap.extend}{Penalty for extending a gap in alignment metrics (default: -1).}
 
 \item{call.related.clones}{Logical. If \code{TRUE}, uses \code{clonalCluster()} to
 identify related clones based on sequence similarity. If \code{FALSE}, defines
@@ -74,16 +82,32 @@ clustered together.}
 \item{use.J}{Logical. If \code{TRUE}, sequences must share the same J gene to be
 clustered together.}
 
-\item{removeNA}{This will remove any chain without values.}
+\item{remove.na}{This will remove any chain without values.}
 
-\item{removeMulti}{Logical. If \code{TRUE}, removes cells that have more than
+\item{remove.multi}{Logical. If \code{TRUE}, removes cells that have more than
 one distinct heavy or light chain after processing.}
 
-\item{filterMulti}{Logical. If \code{TRUE}, filters multi-chain cells to retain
+\item{filter.multi}{Logical. If \code{TRUE}, filters multi-chain cells to retain
 only the most abundant IGH and IGL/IGK chains.}
 
-\item{filterNonproductive}{Logical. If \code{TRUE}, removes non-productive contigs
+\item{filter.nonproductive}{Logical. If \code{TRUE}, removes non-productive contigs
 from the analysis.}
+
+\item{removeNA}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{remove.na} instead.}
+
+\item{removeMulti}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{remove.multi} instead.}
+
+\item{filterMulti}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{filter.multi} instead.}
+
+\item{filterNonproductive}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{filter.nonproductive} instead.}
+
+\item{dist_type}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{dist.type} instead.}
+
+\item{dist_mat}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{dist.mat} instead.}
+
+\item{gap_open}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{gap.open} instead.}
+
+\item{gap_extend}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{gap.extend} instead.}
 }
 \value{
 A list of data frames, where each data frame represents a sample.

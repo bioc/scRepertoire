@@ -21,28 +21,32 @@
 #' # Using combineExpresion()
 #' scRep_example <- combineExpression(combined, scRep_example)
 #' 
-#' @param input.data The product of [combineTCR()], [combineBCR()] or a list of 
+#' @param input.data The product of [combineTCR()], [combineBCR()] or a list of
 #' both c([combineTCR()], [combineBCR()]).
 #' @param sc.data The Seurat or Single-Cell Experiment (SCE) object to attach
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
-#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL` 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
+#' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`
 #' (for both light chains), `both`.
-#' @param group.by A column header in lists to group the analysis 
+#' @param group.by A column header in lists to group the analysis
 #' by (e.g., "sample", "treatment"). If `NULL`, will be based on the list element.
-#' @param proportion Whether to proportion (`TRUE`) or total 
-#' frequency (`FALSE`) of the clone based on the group.by variable. 
-#' @param cloneSize The bins for the grouping based on proportion or frequency. 
-#' If proportion is `FALSE` and the cloneSizes are not set high enough
-#' based on frequency, the upper limit of cloneSizes will be automatically
-#' updated.S
-#' @param filterNA Method to subset Seurat/SCE object of barcodes without 
+#' @param proportion Whether to proportion (`TRUE`) or total
+#' frequency (`FALSE`) of the clone based on the group.by variable.
+#' @param clone.size The bins for the grouping based on proportion or frequency.
+#' If proportion is `FALSE` and the clone.sizes are not set high enough
+#' based on frequency, the upper limit of clone.sizes will be automatically
+#' updated.
+#' @param filter.na Method to subset Seurat/SCE object of barcodes without
 #' clone information
-#' @param addLabel This will add a label to the frequency header, allowing
-#' the user to try multiple group.by variables or recalculate frequencies after 
+#' @param add.label This will add a label to the frequency header, allowing
+#' the user to try multiple group.by variables or recalculate frequencies after
 #' subsetting the data.
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#' @param cloneSize \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.size` instead.
+#' @param filterNA \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `filter.na` instead.
+#' @param addLabel \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `add.label` instead.
 #' @importFrom dplyr left_join all_of coalesce
 #' @importFrom  rlang %||% sym :=
 #' @importFrom SummarizedExperiment colData<- colData
@@ -52,43 +56,68 @@
 #' @return Single-cell object with clone information added to meta data
 #' information
 #'
-combineExpression <- function(input.data, 
-                              sc.data, 
-                              cloneCall ="strict", 
-                              chain = "both", 
-                              group.by = NULL, 
-                              proportion = TRUE, 
-                              filterNA = FALSE,
-                              cloneSize = c(Rare = 1e-4,Small = 0.001,Medium = 0.01,Large = 0.1,Hyperexpanded = 1),
-                              addLabel = FALSE) {
-    
+combineExpression <- function(input.data,
+                              sc.data,
+                              clone.call = NULL,
+                              chain = "both",
+                              group.by = NULL,
+                              proportion = TRUE,
+                              filter.na = NULL,
+                              clone.size = NULL,
+                              add.label = NULL,
+                              # Deprecated arguments
+                              cloneCall = NULL,
+                              cloneSize = NULL,
+                              filterNA = NULL,
+                              addLabel = NULL) {
+
+  # Handle deprecated arguments
+  clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                               "combineExpression", default = "strict")
+  clone.size <- .deprecate_arg(cloneSize, clone.size, "cloneSize", "clone.size",
+                               "combineExpression", default = c(Rare = 1e-4, Small = 0.001, Medium = 0.01, Large = 0.1, Hyperexpanded = 1))
+  filter.na <- .deprecate_arg(filterNA, filter.na, "filterNA", "filter.na",
+                              "combineExpression", default = FALSE)
+  add.label <- .deprecate_arg(addLabel, add.label, "addLabel", "add.label",
+                              "combineExpression", default = FALSE)
+
+  clonalFrequency <- NULL
   call_time <- Sys.time()
     options( dplyr.summarise.inform = FALSE )
-    if (!proportion && any(cloneSize < 1)) {
-        stop("Adjust the cloneSize parameter - there are groupings < 1")
+    if (!proportion && any(clone.size < 1)) {
+        stop("Adjust the clone.size parameter - there are groupings < 1")
     }
-    cloneSize <- c(None = 0, cloneSize)
+    clone.size <- c(None = 0, clone.size)
 
-    cloneCall <- .theCall(input.data, cloneCall)
+    clone.call <- .theCall(input.data, clone.call)
     if (chain != "both") {
       #Retain the full clone information
       full.clone <- lapply(input.data, function(x) {
-        x[, c("barcode", cloneCall)]
+        x[, c("barcode", clone.call)]
       })
       full.clone <- bind_rows(full.clone)
       for(i in seq_along(input.data)) {
-        input.data[[i]] <- .offTheChain(input.data[[i]], chain, cloneCall, check = FALSE)
+        input.data[[i]] <- .offTheChain(input.data[[i]], chain, clone.call, check = FALSE)
       }
     }
     input.data <- .checkList(input.data)
-    
+
+    # Remove any existing clonal columns to allow recalculation
+    cols_to_remove <- c("clonalFrequency", "clonalProportion", "cloneSize")
+    for (i in seq_along(input.data)) {
+      existing_cols <- intersect(cols_to_remove, colnames(input.data[[i]]))
+      if (length(existing_cols) > 0) {
+        input.data[[i]] <- input.data[[i]][, !colnames(input.data[[i]]) %in% existing_cols, drop = FALSE]
+      }
+    }
+
     #Getting Summaries of clones from combineTCR() or combineBCR()
     Con.df <- NULL
     meta <- .grabMeta(sc.data)
     cell.names <- rownames(meta)
 
     conDfColnamesNoCloneSize <- unique(c(
-        "barcode", CT_lines, cloneCall, "clonalProportion", "clonalFrequency"
+        "barcode", CT_lines, clone.call, "clonalProportion", "clonalFrequency"
     ))
 
     # Computes the clonalProportion and clonalFrequency for each clone
@@ -97,78 +126,60 @@ combineExpression <- function(input.data,
         for (i in seq_along(input.data)) {
 
             data <- data.frame(input.data[[i]], stringsAsFactors = FALSE)
-            data2 <- unique(data[,c("barcode", cloneCall)])
+            data2 <- unique(data[,c("barcode", clone.call)])
             #This ensures all calculations are based on the cells in the SCO
             data2 <- na.omit(data2[data2[,"barcode"] %in% cell.names,])
-            data2 <- data2 %>% 
-                        group_by(data2[,cloneCall]) %>%
-                        summarise(clonalProportion = dplyr::n()/nrow(data2), 
+            data2 <- data2 %>%
+                        group_by(data2[,clone.call]) %>%
+                        summarise(clonalProportion = dplyr::n()/nrow(data2),
                                   clonalFrequency = dplyr::n())
-            colnames(data2)[1] <- cloneCall
-            data <- merge(data, data2, by = cloneCall, all = TRUE)
+            colnames(data2)[1] <- clone.call
+            data <- merge(data, data2, by = clone.call, all = TRUE)
             data <- data[, conDfColnamesNoCloneSize]
             Con.df <- rbind.data.frame(Con.df, data)
         }
 
     } else {
         data <- data.frame(bind_rows(input.data), stringsAsFactors = FALSE)
-        data2 <- na.omit(unique(data[,c("barcode", cloneCall, group.by)]))
+        data2 <- na.omit(unique(data[,c("barcode", clone.call, group.by)]))
         #This ensures all calculations are based on the cells in the SCO
         data2 <- data2[data2[,"barcode"] %in% cell.names, ]
         data2 <- data2 %>%
-          group_by(.data[[cloneCall]], .data[[group.by]]) %>%
+          group_by(.data[[clone.call]], .data[[group.by]]) %>%
           summarise(clonalFrequency = n(), .groups = "drop") %>%
           group_by(.data[[group.by]]) %>%
           mutate(clonalProportion = clonalFrequency / sum(clonalFrequency))
 
-        colnames(data2)[c(1,2)] <- c(cloneCall, group.by)
-        data <- merge(data, data2, by = c(cloneCall, group.by), all = TRUE)
+        colnames(data2)[c(1,2)] <- c(clone.call, group.by)
+        data <- merge(data, data2, by = c(clone.call, group.by), all = TRUE)
         Con.df <- data[, conDfColnamesNoCloneSize]
     }
 
-    #Detect if largest cloneSize category is too small for experiment and amend
-    #this prevents a ton of NA values in the data
-    if(!proportion && max(na.omit(Con.df[,"clonalFrequency"])) > cloneSize[length(cloneSize)]) {
-      cloneSize[length(cloneSize)] <- max(na.omit(Con.df[,"clonalFrequency"]))
-    }
-    
-    #Creating the bins for cloneSize
-    Con.df$cloneSize <- NA
-    for (x in seq_along(cloneSize)) { 
-      names(cloneSize)[x] <- paste0(names(cloneSize[x]), ' (', cloneSize[x-1], 
-        ' < X <= ', cloneSize[x], ')') 
-    }
+    #Use shared helper to assign cloneSize bins
+    bin_result <- .assignCloneSizeBins(Con.df, clone.size, proportion)
+    Con.df <- bin_result$df
+    clone.size <- bin_result$clone.size
 
-    cloneRatioColname <- ifelse(proportion, "clonalProportion", "clonalFrequency")
-
-    #Assigning cloneSize
-    for (i in 2:length(cloneSize)) { 
-        Con.df$cloneSize <- ifelse(Con.df[, cloneRatioColname] > cloneSize[i-1] & 
-                                   Con.df[, cloneRatioColname] <= cloneSize[i], 
-                                   names(cloneSize[i]), 
-                                   Con.df$cloneSize)
-    }
-    
     #Formating the meta data to add and removing any duplicate barcodes
     PreMeta <- unique(Con.df[, c(conDfColnamesNoCloneSize, "cloneSize")])
     dup <- PreMeta$barcode[which(duplicated(PreMeta$barcode))]
     PreMeta <- PreMeta[!PreMeta$barcode %in% dup,]
-    
-    #Re-adding full clones 
+
+    #Re-adding full clones
     if (chain != "both") {
-      clone_sym <- sym(cloneCall)
+      clone_sym <- sym(clone.call)
       PreMeta <- PreMeta %>%
         left_join(full.clone, by = "barcode", suffix = c("", ".from_full_clones")) %>%
-        mutate(!!clone_sym := coalesce(!!sym(paste0(cloneCall, ".from_full_clones")), !!clone_sym)) %>%
-        dplyr::select(-all_of(paste0(cloneCall, ".from_full_clones")))
+        mutate(!!clone_sym := coalesce(!!sym(paste0(clone.call, ".from_full_clones")), !!clone_sym)) %>%
+        dplyr::select(-all_of(paste0(clone.call, ".from_full_clones")))
     }
     barcodes <- PreMeta$barcode
     PreMeta <- PreMeta[,-1]
     rownames(PreMeta) <- barcodes
-    if (!is.null(group.by) && group.by != "none" && addLabel) {
-      location <- which(colnames(PreMeta) %in% c("clonalProportion", 
+    if (!is.null(group.by) && group.by != "none" && add.label) {
+      location <- which(colnames(PreMeta) %in% c("clonalProportion",
                           "clonalFrequency"))
-      colnames(PreMeta)[location] <- paste0(c("clonalProportion", 
+      colnames(PreMeta)[location] <- paste0(c("clonalProportion",
                                             "clonalFrequency"), group.by)
     }
     
@@ -193,10 +204,10 @@ combineExpression <- function(input.data,
       full_data  <- full_data[, -1]
       colData(sc.data) <- DataFrame(full_data[, combined_col_names])  
     }
-    if (filterNA) { 
-      sc.data <- .filteringNA(sc.data) 
+    if (filter.na) {
+      sc.data <- .filteringNA(sc.data)
     }
-    sc.data$cloneSize <- factor(sc.data$cloneSize, levels = rev(names(cloneSize)))
+    sc.data$cloneSize <- factor(sc.data$cloneSize, levels = rev(names(clone.size)))
     
     if(.is.seurat.object(sc.data)) {
         sc.data@commands[["combineExpression"]] <- .makeScrepSeurat(

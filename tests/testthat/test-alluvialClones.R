@@ -12,8 +12,8 @@ test_that("Input validation works correctly", {
 })
 
 test_that("Output formats (table vs. plot) are correct", {
-  # Test that exportTable = TRUE returns a data.frame in lodes format
-  table_output <- alluvialClones(scRep_example, y.axes = c("Patient", "Type"), exportTable = TRUE)
+  # Test that export.table = TRUE returns a data.frame in lodes format
+  table_output <- alluvialClones(scRep_example, y.axes = c("Patient", "Type"), export.table = TRUE)
   expect_s3_class(table_output, "data.frame")
   expect_true(all(c("x", "stratum", "alluvium") %in% names(table_output)))
   
@@ -37,7 +37,7 @@ test_that("Aesthetic parameters (`color`, `alpha`, `facet`) are handled correctl
 })
 
 test_that("Lodes data frame is generated correctly", {
-  lodes_df <- alluvialClones(scRep_example, y.axes = c("Patient", "Type"), exportTable = TRUE)
+  lodes_df <- alluvialClones(scRep_example, y.axes = c("Patient", "Type"), export.table = TRUE)
   axis_labels <- unique(as.character(lodes_df$x))
   expect_equal(axis_labels, c("Patient", "Type"))
 })

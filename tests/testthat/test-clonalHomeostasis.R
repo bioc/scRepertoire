@@ -9,14 +9,14 @@ combined <- addVariable(combined,
                         variables = rep(c("B", "L"), 4))
 
 test_that("Output formats (matrix vs. plot) are correct", {
-  mat_output <- clonalHomeostasis(combined, exportTable = TRUE)
+  mat_output <- clonalHomeostasis(combined, export.table = TRUE)
   expect_true(is.matrix(mat_output))
   plot_output <- clonalHomeostasis(combined)
   expect_s3_class(plot_output, "ggplot")
 })
 
 test_that("The returned matrix has correct dimensions and properties", {
-  mat_output <- clonalHomeostasis(combined, exportTable = TRUE)
+  mat_output <- clonalHomeostasis(combined, export.table = TRUE)
   expect_equal(nrow(mat_output), length(combined)) # Rows should equal number of samples
   expect_equal(ncol(mat_output), 5)               # Default has 5 bins
   expect_true(all(abs(rowSums(mat_output) - 1) < 1e-9))
@@ -30,7 +30,7 @@ test_that("The returned matrix has correct dimensions and properties", {
 
 test_that("Custom `cloneSize` parameter works as expected", {
   custom_bins <- c(Small = 0.01, Medium = 0.2, Large = 1)
-  mat_custom <- clonalHomeostasis(combined, cloneSize = custom_bins, exportTable = TRUE)
+  mat_custom <- clonalHomeostasis(combined, clone.size = custom_bins, export.table = TRUE)
   expect_equal(ncol(mat_custom), 3)
   expected_custom_colnames <- c("Small (0 < X <= 0.01)",
                                 "Medium (0.01 < X <= 0.2)",
@@ -40,17 +40,17 @@ test_that("Custom `cloneSize` parameter works as expected", {
 })
 
 test_that("`group.by` parameter correctly aggregates the data", {
-  mat_grouped <- clonalHomeostasis(combined, group.by = "Type", exportTable = TRUE)
+  mat_grouped <- clonalHomeostasis(combined, group.by = "Type", export.table = TRUE)
   expect_equal(nrow(mat_grouped), 2)
   expect_true(all(rownames(mat_grouped) %in% c("B", "L")))
   expect_true(all(abs(rowSums(mat_grouped) - 1) < 1e-9))
 })
 
-test_that("`cloneCall` and `chain` parameters execute correctly", {
-  mat_aa <- clonalHomeostasis(combined, cloneCall = "aa", exportTable = TRUE)
+test_that("`clone.call` and `chain` parameters execute correctly", {
+  mat_aa <- clonalHomeostasis(combined, clone.call = "aa", export.table = TRUE)
   expect_true(is.matrix(mat_aa))
   expect_equal(nrow(mat_aa), length(combined))
-  mat_trb <- clonalHomeostasis(combined, chain = "TRB", exportTable = TRUE)
+  mat_trb <- clonalHomeostasis(combined, chain = "TRB", export.table = TRUE)
   expect_true(is.matrix(mat_trb))
   expect_equal(nrow(mat_trb), length(combined))
 })

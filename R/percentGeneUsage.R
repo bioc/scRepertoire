@@ -34,14 +34,14 @@
 #' trbv_usage_table <- percentGeneUsage(combined,
 #'                                      genes = "TRBV",
 #'                                      group.by = "sample",
-#'                                      exportTable = TRUE,
+#'                                      export.table = TRUE,
 #'                                      summary.fun = "count")
 #'
 #' # Export the raw data table for paired gene usage
 #' trbv_trbj_usage_table <- percentGeneUsage(combined,
 #'                                           genes = c("TRBV", "TRBJ"),
 #'                                           group.by = "sample",
-#'                                           exportTable = TRUE,
+#'                                           export.table = TRUE,
 #'                                           summary.fun = "percent")
 #' 
 #'
@@ -60,9 +60,10 @@
 #' `"percent"` (default), `"proportion"`, or `"count"`.
 #' @param plot.type The type of plot to return: `"heatmap"` (default for paired loci,
 #' also available for single loci), or `"barplot"` (for single loci).
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
 #' @param palette Colors to use in visualization - input any
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' [hcl.pals][grDevices::hcl.pals].
 #' @param ... Additional arguments passed to the ggplot theme
 #'
@@ -85,11 +86,17 @@ percentGeneUsage <- function(input.data,
                              group.by = NULL,
                              order.by = NULL,
                              summary.fun = c("percent", "proportion", "count"),
-                             plot.type = "heatmap", 
-                             exportTable = FALSE,
+                             plot.type = "heatmap",
+                             export.table = NULL,
                              palette = "inferno",
+                             # Deprecated arguments
+                             exportTable = NULL,
                              ...) {
-  
+
+  # Handle deprecated arguments
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "percentGeneUsage", default = FALSE)
+
   sco <- .is.seurat.or.se.object(input.data)
   
   summary.fun <- match.arg(summary.fun)
@@ -189,7 +196,7 @@ percentGeneUsage <- function(input.data,
   })
   
   mat_melt <- do.call(rbind, mat_melt_list)
-  if (exportTable) {
+  if (export.table) {
     if (length(genes) == 1) {
       # Single gene usage: rows are genes, columns are groups
       output_matrix <- tapply(mat_melt$Weight, list(mat_melt$Var1, mat_melt$Group), sum)
@@ -269,14 +276,20 @@ percentGeneUsage <- function(input.data,
 #' @export
 vizGenes <- function(input.data,
                      x.axis = "TRBV",
-                     y.axis = NULL, 
+                     y.axis = NULL,
                      group.by = NULL,
                      plot = "heatmap",
-                     order.by = NULL, 
+                     order.by = NULL,
                      summary.fun = c("percent", "proportion", "count"),
-                     exportTable = FALSE,
-                     palette = "inferno") {
-  
+                     export.table = NULL,
+                     palette = "inferno",
+                     # Deprecated arguments
+                     exportTable = NULL) {
+
+  # Handle deprecated arguments
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "vizGenes", default = FALSE)
+
   summary.fun <- match.arg(summary.fun)
   genes_param <- x.axis
   plot_type_param <- plot
@@ -299,9 +312,9 @@ vizGenes <- function(input.data,
     genes = genes_param,
     group.by = group_by_param,
     order.by = order_by_param,
-    summary.fun = summary.fun, 
+    summary.fun = summary.fun,
     plot.type = plot_type_param,
-    exportTable = exportTable,
+    export.table = export.table,
     palette = palette
   )
 }
@@ -324,7 +337,7 @@ vizGenes <- function(input.data,
 #'                                  chain = "TRA",
 #'                                  gene = "Jgene",
 #'                                  group.by = "sample",
-#'                                  exportTable = TRUE,
+#'                                  export.table = TRUE,
 #'                                  summary.fun = "count")
 #' 
 #' @export
@@ -333,10 +346,16 @@ percentGenes <- function(input.data,
                          gene = "Vgene",
                          group.by = NULL,
                          order.by = NULL,
-                         exportTable = FALSE,
+                         export.table = NULL,
                          summary.fun = c("percent", "proportion", "count"),
-                         palette = "inferno") {
-  
+                         palette = "inferno",
+                         # Deprecated arguments
+                         exportTable = NULL) {
+
+  # Handle deprecated arguments
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "percentGenes", default = FALSE)
+
   summary.fun <- match.arg(summary.fun)
   
   
@@ -360,15 +379,15 @@ percentGenes <- function(input.data,
     group.by = group.by,
     order.by = order.by,
     summary.fun = summary.fun,
-    plot.type = "heatmap", 
-    exportTable = exportTable,
+    plot.type = "heatmap",
+    export.table = export.table,
     palette = palette
   )
 }
 
 #' @rdname percentGeneUsage
-#' @param chain The TCR/BCR chain to use. Accepted values: `TRA`, `TRB`, `TRG`, 
-#' `TRD`, `IGH`, `IGL` (for both light chains) 
+#' @param chain The TCR/BCR chain to use. Accepted values: `TRA`, `TRB`, `TRG`,
+#' `TRD`, `IGH`, `IGL` (for both light chains)
 #' @examples
 
 #' # Quantify and visualize TRB V-J gene pairings as a heatmap
@@ -381,7 +400,7 @@ percentGenes <- function(input.data,
 #' trav_traj_table <- percentVJ(combined,
 #'                              chain = "TRA",
 #'                              group.by = "sample",
-#'                              exportTable = TRUE,
+#'                              export.table = TRUE,
 #'                              summary.fun = "proportion")
 #' @export
 percentVJ <- function(input.data,
@@ -389,9 +408,15 @@ percentVJ <- function(input.data,
                       group.by = NULL,
                       order.by = NULL,
                       summary.fun = c("percent", "proportion", "count"),
-                      exportTable = FALSE,
-                      palette = "inferno") {
-  
+                      export.table = NULL,
+                      palette = "inferno",
+                      # Deprecated arguments
+                      exportTable = NULL) {
+
+  # Handle deprecated arguments
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "percentVJ", default = FALSE)
+
   summary.fun <- match.arg(summary.fun)
   genes_param <- switch(chain,
                         "TRA" = c("TRAV", "TRAJ"),
@@ -409,9 +434,9 @@ percentVJ <- function(input.data,
     genes = genes_param,
     group.by = group.by,
     order.by = order.by,
-    summary.fun = summary.fun, 
+    summary.fun = summary.fun,
     plot.type = "heatmap",
-    exportTable = exportTable,
+    export.table = export.table,
     palette = palette
   )
 }

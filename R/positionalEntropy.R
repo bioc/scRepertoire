@@ -28,13 +28,14 @@
 #' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups 
 #' automatically.
 #' @param aa.length The maximum length of the CDR3 amino acid sequence. 
-#' @param method The method to calculate the entropy/diversity - 
-#' `"shannon"`, `"inv.simpson"`, `"gini.simpson"`, `"norm.entropy"`, 
+#' @param method The method to calculate the entropy/diversity -
+#' `"shannon"`, `"inv.simpson"`, `"gini.simpson"`, `"norm.entropy"`,
 #' `"pielou"`, `"hill0"`, `"hill1"`, `"hill2"`
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
-#' @param palette Colors to use in visualization - input any 
+#' @param palette Colors to use in visualization - input any
 #' [hcl.pals][grDevices::hcl.pals]
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
 #' 
 #' @export
@@ -42,16 +43,22 @@
 #' @concept Summarize_Repertoire
 #' @return A ggplot object displaying entropy or diversity by amino acid position.
 #' If `exportTable = TRUE`, a matrix of the raw data is returned.
-positionalEntropy <- function(input.data, 
-                              chain = "TRB", 
-                              group.by = NULL, 
+positionalEntropy <- function(input.data,
+                              chain = "TRB",
+                              group.by = NULL,
                               order.by = NULL,
                               aa.length = 20,
                               method = "norm.entropy",
-                              exportTable = FALSE, 
+                              export.table = NULL,
                               palette = "inferno",
+                              # Deprecated arguments
+                              exportTable = NULL,
                               ...)  {
-  
+
+  # Handle deprecated arguments
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "positionalEntropy", default = FALSE)
+
   sco <- .is.seurat.or.se.object(input.data)
   input.data <- .dataWrangle(input.data, 
                               group.by, 
@@ -95,8 +102,8 @@ positionalEntropy <- function(input.data,
           ylab("Relative Diversity") +
           .themeRepertoire(...) + 
           theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-    if (exportTable == TRUE) { 
-      return(mat_melt) 
+    if (export.table == TRUE) {
+      return(mat_melt)
     }
     return(plot)
 }

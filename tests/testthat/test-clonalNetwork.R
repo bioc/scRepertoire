@@ -8,13 +8,13 @@ scRep_example$Patient <- substring(scRep_example$orig.ident, 1, 3)
 scRep_example$Type <- substring(scRep_example$orig.ident, 4, 4)
  
 test_that("Output formats (table, clones, plot) are correct", {
-  # Test exportTable
-  table_output <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", exportTable = TRUE)
+  # Test export.table
+  table_output <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", export.table = TRUE)
   expect_s3_class(table_output, "data.frame")
   expect_true(all(c("to", "from", "weight") %in% names(table_output)))
   
   # Test exportClones
-  clones_output <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", exportClones = TRUE)
+  clones_output <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", export.clones = TRUE)
   expect_s3_class(clones_output, "data.frame")
   expect_true(all(c("clone", "sum") %in% names(clones_output)))
   
@@ -24,7 +24,7 @@ test_that("Output formats (table, clones, plot) are correct", {
 })
 
 test_that("Core edge weight calculation is correct", {
-  edge_list <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", exportTable = TRUE)
+  edge_list <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", export.table = TRUE)
   
   edge_c3_c5 <- edge_list[edge_list$from == "3" & edge_list$to == "5", ]
   edge_c5_c3 <- edge_list[edge_list$from == "5" & edge_list$to == "3", ]
@@ -35,17 +35,17 @@ test_that("Core edge weight calculation is correct", {
 
 test_that("Filtering parameters work as expected", {
   edge_list_prop <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", 
-                                  filter.proportion = 0.2, exportTable = TRUE)
+                                  filter.proportion = 0.2, export.table = TRUE)
   expect_equal(nrow(edge_list_prop), 1)
   expect_equal(edge_list_prop$weight, 0.25)
-  edge_list_unfiltered <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", exportTable = TRUE)
+  edge_list_unfiltered <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", export.table = TRUE)
   edge_list_half <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", 
-                                  filter.graph = TRUE, exportTable = TRUE)
+                                  filter.graph = TRUE, export.table = TRUE)
   expect_lt(nrow(edge_list_half), nrow(edge_list_unfiltered))
 })
 
 test_that("exportClones provides correctly summarized data", {
-  clones_df <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", exportClones = TRUE)
+  clones_df <- clonalNetwork(scRep_example, reduction = "umap", group.by = "seurat_clusters", export.clones = TRUE)
   expect_equal(nrow(clones_df), 341)
   expect_equal(clones_df$sum[1:5], c(11,3,3,3,2))
 })

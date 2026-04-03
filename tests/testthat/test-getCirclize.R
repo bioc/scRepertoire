@@ -22,11 +22,11 @@ test_that("`include.self = FALSE` correctly removes self-referential rows", {
 })
 
 
-test_that("Function handles different `cloneCall` methods", {
+test_that("Function handles different `clone.call` methods", {
   expect_silent(
-    df_strict <- getCirclize(scRep_example, group.by = "seurat_clusters", cloneCall = "strict")
+    df_strict <- getCirclize(scRep_example, group.by = "seurat_clusters", clone.call = "strict")
   )
-  df_aa <- getCirclize(scRep_example, group.by = "seurat_clusters", cloneCall = "aa")
+  df_aa <- getCirclize(scRep_example, group.by = "seurat_clusters", clone.call = "aa")
   expect_equal(df_strict$value, df_aa$value)
 })
 

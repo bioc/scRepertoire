@@ -13,14 +13,14 @@ test_that("Function returns a ggplot object by default", {
   expect_s3_class(p, "ggplot")
 })
 
-test_that("Function returns a data.frame when exportTable is TRUE", {
-  df_out <- positionalEntropy(combined, exportTable = TRUE)
+test_that("Function returns a data.frame when export.table is TRUE", {
+  df_out <- positionalEntropy(combined, export.table = TRUE)
   expect_s3_class(df_out, "data.frame")
   expect_true(all(c("entropy", "Position", "group") %in% colnames(df_out)))
 })
 
 test_that("Grouping with 'group.by' works correctly", {
-  df_grouped <- positionalEntropy(combined, group.by = "Type", exportTable = TRUE)
+  df_grouped <- positionalEntropy(combined, group.by = "Type", export.table = TRUE)
   
   # Check for correct group names
   expect_equal(sort(unique(df_grouped$group)), c("B", "L"))
@@ -34,37 +34,37 @@ test_that("Grouping with 'group.by' works correctly", {
 test_that("'method' parameter changes", {
   df_shannon <- positionalEntropy(combined, 
                                   method = "shannon", 
-                                  exportTable = TRUE)
+                                  export.table = TRUE)
   expect_s3_class(df_shannon, "data.frame")
   expect_true(all(c("entropy", "Position", "group") %in% colnames(df_shannon)))
   
   df_inv_simpson <- positionalEntropy(combined, 
                                       method = "inv.simpson", 
-                                      exportTable = TRUE)
+                                      export.table = TRUE)
   expect_s3_class(df_inv_simpson, "data.frame")
   expect_true(all(c("entropy", "Position", "group") %in% colnames(df_inv_simpson)))
   
   df_gini_simpson <- positionalEntropy(combined, 
                                        method = "gini.simpson", 
-                                       exportTable = TRUE)
+                                       export.table = TRUE)
   expect_s3_class(df_gini_simpson, "data.frame")
   expect_true(all(c("entropy", "Position", "group") %in% colnames(df_gini_simpson)))
 
   df_hill0 <- positionalEntropy(combined, 
                                 method = "hill0", 
-                                exportTable = TRUE)
+                                export.table = TRUE)
   expect_s3_class(df_hill0 , "data.frame")
   expect_true(all(c("entropy", "Position", "group") %in% colnames(df_hill0 )))
   
   df_hill1 <- positionalEntropy(combined, 
                                 method = "hill1", 
-                                exportTable = TRUE)
+                                export.table = TRUE)
   expect_s3_class(df_hill1, "data.frame")
   expect_true(all(c("entropy", "Position", "group") %in% colnames(df_hill1)))
   
   df_hill2 <- positionalEntropy(combined, 
                                 method = "hill2", 
-                                exportTable = TRUE)
+                                export.table = TRUE)
   expect_s3_class(df_hill2, "data.frame")
   expect_true(all(c("entropy", "Position", "group") %in% colnames(df_hill2)))
 
@@ -75,7 +75,7 @@ test_that("Ordering with 'order.by' works correctly", {
   df_ordered <- positionalEntropy(combined, 
                                   group.by = "Type", 
                                   order.by = order_vec, 
-                                  exportTable = TRUE)
+                                  export.table = TRUE)
   
   expect_s3_class(df_ordered$group, "factor")
   expect_equal(levels(df_ordered$group), order_vec)

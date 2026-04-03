@@ -7,14 +7,17 @@
 combineExpression(
   input.data,
   sc.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   chain = "both",
   group.by = NULL,
   proportion = TRUE,
-  filterNA = FALSE,
-  cloneSize = c(Rare = 1e-04, Small = 0.001, Medium = 0.01, Large = 0.1, Hyperexpanded =
-    1),
-  addLabel = FALSE
+  filter.na = NULL,
+  clone.size = NULL,
+  add.label = NULL,
+  cloneCall = NULL,
+  cloneSize = NULL,
+  filterNA = NULL,
+  addLabel = NULL
 )
 }
 \arguments{
@@ -23,7 +26,7 @@ both c(\code{\link[=combineTCR]{combineTCR()}}, \code{\link[=combineBCR]{combine
 
 \item{sc.data}{The Seurat or Single-Cell Experiment (SCE) object to attach}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -37,17 +40,25 @@ by (e.g., "sample", "treatment"). If \code{NULL}, will be based on the list elem
 \item{proportion}{Whether to proportion (\code{TRUE}) or total
 frequency (\code{FALSE}) of the clone based on the group.by variable.}
 
-\item{filterNA}{Method to subset Seurat/SCE object of barcodes without
+\item{filter.na}{Method to subset Seurat/SCE object of barcodes without
 clone information}
 
-\item{cloneSize}{The bins for the grouping based on proportion or frequency.
-If proportion is \code{FALSE} and the cloneSizes are not set high enough
-based on frequency, the upper limit of cloneSizes will be automatically
-updated.S}
+\item{clone.size}{The bins for the grouping based on proportion or frequency.
+If proportion is \code{FALSE} and the clone.sizes are not set high enough
+based on frequency, the upper limit of clone.sizes will be automatically
+updated.}
 
-\item{addLabel}{This will add a label to the frequency header, allowing
+\item{add.label}{This will add a label to the frequency header, allowing
 the user to try multiple group.by variables or recalculate frequencies after
 subsetting the data.}
+
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{cloneSize}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.size} instead.}
+
+\item{filterNA}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{filter.na} instead.}
+
+\item{addLabel}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{add.label} instead.}
 }
 \value{
 Single-cell object with clone information added to meta data

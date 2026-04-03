@@ -3,7 +3,7 @@ title: "Single-cell Gene Set Enrichment Analysis"
 date: 'Compiled: `r format(Sys.Date(), "%B %d, %Y")`'
 output: rmarkdown::html_vignette
 theme: united
-pdf_print: kable
+df_print: kable
 vignette: >
   %\VignetteIndexEntry{Single-cell Gene Set Enrichment Analysis}
   %\VignetteEngine{knitr::rmarkdown}

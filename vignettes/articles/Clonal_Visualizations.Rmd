@@ -186,3 +186,10 @@ clonalScatter(combined.TCR,
               dot.size = "total",
               graph = "proportion")
 ```
+
+## Next Steps
+
+- [Visualizing Clonal Dynamics](Clonal_Dynamics.html) - Explore clonal homeostasis and proportional analysis.
+- [Comparing Clonal Diversity and Overlap](Clonal_Diversity.html) - Diversity metrics, rarefaction, and repertoire overlap.
+- [Summarizing Repertoires](Repertoire_Summary.html) - Gene usage, amino acid properties, and k-mer analysis.
+- [Combining Clones and Single-Cell Objects](Attaching_SC.html) - Integrate clonal data with Seurat or SCE objects.

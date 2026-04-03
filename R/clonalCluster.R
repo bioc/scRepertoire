@@ -188,7 +188,7 @@ clonalCluster <- function(input.data,
   full_edge_list <- do.call(rbind, result_list)
   
   # if group.by is invoked
-  if (length(chain_data) > 1 && !is.null(names(chain_data))) {
+  if (!is.null(group.by) && !is.null(names(chain_data))) {
     row_counts <- sapply(result_list, NROW)
     full_edge_list$group <- rep(names(chain_data), times = row_counts)
   }

@@ -1,3 +1,11 @@
+# scRepertoire VERSION 2.7.3
+
+## BUG FIXES
+
+* Fixed `combineBCR()` assigning the same `group.by` value to all cells instead of per-barcode values.
+* Fixed `clonalCluster()` failing when `group.by` produces a single group by correcting the condition for adding the group column to the edge list.
+* Fixed test for CTstrict clustering pattern to match the new default `chain = "IGH"` behavior in `combineBCR()`.
+
 # scRepertoire VERSION 2.7.2
 
 ## NEW FEATURES

@@ -332,7 +332,8 @@ combineBCR <- function(input.data,
       Con.df <- .parseBCR(Con.df, unique_df, data2)
       Con.df <- .assignCT(cellType = "B", Con.df)
       if(!is.null(group.by)) { #retain group.by variable for clustering
-        Con.df[[group.by]] <- data2[[group.by]][1]
+        barcode_groups <- data2[!duplicated(data2$barcode), c("barcode", group.by)]
+        Con.df[[group.by]] <- barcode_groups[[group.by]][match(Con.df$barcode, barcode_groups$barcode)]
       }
       Con.df %>% 
         mutate(length1 = nchar(cdr3_nt1)) %>%

@@ -177,8 +177,8 @@ test_that("CTstrict format: Clustered vs Singlet cells", {
   
   ctstrict_values <- combined_bcr[[1]]$CTstrict
   
-  # Clustered cells should have format: cluster.X_cluster.X (when chain="both")
-  clustered_pattern <- "^cluster\\.\\d+_cluster\\.\\d+$"
+  # Clustered cells should have cluster.X prefix on the heavy chain side (chain="IGH" default)
+  clustered_pattern <- "^cluster\\.\\d+_"
   clustered_cells <- grep(clustered_pattern, ctstrict_values, value = TRUE)
   expect_true(length(clustered_cells) > 0)
   

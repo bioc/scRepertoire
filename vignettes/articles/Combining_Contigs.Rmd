@@ -157,3 +157,9 @@ head(cleaned.BCR[[1]])
 ```
 
 `combineBCR()` is designed for processing B cell repertoire data, going beyond simple contig aggregation to incorporate advanced clustering based on CDR3 sequence similarity. This enables the identification of clonally related B cells, crucial for studying B cell development, affinity maturation, and humoral immune responses. Its filtering options further ensure the quality and interpretability of the processed data.
+
+## Next Steps
+
+- [Additional Processing Steps](Processing.html) - Add metadata, subset clones, bin by frequency, and export data.
+- [Basic Clonal Visualizations](Clonal_Visualizations.html) - Visualize clonal abundance, length, and composition across samples.
+- [Combining Clones and Single-Cell Objects](Attaching_SC.html) - Attach clonal data to Seurat or SCE objects with `combineExpression()`.

@@ -380,3 +380,9 @@ chordDiagram(circles_filtered, self.link = 1)
 ```
 
 `getCirclize()` and `vizCirclize()` facilitate the creation of visually striking and informative chord diagrams to represent shared clonal relationships between distinct groups within your single-cell data. By providing flexible ways to quantify and format clonal overlap, they enable researchers to effectively illustrate complex clonal connectivity patterns, which are crucial for understanding immune communication and migration.
+
+## Next Steps
+
+- [Quantifying Clonal Bias](Clonal_Bias.html) - Measure clonal expansion bias across clusters and conditions.
+- [Clustering by Edit Distance](Clonal_Cluster.html) - Group clones by sequence similarity beyond exact matches.
+- [FAQ](FAQ.html) - Common questions about color palettes, plot customization, and data export.

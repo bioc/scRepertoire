@@ -122,3 +122,9 @@ clonalProportion(combined.TCR,
 ```
 
 `clonalProportion()` complements `clonalHomeostasis()` by providing a perspective on how the "richest" (most abundant) clones contribute to the overall repertoire space. By segmenting clones into rank-based bins, it helps identify whether a few highly expanded clones or a larger number of moderately expanded clones dominate the immune response, offering distinct insights into repertoire structure and dynamics.
+
+## Next Steps
+
+- [Comparing Clonal Diversity and Overlap](Clonal_Diversity.html) - Diversity indices, rarefaction curves, and repertoire overlap.
+- [Basic Clonal Visualizations](Clonal_Visualizations.html) - Clonal abundance, length distributions, and scatter plots.
+- [Visualizations for Single-Cell Objects](SC_Visualizations.html) - Overlay clonal data on UMAP/tSNE embeddings.

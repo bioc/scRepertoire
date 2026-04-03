@@ -132,6 +132,12 @@ clonalBias(scRep_example,
            cloneCall = "aa", 
            split.by = "Patient", 
            group.by = "seurat_clusters",
-           n.boots = 10, 
+           n.boots = 10,
            min.expand =5)
 ```
+
+## Related Articles
+
+- [Visualizations for Single-Cell Objects](SC_Visualizations.html) - Alluvial plots, chord diagrams, and clonal network overlays.
+- [Combining Clones and Single-Cell Objects](Attaching_SC.html) - Attach clonal data with `combineExpression()`.
+- [Comparing Clonal Diversity and Overlap](Clonal_Diversity.html) - Diversity metrics and repertoire overlap.

@@ -202,7 +202,13 @@ combined <- annotateInvariant(combined,
                               type = "MAIT", 
                               species = "human")
 
-combined <- annotateInvariant(combined, 
-                              type = "iNKT", 
+combined <- annotateInvariant(combined,
+                              type = "iNKT",
                               species = "human")
 ```
+
+## Next Steps
+
+- [Basic Clonal Visualizations](Clonal_Visualizations.html) - Visualize clonal abundance, length, and composition across samples.
+- [Combining Clones and Single-Cell Objects](Attaching_SC.html) - Attach clonal data to Seurat or SCE objects with `combineExpression()`.
+- [Summarizing Repertoires](Repertoire_Summary.html) - Analyze gene usage, amino acid properties, and k-mer motifs.

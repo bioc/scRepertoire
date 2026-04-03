@@ -171,3 +171,10 @@ Citation Details
 Your feedback is valuable for improving scRepertoire! If you encounter a bug or have a suggestion for a new feature, please report it.
 
 Submit a [GitHub issue](https://github.com/BorchLab/scRepertoire/issues) - if possible please include a [reproducible example](https://reprex.tidyverse.org/). Alternatively, an example with the internal **scRep_example** and **contig_list** would be extremely helpful.
+
+### Helpful Articles
+
+- [Installation Instructions](Installation.html) - Getting scRepertoire installed.
+- [Loading Data](Loading.html) - Loading contig data from various formats.
+- [Basic Clonal Visualizations](Clonal_Visualizations.html) - Plot customization and visualization options.
+- [Visualizations for Single-Cell Objects](SC_Visualizations.html) - Overlaying clonal data on embeddings.

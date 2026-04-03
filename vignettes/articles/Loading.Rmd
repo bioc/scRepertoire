@@ -140,3 +140,8 @@ data("contig_list") #the data built into scRepertoire
 
 head(contig_list[[1]])
 ```
+
+## Next Steps
+
+- [Combining Contigs into Clones](Combining_Contigs.html) - Process loaded contigs into clonal definitions with `combineTCR()` and `combineBCR()`.
+- [Additional Processing Steps](Processing.html) - Add metadata, subset clones, export data, and annotate invariant T cells.

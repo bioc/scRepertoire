@@ -234,3 +234,9 @@ clonalOverlap(combined.TCR,
 ```
 
 `clonalOverlap()` is a tool for assessing the similarity and shared clonotypes between different immune repertoires. By offering various quantitative methods and a clear heatmap visualization, it allows researchers to identify the degree of overlap, providing insights into shared immune responses, cross-reactivity, or the impact of different treatments on clonal composition.
+
+## Next Steps
+
+- [Clustering by Edit Distance](Clonal_Cluster.html) - Group clones by sequence similarity beyond exact matches.
+- [Combining Clones and Single-Cell Objects](Attaching_SC.html) - Integrate clonal data with Seurat or SCE objects.
+- [Visualizations for Single-Cell Objects](SC_Visualizations.html) - Chord diagrams, alluvial plots, and clonal network overlays.

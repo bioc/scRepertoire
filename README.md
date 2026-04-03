@@ -1,7 +1,7 @@
 # scRepertoire: A toolkit for single-cell immune profiling
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/BorchLab/scRepertoire/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BorchLab/scRepertoire/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/BorchLab/scRepertoire/branch/master/graph/badge.svg)](https://app.codecov.io/gh/BorchLab/scRepertoire?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/BorchLab/scRepertoire/branch/devel/graph/badge.svg)](https://app.codecov.io/gh/BorchLab/scRepertoire?branch=devel)
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://www.borch.dev/uploads/screpertoire/)
 [![Bioc Release Build](http://www.bioconductor.org/shields/build/release/bioc/scRepertoire.svg)](http://www.bioconductor.org/checkResults/release/bioc-LATEST/scRepertoire)
 [![Bioc Devel Build](http://www.bioconductor.org/shields/build/devel/bioc/scRepertoire.svg)](http://www.bioconductor.org/checkResults/devel/bioc-LATEST/scRepertoire)
@@ -22,11 +22,11 @@ scRepertoire has a comprehensive [website](https://www.borch.dev/uploads/screper
 
 ### Installation
 
-#### Installation of Master Branch
+#### Installation of Development Branch
 [immApex](https://github.com/BorchLab/immApex) is now required for the underlying processes of scRepertoire make sure if not using bioconductor, to call both during installation.
 
 ```R
-remotes::install_github(c("BorchLab/immApex", "BorchLab/scRepertoire"))
+remotes::install_github(c("BorchLab/immApex", "BorchLab/scRepertoire@devel"))
 ```
 
 #### Installing from Bioconductor

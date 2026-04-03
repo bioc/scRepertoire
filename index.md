@@ -2,7 +2,7 @@
 <!-- badges: start -->
 [![BioC status](http://www.bioconductor.org/shields/build/release/bioc/scRepertoire.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/scRepertoire)
 [![R-CMD-check](https://github.com/BorchLab/scRepertoire/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BorchLab/scRepertoire/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/BorchLab/scRepertoire/branch/master/graph/badge.svg)](https://app.codecov.io/gh/BorchLab/scRepertoire?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/BorchLab/scRepertoire/branch/devel/graph/badge.svg)](https://app.codecov.io/gh/BorchLab/scRepertoire?branch=devel)
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://www.borch.dev/uploads/scRepertoire/)
 <!-- badges: end -->
 <img src="https://www.borch.dev/uploads/screpertoire/reference/figures/screpertoire_hex.png" align="right" width="150"/>
@@ -15,10 +15,10 @@ scRepertoire is compatible and integrated with the R packages [Trex](https://git
 
 ## Installation
 
-#### Installation of Master Branch
+#### Installation of Development Branch
 [immApex](https://github.com/BorchLab/immApex) is now required for the underlying processes of scRepertoire make sure if not using bioconductor, to call both during installation.
 ```R
-remotes::install_github(c("BorchLab/immApex", "BorchLab/scRepertoire"))
+remotes::install_github(c("BorchLab/immApex", "BorchLab/scRepertoire@devel"))
 ```
 
 ### Installing from Bioconductor

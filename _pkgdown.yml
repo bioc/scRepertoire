@@ -1,6 +1,7 @@
 url: https://www.borch.dev/uploads/scRepertoire/
 
 template:
+  bootstrap: 5
   bootswatch: flatly
 
 home:
@@ -18,7 +19,7 @@ home:
 
 navbar:
   left:
-  - text: Getting Started
+  - text: Home
     href: index.html
   - text: Vignettes
     menu:
@@ -64,6 +65,8 @@ navbar:
       href: articles/immLynx.html
     - text: TCR Specificity Grouping with immGLIPH
       href: articles/immGLIPH.html
+    - text: Immune Reference Data with immReferent
+      href: articles/immReferent.html
     - text: Single-cell Gene Set Enrichment with escape
       href: articles/Running_Escape.html
   - text: Compatible Packages
@@ -92,44 +95,48 @@ articles:
 - title: Getting Set Up
   navbar: ~
   contents:
-  - Installation
-  - Loading
-  - Combining_Contigs
-  - Processing
+  - articles/Installation
+  - articles/Loading
+  - articles/Combining_Contigs
+  - articles/Processing
 - title: Repertoire Analysis
   navbar: ~
   contents:
-  - Clonal_Visualizations
-  - Clonal_Dynamics
-  - Repertoire_Summary
-  - Clonal_Diversity
-  - Clonal_Cluster
+  - articles/Clonal_Visualizations
+  - articles/Clonal_Dynamics
+  - articles/Repertoire_Summary
+  - articles/Clonal_Diversity
+  - articles/Clonal_Cluster
 - title: Working with Single-Cell Objects
   navbar: ~
   contents:
-  - Attaching_SC
-  - SC_Visualizations
-  - Clonal_Bias
+  - articles/Attaching_SC
+  - articles/SC_Visualizations
+  - articles/Clonal_Bias
 - title: Extensions (BorchLab Packages)
   navbar: ~
   contents:
-  - immApex
-  - Trex
-  - Ibex
-  - immLynx
-  - immGLIPH
-  - Running_Escape
+  - articles/immApex
+  - articles/Trex
+  - articles/Ibex
+  - articles/immLynx
+  - articles/immGLIPH
+  - articles/immReferent
+  - articles/Running_Escape
 - title: Compatible Packages
   navbar: ~
   contents:
-  - immcantation
-  - tcrpheno
-  - immunarch
-  - dandelionR
+  - articles/immcantation
+  - articles/tcrpheno
+  - articles/immunarch
+  - articles/dandelionR
 - title: Help
   navbar: ~
   contents:
-  - FAQ
+  - articles/FAQ
+- title: internal
+  contents:
+  - vignette
 
 reference:
 - title: Loading and Processing Contigs
@@ -138,6 +145,7 @@ reference:
   - loadContigs
   - combineTCR
   - combineBCR
+  - clonalBin
   - addVariable
   - subsetClones
   - exportClones
@@ -158,18 +166,22 @@ reference:
   - clonalRarefaction
   - clonalScatter
   - clonalSizeDistribution
-  - clonalCluster
   - vizGenes
 - title: Summarizing Repertoire
   desc: Functions to summarize clonal sequences across the repertoire.
 - contents:
+  - percentGeneUsage
+  - percentGenes
+  - percentVJ
   - percentAA
+  - percentKmer
   - positionalEntropy
   - positionalProperty
-  - percentGenes
-  - percentKmer
-  - percentVJ
-- title: Single-Cell Object Processing and Visualizations
+- title: Clustering and Similarity
+  desc: Functions for clustering clones by sequence similarity.
+- contents:
+  - clonalCluster
+- title: Single-Cell Object Visualizations
   desc: Functions to add or visualize clonal information along a single-cell object.
 - contents:
   - combineExpression
@@ -179,11 +191,16 @@ reference:
   - clonalOccupy
   - clonalOverlay
   - getCirclize
+  - vizCirclize
   - highlightClones
   - StartracDiversity
+- title: Utilities
+  desc: Helper functions for filtering gene signatures and converting data.
+- contents:
   - quietVDJgenes
   - quietBCRgenes
   - quietTCRgenes
+  - expression2List
 - title: Data
   desc: Reference data for package functions.
 - contents:

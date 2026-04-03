@@ -8,7 +8,7 @@ combineBCR(
   input.data,
   samples = NULL,
   ID = NULL,
-  chain = "both",
+  chain = "IGH",
   sequence = "nt",
   dist.type = NULL,
   dist.mat = NULL,
@@ -45,7 +45,7 @@ as the input list.}
 \item{ID}{An optional character vector for additional sample identifiers.}
 
 \item{chain}{The chain to use for clustering when \code{call.related.clones = TRUE}.
-Passed to \code{clonalCluster()}. Default is \code{"both"}.}
+Passed to \code{clonalCluster()}. Default is \code{"IGH"}.}
 
 \item{sequence}{The sequence type (\code{"nt"} or \code{"aa"}) to use for clustering.
 Passed to \code{clonalCluster()}. Default is \code{"nt"}.}

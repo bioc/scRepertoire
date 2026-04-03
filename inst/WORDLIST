@@ -236,11 +236,13 @@ calculateFrequency
 calculateGeneUsage
 calculateMotif
 calculateProperty
+camelCase
 checkBlanks
 checkContigs
 circlize
 clonalAbundance
 clonalBias
+clonalBin
 clonalCluster
 clonalCompare
 clonalDiversity
@@ -259,7 +261,6 @@ clonalSizeDistribution
 clonally
 cloneCall
 cloneSize
-cloneSizes
 cloneType
 clonesizeDistribution
 clonotype
@@ -510,6 +511,7 @@ unreturned
 variational
 visVgene
 visualise
+vizCirclize
 vizGene
 vizGenes
 vizVgene

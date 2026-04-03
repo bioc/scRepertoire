@@ -6,7 +6,7 @@
 \usage{
 clonalCompare(
   input.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   chain = "both",
   samples = NULL,
   clones = NULL,
@@ -17,8 +17,10 @@ clonalCompare(
   order.by = NULL,
   graph = "alluvial",
   proportion = TRUE,
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
@@ -26,7 +28,7 @@ clonalCompare(
 \item{input.data}{The product of \code{\link{combineTCR}},
 \code{\link{combineBCR}}, or \code{\link{combineExpression}}.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -62,17 +64,21 @@ automatically.}
 proportional abundance of clones. If \code{FALSE}, the y-axis will represent
 raw clone counts.`}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices]{hcl.pals}}
 
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
+
 \item{...}{Additional arguments passed to the ggplot theme}
 }
 \value{
 A ggplot object visualizing proportions of clones by groupings, or a
-data.frame if \code{exportTable = TRUE}.
+data.frame if \code{export.table = TRUE}.
 }
 \description{
 This function visualizes the relative abundance of specific clones across
@@ -90,7 +96,7 @@ combined <- combineTCR(contig_list,
 clonalCompare(combined,
               top.clones = 5,
               samples = c("P17B", "P17L"),
-              cloneCall="aa")
+              clone.call = "aa")
 
 }
 \concept{Visualizing_Clones}

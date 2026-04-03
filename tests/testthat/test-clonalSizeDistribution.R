@@ -9,8 +9,8 @@ combined <- addVariable(combined,
                         variables = rep(c("B", "L"), 4))
 
 test_that("Output formats (distance matrix vs. plot) are correct", {
-  # Test that exportTable = TRUE returns a matrix
-  dist_matrix <- clonalSizeDistribution(combined[1:2], exportTable = TRUE)
+  # Test that export.table = TRUE returns a matrix
+  dist_matrix <- clonalSizeDistribution(combined[1:2], export.table = TRUE)
   expect_true(is.matrix(dist_matrix))
   
   # Test that the default behavior returns a ggplot object
@@ -19,7 +19,7 @@ test_that("Output formats (distance matrix vs. plot) are correct", {
 })
 
 test_that("Distance matrix has correct properties", {
-  dist_matrix <- clonalSizeDistribution(combined[1:3], exportTable = TRUE)
+  dist_matrix <- clonalSizeDistribution(combined[1:3], export.table = TRUE)
   num_samples <- length(combined[1:3])
   
   # Matrix should be square and have correct dimensions
@@ -41,7 +41,7 @@ test_that("Distance matrix has correct properties", {
 })
 
 test_that("`group.by` parameter correctly aggregates data", {
-  dist_matrix_grouped <- clonalSizeDistribution(combined, group.by = "Type", exportTable = TRUE)
+  dist_matrix_grouped <- clonalSizeDistribution(combined, group.by = "Type", export.table = TRUE)
   num_groups <- 2
   expect_equal(nrow(dist_matrix_grouped), num_groups)
   expect_equal(ncol(dist_matrix_grouped), num_groups)
@@ -54,14 +54,14 @@ test_that("`method` parameter is passed to hclust correctly", {
   expect_silent(clonalSizeDistribution(combined[1:2], method = "single"))
 })
 
-test_that("`cloneCall` and `chain` parameters execute correctly", {
+test_that("`clone.call` and `chain` parameters execute correctly", {
   expect_silent(
-    res_aa <- clonalSizeDistribution(combined[1:2], cloneCall = "aa", exportTable = TRUE)
+    res_aa <- clonalSizeDistribution(combined[1:2], clone.call = "aa", export.table = TRUE)
   )
   expect_true(is.matrix(res_aa))
   
   expect_silent(
-    res_tra <- clonalSizeDistribution(combined[1:2], chain = "TRA", exportTable = TRUE)
+    res_tra <- clonalSizeDistribution(combined[1:2], chain = "TRA", export.table = TRUE)
   )
   expect_true(is.matrix(res_tra))
 })

@@ -6,21 +6,32 @@
 \usage{
 alluvialClones(
   sc.data,
-  cloneCall = "strict",
+  clone.call = NULL,
   chain = "both",
   y.axes = NULL,
   color = NULL,
-  alpha = NULL,
   facet = NULL,
-  exportTable = FALSE,
+  alpha = NULL,
+  top.clones = NULL,
+  min.freq = 0,
+  highlight.clones = NULL,
+  highlight.color = "red",
+  stratum.width = 0.2,
+  flow.alpha = 0.5,
+  show.labels = TRUE,
+  label.size = 2,
+  order.strata = NULL,
+  export.table = NULL,
   palette = "inferno",
+  cloneCall = NULL,
+  exportTable = NULL,
   ...
 )
 }
 \arguments{
 \item{sc.data}{The product of \code{\link[=combineExpression]{combineExpression()}}.}
 
-\item{cloneCall}{Defines the clonal sequence grouping. Accepted values
+\item{clone.call}{Defines the clonal sequence grouping. Accepted values
 are: \code{gene} (VDJC genes), \code{nt} (CDR3 nucleotide sequence), \code{aa} (CDR3 amino
 acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be used.}
 
@@ -28,26 +39,52 @@ acid sequence), or \code{strict} (VDJC + nt). A custom column header can also be
 (e.g., TRA/TRB). Accepted values: \code{TRA}, \code{TRB}, \code{TRG}, \code{TRD}, \code{IGH}, \code{IGL},
 \code{IGK}, \code{Light} (for both light chains), or \code{both} (for TRA/B and Heavy/Light).}
 
-\item{y.axes}{The columns that will separate the proportional .
-visualizations.}
+\item{y.axes}{The columns that will separate the proportional visualizations.}
 
 \item{color}{The column header or clone(s) to be highlighted.}
 
-\item{alpha}{The column header to have gradated opacity.}
-
 \item{facet}{The column label to separate.}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{alpha}{The column header to have gradated opacity.}
+
+\item{top.clones}{Show only the top N clones by frequency. If \code{NULL} (default),
+show all clones.}
+
+\item{min.freq}{Minimum frequency threshold for displaying flows. Clones
+appearing fewer than this many times are filtered out.}
+
+\item{highlight.clones}{Character vector of specific clone sequences to highlight.
+These clones will be colored distinctly while others are shown in gray.}
+
+\item{highlight.color}{Color to use for highlighted clones (default: "red").}
+
+\item{stratum.width}{Width of the stratum bars (default: 0.2).}
+
+\item{flow.alpha}{Transparency of the flows (default: 0.5). Highlighted clones
+use full opacity.}
+
+\item{show.labels}{If \code{TRUE} (default), display stratum labels.}
+
+\item{label.size}{Text size for stratum labels (default: 2).}
+
+\item{order.strata}{Named list specifying the order of levels within each stratum.
+Names should match column names in y.axes.}
+
+\item{export.table}{If \code{TRUE}, returns a data frame of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any
 \link[grDevices:palettes]{hcl.pals}.}
 
+\item{cloneCall}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{clone.call} instead.}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
+
 \item{...}{Additional arguments passed to the ggplot theme}
 }
 \value{
 A ggplot object visualizing categorical distribution of clones, or a
-data.frame if \code{exportTable = TRUE}.
+data.frame if \code{export.table = TRUE}.
 }
 \description{
 View the proportional contribution of clones by Seurat or SCE object
@@ -59,8 +96,8 @@ add an additional stratum/column to the end of the graph.
 }
 \examples{
 # Getting the combined contigs
-combined <- combineTCR(contig_list, 
-                        samples = c("P17B", "P17L", "P18B", "P18L", 
+combined <- combineTCR(contig_list,
+                        samples = c("P17B", "P17L", "P18B", "P18L",
                                     "P19B","P19L", "P20B", "P20L"))
 
 # Getting a sample of a Seurat object
@@ -71,10 +108,22 @@ scRep_example <- combineExpression(combined, scRep_example)
 scRep_example$Patient <- substring(scRep_example$orig.ident, 1,3)
 
 # Using alluvialClones()
-alluvialClones(scRep_example, 
-                   cloneCall = "gene", 
-                   y.axes = c("Patient", "ident"), 
+alluvialClones(scRep_example,
+                   clone.call = "gene",
+                   y.axes = c("Patient", "ident"),
                    color = "ident")
+
+# Show only top 50 most frequent clones
+alluvialClones(scRep_example,
+                   clone.call = "aa",
+                   y.axes = c("Patient", "ident"),
+                   top.clones = 50)
+
+# Highlight specific clones
+alluvialClones(scRep_example,
+                   clone.call = "aa",
+                   y.axes = c("Patient", "ident"),
+                   highlight.clones = c("CVVSDNTGGFKTIF_CASSVRRERANTGELFF"))
 
 }
 \concept{SC_Functions}

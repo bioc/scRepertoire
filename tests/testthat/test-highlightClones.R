@@ -6,7 +6,7 @@ scRep_example <- combineExpression(combined, scRep_example)
 
 test_that("Function correctly highlights a single sequence", {
   # Highlight cloneB
-  sc_highlighted <- highlightClones(scRep_example, cloneCall = "aa", sequence = "CVVSDNTGGFKTIF_CASSVRRERANTGELFF")
+  sc_highlighted <- highlightClones(scRep_example, clone.call = "aa", sequence = "CVVSDNTGGFKTIF_CASSVRRERANTGELFF")
   
   # Check that output is a Seurat object and has the new column
   expect_s4_class(sc_highlighted, "Seurat")

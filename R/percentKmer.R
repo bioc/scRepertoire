@@ -23,26 +23,28 @@
 #' 
 #' @param input.data The product of [combineTCR()], 
 #' [combineBCR()], or [combineExpression()]
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
 #' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
 #' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
 #' are: `nt` (CDR3 nucleotide sequence) or `aa` (CDR3 amino acid sequence).
-#' @param group.by A column header in the metadata or lists to group the analysis 
-#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed as 
+#' @param group.by A column header in the metadata or lists to group the analysis
+#' by (e.g., "sample", "treatment"). If `NULL`, data will be analyzed as
 #' by list element or active identity in the case of single-cell objects.
-#' @param order.by A character vector defining the desired order of elements 
-#' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups 
+#' @param order.by A character vector defining the desired order of elements
+#' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups
 #' automatically.
 #' @param motif.length The length of the kmer to analyze
-#' @param min.depth Minimum count a motif must reach to be retained in the 
+#' @param min.depth Minimum count a motif must reach to be retained in the
 #' output (`>= 1`). **Default:** `3`.
-#' @param top.motifs Return the n most variable motifs as a function of 
+#' @param top.motifs Return the n most variable motifs as a function of
 #' median absolute deviation
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
-#' @param palette Colors to use in visualization - input any 
+#' @param palette Colors to use in visualization - input any
 #' [hcl.pals][grDevices::hcl.pals]
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
 #' 
 #' @importFrom stats mad
@@ -54,37 +56,46 @@
 #' 
 #' @return A ggplot object displaying a heatmap of motif percentages.
 #' If `exportTable = TRUE`, a matrix of the raw data is returned.
-percentKmer <- function(input.data, 
-                        chain = "TRB", 
-                        cloneCall = "aa",
-                        group.by = NULL, 
+percentKmer <- function(input.data,
+                        chain = "TRB",
+                        clone.call = NULL,
+                        group.by = NULL,
                         order.by = NULL,
                         motif.length = 3,
                         min.depth = 3,
                         top.motifs = 30,
-                        exportTable = FALSE, 
+                        export.table = NULL,
                         palette = "inferno",
+                        # Deprecated arguments
+                        cloneCall = NULL,
+                        exportTable = NULL,
                         ...) {
-  
-  if(!cloneCall %in% c("aa", "nt")) {
-    stop("Please select either nucleotide (nt) or amino acid (aa) sequences for cloneCall")
+
+  # Handle deprecated arguments
+  clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                               "percentKmer", default = "aa")
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "percentKmer", default = FALSE)
+
+  if(!clone.call %in% c("aa", "nt")) {
+    stop("Please select either nucleotide (nt) or amino acid (aa) sequences for clone.call")
   }
   motifs.to.save <- NULL
   sco <- .is.seurat.or.se.object(input.data)
-  input.data <- .dataWrangle(input.data, 
-                             group.by, 
-                             .theCall(input.data, cloneCall, 
-                                      check.df = FALSE, silent = TRUE), 
+  input.data <- .dataWrangle(input.data,
+                             group.by,
+                             .theCall(input.data, clone.call,
+                                      check.df = FALSE, silent = TRUE),
                              chain)
-  cloneCall <- .theCall(input.data, cloneCall)
+  clone.call <- .theCall(input.data, clone.call)
   if(!is.null(group.by) && !sco) {
     input.data <- .groupList(input.data, group.by)
   }
-  
+
   # Generating all motif counts
   motif.list <- lapply(input.data, function(x) {
-      immApex::calculateMotif(x[[cloneCall]], 
-                          motif.lengths = motif.length, 
+      immApex::calculateMotif(x[[clone.call]],
+                          motif.lengths = motif.length,
                           min.depth = min.depth)
   })
   
@@ -113,7 +124,7 @@ percentKmer <- function(input.data,
   }
   
   # Export table if asked for
-  if (exportTable) {
+  if (export.table) {
     return(mat)
   }
 

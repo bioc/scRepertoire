@@ -10,17 +10,23 @@ clonalCluster(
   sequence = "aa",
   threshold = 0.85,
   group.by = NULL,
-  dist_type = "levenshtein",
-  dist_mat = "BLOSUM80",
+  dist.type = NULL,
+  dist.mat = NULL,
   normalize = "length",
-  gap_open = -10,
-  gap_extend = -1,
+  gap.open = NULL,
+  gap.extend = NULL,
   cluster.method = "components",
   cluster.prefix = "cluster.",
   use.V = TRUE,
   use.J = FALSE,
-  exportAdjMatrix = FALSE,
-  exportGraph = FALSE
+  export.adj.matrix = NULL,
+  export.graph = NULL,
+  dist_type = NULL,
+  dist_mat = NULL,
+  gap_open = NULL,
+  gap_extend = NULL,
+  exportAdjMatrix = NULL,
+  exportGraph = NULL
 )
 }
 \arguments{
@@ -41,11 +47,11 @@ similarity (higher is stricter). If >= 1, treated as raw edit distance
 by (e.g., "sample", "treatment"). If \code{NULL}, clusters will be calculated across
 all sequences.}
 
-\item{dist_type}{The distance metric to use. Options: \code{"levenshtein"} (default),
+\item{dist.type}{The distance metric to use. Options: \code{"levenshtein"} (default),
 \code{"hamming"}, \code{"damerau"} (allows transpositions), \code{"nw"} (Needleman-Wunsch),
 or \code{"sw"} (Smith-Waterman).}
 
-\item{dist_mat}{The substitution matrix to use for alignment-based metrics
+\item{dist.mat}{The substitution matrix to use for alignment-based metrics
 (\code{"nw"} or \code{"sw"}). Options: \code{"BLOSUM45"}, \code{"BLOSUM50"}, \code{"BLOSUM62"},
 \code{"BLOSUM80"} (default), \code{"BLOSUM100"}, \code{"PAM30"}, \code{"PAM40"}, \code{"PAM70"}, \code{"PAM120"},
 \code{"PAM250"}, or \code{"identity"}.}
@@ -55,9 +61,9 @@ or \code{"sw"} (Smith-Waterman).}
 by mean sequence length). If \code{threshold < 1}, this controls how the
 similarity is calculated.}
 
-\item{gap_open}{Penalty for opening a gap in alignment metrics (default: -10).}
+\item{gap.open}{Penalty for opening a gap in alignment metrics (default: -10).}
 
-\item{gap_extend}{Penalty for extending a gap in alignment metrics (default: -1).}
+\item{gap.extend}{Penalty for extending a gap in alignment metrics (default: -1).}
 
 \item{cluster.method}{The clustering algorithm to use. Defaults to \code{"components"},
 which finds connected subgraphs.}
@@ -71,18 +77,30 @@ clustered together.}
 \item{use.J}{If \code{TRUE}, sequences must share the same J gene to be
 clustered together.}
 
-\item{exportAdjMatrix}{If \code{TRUE}, the function returns a sparse
+\item{export.adj.matrix}{If \code{TRUE}, the function returns a sparse
 adjacency matrix (\code{dgCMatrix}) of the network.}
 
-\item{exportGraph}{If \code{TRUE}, the function returns an \code{igraph}
+\item{export.graph}{If \code{TRUE}, the function returns an \code{igraph}
 object of the sequence network.}
+
+\item{dist_type}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{dist.type} instead.}
+
+\item{dist_mat}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{dist.mat} instead.}
+
+\item{gap_open}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{gap.open} instead.}
+
+\item{gap_extend}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{gap.extend} instead.}
+
+\item{exportAdjMatrix}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.adj.matrix} instead.}
+
+\item{exportGraph}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.graph} instead.}
 }
 \value{
 Depending on the export parameters, one of the following:
 \itemize{
 \item An amended \code{input.data} object with a new metadata column containing cluster IDs (default).
-\item An \code{igraph} object if \code{exportGraph = TRUE}.
-\item A sparse \code{dgCMatrix} object if \code{exportAdjMatrix = TRUE}.
+\item An \code{igraph} object if \code{export.graph = TRUE}.
+\item A sparse \code{dgCMatrix} object if \code{export.adj.matrix = TRUE}.
 }
 }
 \description{
@@ -111,9 +129,9 @@ distance. A lower value means greater similarity is required.
 \item \strong{Distance Metrics:}
 \itemize{
 \item \strong{Levenshtein/Hamming/Damerau:} Standard edit distance calculations.
-\item \strong{Alignment (NW/SW):} If \code{dist_type} is "nw" (Needleman-Wunsch) or
+\item \strong{Alignment (NW/SW):} If \code{dist.type} is "nw" (Needleman-Wunsch) or
 "sw" (Smith-Waterman), alignment scores are calculated using the
-specified substitution matrix (\code{dist_mat}). These scores are converted
+specified substitution matrix (\code{dist.mat}). These scores are converted
 to a distance-like metric for clustering.
 }
 \item An \code{igraph} graph is built from the edge list.
@@ -135,14 +153,14 @@ sub_combined <- clonalCluster(combined[c(1,2)],
 # Alignment-based clustering using BLOSUM80
 sub_combined_nw <- clonalCluster(combined[c(1,2)],
                                  chain = "TRA",
-                                 dist_type = "nw",
-                                 dist_mat = "BLOSUM80",
+                                 dist.type = "nw",
+                                 dist.mat = "BLOSUM80",
                                  threshold = 0.85)
 
 # Export the graph object instead
 graph_obj <- clonalCluster(combined[c(1,2)],
                            chain = "TRA",
-                           exportGraph = TRUE)
+                           export.graph = TRUE)
 
 }
 \concept{Visualizing_Clones}

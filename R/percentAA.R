@@ -25,10 +25,11 @@
 #' @param order.by A character vector defining the desired order of elements 
 #' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups 
 #' automatically.
-#' @param aa.length The maximum length of the CDR3 amino acid sequence. 
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param aa.length The maximum length of the CDR3 amino acid sequence.
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
 #' @param palette Colors to use in visualization - input any [hcl.pals][grDevices::hcl.pals].
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
 #' @importFrom immApex calculateFrequency
 #' @importFrom stats reshape
@@ -36,15 +37,21 @@
 #' @concept Summarize_Repertoire
 #' @return A ggplot object visualizing amino acid by proportion or a data.frame if
 #'`exportTable = TRUE`.
-percentAA <- function(input.data, 
-                      chain = "TRB", 
-                      group.by = NULL, 
+percentAA <- function(input.data,
+                      chain = "TRB",
+                      group.by = NULL,
                       order.by = NULL,
                       aa.length = 20,
-                      exportTable = FALSE, 
+                      export.table = NULL,
                       palette = "inferno",
+                      # Deprecated arguments
+                      exportTable = NULL,
                       ...)  {
-  
+
+  # Handle deprecated arguments
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "percentAA", default = FALSE)
+
   sco <- .is.seurat.or.se.object(input.data)
   input.data <- .dataWrangle(input.data, group.by, "CTaa", chain)
   if(!is.null(group.by) & !sco) {
@@ -79,8 +86,8 @@ percentAA <- function(input.data,
                                   group.by = "group", 
                                   mat_melt)
   }
-  if (exportTable == TRUE) { 
-    return(mat_melt) 
+  if (export.table) {
+    return(mat_melt)
   }
   
   # Plotting the result

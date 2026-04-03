@@ -15,8 +15,9 @@ percentGeneUsage(
   order.by = NULL,
   summary.fun = c("percent", "proportion", "count"),
   plot.type = "heatmap",
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  exportTable = NULL,
   ...
 )
 
@@ -28,8 +29,9 @@ vizGenes(
   plot = "heatmap",
   order.by = NULL,
   summary.fun = c("percent", "proportion", "count"),
-  exportTable = FALSE,
-  palette = "inferno"
+  export.table = NULL,
+  palette = "inferno",
+  exportTable = NULL
 )
 
 percentGenes(
@@ -38,9 +40,10 @@ percentGenes(
   gene = "Vgene",
   group.by = NULL,
   order.by = NULL,
-  exportTable = FALSE,
+  export.table = NULL,
   summary.fun = c("percent", "proportion", "count"),
-  palette = "inferno"
+  palette = "inferno",
+  exportTable = NULL
 )
 
 percentVJ(
@@ -49,8 +52,9 @@ percentVJ(
   group.by = NULL,
   order.by = NULL,
   summary.fun = c("percent", "proportion", "count"),
-  exportTable = FALSE,
-  palette = "inferno"
+  export.table = NULL,
+  palette = "inferno",
+  exportTable = NULL
 )
 }
 \arguments{
@@ -78,10 +82,12 @@ automatically.}
 \item{plot.type}{The type of plot to return: \code{"heatmap"} (default for paired loci,
 also available for single loci), or \code{"barplot"} (for single loci).}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
-\item{palette}{Colors to use in visualization - input any
+\item{palette}{Colors to use in visualization - input any}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.
 \link[grDevices:palettes]{hcl.pals}.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
@@ -135,14 +141,14 @@ percentGeneUsage(combined[1:2],
 trbv_usage_table <- percentGeneUsage(combined,
                                      genes = "TRBV",
                                      group.by = "sample",
-                                     exportTable = TRUE,
+                                     export.table = TRUE,
                                      summary.fun = "count")
 
 # Export the raw data table for paired gene usage
 trbv_trbj_usage_table <- percentGeneUsage(combined,
                                           genes = c("TRBV", "TRBJ"),
                                           group.by = "sample",
-                                          exportTable = TRUE,
+                                          export.table = TRUE,
                                           summary.fun = "percent")
 
 
@@ -173,7 +179,7 @@ traj_usage_table <- percentGenes(combined,
                                  chain = "TRA",
                                  gene = "Jgene",
                                  group.by = "sample",
-                                 exportTable = TRUE,
+                                 export.table = TRUE,
                                  summary.fun = "count")
 
 # Quantify and visualize TRB V-J gene pairings as a heatmap
@@ -186,7 +192,7 @@ percentVJ(combined[1:2],
 trav_traj_table <- percentVJ(combined,
                              chain = "TRA",
                              group.by = "sample",
-                             exportTable = TRUE,
+                             export.table = TRUE,
                              summary.fun = "proportion")
 }
 \concept{Summarize_Repertoire}

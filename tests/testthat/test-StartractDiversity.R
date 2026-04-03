@@ -26,11 +26,11 @@ test_that("Output format and structure are correct", {
                                    group.by = "Patient")
   expect_s3_class(plot_output, "ggplot")
   
-  # Returns a data.frame when exportTable = TRUE
+  # Returns a data.frame when export.table = TRUE
   table_output <- StartracDiversity(scRep_example, 
                                     type = "Type", 
                                     group.by = "Patient", 
-                                    exportTable = TRUE)
+                                    export.table = TRUE)
   expect_s3_class(table_output, "data.frame")
   
   # Check standard output columns
@@ -54,7 +54,7 @@ test_that("Standard index calculations are mathematically correct", {
   results <- StartracDiversity(scRep_example, 
                                type = "Type", 
                                group.by = "Patient", 
-                               exportTable = TRUE)
+                               export.table = TRUE)
   
 
   expect_equal(results$expa[results$cluster == "1"][1], 0, tolerance = 1e-4)
@@ -77,7 +77,7 @@ test_that("Pairwise calculations are correct", {
                                              group.by = "Patient",
                                              index = "migr",
                                              pairwise = "Type",
-                                             exportTable = TRUE)
+                                             export.table = TRUE)
   expect_s3_class(pairwise_migr_results, "data.frame")
   expect_true(all(c("group", "cluster", "value", "comparison") %in% names(pairwise_migr_results)))
   expect_true(all(grepl("\\w vs \\w", pairwise_migr_results$comparison)))
@@ -90,7 +90,7 @@ test_that("Pairwise calculations are correct", {
                                              group.by = "Patient",
                                              index = "tran",
                                              pairwise = "cluster",
-                                             exportTable = TRUE)
+                                             export.table = TRUE)
   expect_s3_class(pairwise_tran_results, "data.frame")
   expect_true(all(c("group", "cluster", "value", "comparison") %in% names(pairwise_tran_results)))
   expect_true(all(grepl("\\w vs \\w", pairwise_tran_results$comparison)))

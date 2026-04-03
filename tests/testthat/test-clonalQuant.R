@@ -15,8 +15,8 @@ test_that("Input validation for `group.by` works", {
 })
 
 test_that("Output formats (table vs. plot) are correct", {
-  # Test that exportTable = TRUE returns a data.frame
-  table_output <- clonalQuant(combined, exportTable = TRUE)
+  # Test that export.table = TRUE returns a data.frame
+  table_output <- clonalQuant(combined, export.table = TRUE)
   expect_s3_class(table_output, "data.frame")
   
   # Test that the default behavior returns a ggplot object
@@ -25,18 +25,18 @@ test_that("Output formats (table vs. plot) are correct", {
 })
 
 test_that("`scale` parameter correctly calculates values", {
-  table_raw <- clonalQuant(combined, exportTable = TRUE, scale = FALSE)
+  table_raw <- clonalQuant(combined, export.table = TRUE, scale = FALSE)
   expect_true(all(c("contigs", "values", "total") %in% names(table_raw)))
   expect_true(is.numeric(table_raw$contigs))
   expect_false("scaled" %in% names(table_raw))
-  table_scaled <- clonalQuant(combined, exportTable = TRUE, scale = TRUE)
+  table_scaled <- clonalQuant(combined, export.table = TRUE, scale = TRUE)
   expect_true("scaled" %in% names(table_scaled))
   expect_equal(table_scaled$scaled, (table_scaled$contigs / table_scaled$total) * 100)
   expect_true(all(table_scaled$scaled >= 0 & table_scaled$scaled <= 100))
 })
 
 test_that("Data frame contents are correct", {
-  table_output <- clonalQuant(combined, cloneCall = "aa", exportTable = TRUE)
+  table_output <- clonalQuant(combined, clone.call = "aa", export.table = TRUE)
   expect_equal(nrow(table_output), length(combined))
   first_sample_data <- combined[[1]]
   manual_unique_count <- length(na.omit(unique(first_sample_data$CTaa)))
@@ -46,7 +46,7 @@ test_that("Data frame contents are correct", {
 })
 
 test_that("`group.by` parameter functions correctly", {
-  table_grouped <- clonalQuant(combined, group.by = "Type", exportTable = TRUE)
+  table_grouped <- clonalQuant(combined, group.by = "Type", export.table = TRUE)
   expect_equal(nrow(table_grouped), 2) # Should have 2 groups: "B" and "L"
   expect_true("Type" %in% names(table_grouped))
   grouped_list <- scRepertoire:::.groupList(combined, "Type")

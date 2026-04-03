@@ -1,12 +1,12 @@
 #' Cluster clones by sequence similarity
 #'
-#' This function clusters TCRs or BCRs based on the edit distance or alignment 
-#' score of their CDR3 sequences. It can operate on either nucleotide (`nt`) 
-#' or amino acid (`aa`) sequences and can optionally enforce that clones share 
-#' the same V and/or J genes. The output can be the input object with an added 
-#' metadata column for cluster IDs, a sparse adjacency matrix, or an `igraph` 
+#' This function clusters TCRs or BCRs based on the edit distance or alignment
+#' score of their CDR3 sequences. It can operate on either nucleotide (`nt`)
+#' or amino acid (`aa`) sequences and can optionally enforce that clones share
+#' the same V and/or J genes. The output can be the input object with an added
+#' metadata column for cluster IDs, a sparse adjacency matrix, or an `igraph`
 #' graph object representing the cluster network.
-#' 
+#'
 #' @details
 #' The clustering process is as follows:
 #' 1.  The function retrieves the relevant chain data from the input object.
@@ -15,19 +15,19 @@
 #' 3.  An edge list is constructed, connecting sequences that meet the similarity
 #'     `threshold`.
 #' 4.  The `threshold` parameter behaves differently based on its value:
-#'     - **`threshold` < 1 (e.g., 0.85):** Interpreted as a *normalized* 
+#'     - **`threshold` < 1 (e.g., 0.85):** Interpreted as a *normalized*
 #'       distance. A higher value means greater similarity is required.
 #'     - **`threshold` >= 1 (e.g., 2):** Interpreted as a maximum *raw* edit
 #'       distance. A lower value means greater similarity is required.
 #' 5.  **Distance Metrics:**
 #'     - **Levenshtein/Hamming/Damerau:** Standard edit distance calculations.
-#'     - **Alignment (NW/SW):** If `dist_type` is "nw" (Needleman-Wunsch) or 
-#'       "sw" (Smith-Waterman), alignment scores are calculated using the 
-#'       specified substitution matrix (`dist_mat`). These scores are converted 
+#'     - **Alignment (NW/SW):** If `dist.type` is "nw" (Needleman-Wunsch) or
+#'       "sw" (Smith-Waterman), alignment scores are calculated using the
+#'       specified substitution matrix (`dist.mat`). These scores are converted
 #'       to a distance-like metric for clustering.
 #' 6.  An `igraph` graph is built from the edge list.
 #' 7.  A clustering algorithm is run on the graph (default: connected components).
-#' 
+#'
 #' @examples
 #' # Getting the combined contigs
 #' combined <- combineTCR(contig_list,
@@ -43,53 +43,59 @@
 #' # Alignment-based clustering using BLOSUM80
 #' sub_combined_nw <- clonalCluster(combined[c(1,2)],
 #'                                  chain = "TRA",
-#'                                  dist_type = "nw",
-#'                                  dist_mat = "BLOSUM80",
+#'                                  dist.type = "nw",
+#'                                  dist.mat = "BLOSUM80",
 #'                                  threshold = 0.85)
 #'
 #' # Export the graph object instead
 #' graph_obj <- clonalCluster(combined[c(1,2)],
 #'                            chain = "TRA",
-#'                            exportGraph = TRUE)
-#' 
-#' @param input.data The product of [combineTCR()], 
+#'                            export.graph = TRUE)
+#'
+#' @param input.data The product of [combineTCR()],
 #' [combineBCR()] or [combineExpression()].
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
 #' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
 #' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
 #' @param sequence Clustering based on either `aa` or `nt` sequences.
 #' @param threshold The similarity threshold. If < 1, treated as normalized
 #' similarity (higher is stricter). If >= 1, treated as raw edit distance
 #' (lower is stricter).
-#' @param group.by A column header in the metadata or lists to group the analysis 
+#' @param group.by A column header in the metadata or lists to group the analysis
 #' by (e.g., "sample", "treatment"). If `NULL`, clusters will be calculated across
 #' all sequences.
 #' @param use.V If `TRUE`, sequences must share the same V gene to be
 #' clustered together.
 #' @param use.J If `TRUE`, sequences must share the same J gene to be
 #' clustered together.
-#' @param dist_type The distance metric to use. Options: `"levenshtein"` (default),
+#' @param dist.type The distance metric to use. Options: `"levenshtein"` (default),
 #' `"hamming"`, `"damerau"` (allows transpositions), `"nw"` (Needleman-Wunsch),
 #' or `"sw"` (Smith-Waterman).
-#' @param dist_mat The substitution matrix to use for alignment-based metrics 
+#' @param dist.mat The substitution matrix to use for alignment-based metrics
 #' (`"nw"` or `"sw"`). Options: `"BLOSUM45"`, `"BLOSUM50"`, `"BLOSUM62"`,
-#' `"BLOSUM80"` (default), `"BLOSUM100"`, `"PAM30"`, `"PAM40"`, `"PAM70"`, `"PAM120"`, 
+#' `"BLOSUM80"` (default), `"BLOSUM100"`, `"PAM30"`, `"PAM40"`, `"PAM70"`, `"PAM120"`,
 #' `"PAM250"`, or `"identity"`.
 #' @param normalize Method for normalizing distances. Options: `"none"`,
-#' `"maxlen"` (divide by max sequence length), or `"length"` (default, divide 
-#' by mean sequence length). If `threshold < 1`, this controls how the 
+#' `"maxlen"` (divide by max sequence length), or `"length"` (default, divide
+#' by mean sequence length). If `threshold < 1`, this controls how the
 #' similarity is calculated.
-#' @param gap_open Penalty for opening a gap in alignment metrics (default: -10).
-#' @param gap_extend Penalty for extending a gap in alignment metrics (default: -1).
-#' @param cluster.method The clustering algorithm to use. Defaults to `"components"`, 
+#' @param gap.open Penalty for opening a gap in alignment metrics (default: -10).
+#' @param gap.extend Penalty for extending a gap in alignment metrics (default: -1).
+#' @param cluster.method The clustering algorithm to use. Defaults to `"components"`,
 #' which finds connected subgraphs.
 #' @param cluster.prefix A character prefix to add to the cluster names (e.g.,
 #' "cluster.").
-#' @param exportGraph If `TRUE`, the function returns an `igraph`
+#' @param export.graph If `TRUE`, the function returns an `igraph`
 #' object of the sequence network.
-#' @param exportAdjMatrix If `TRUE`, the function returns a sparse
+#' @param export.adj.matrix If `TRUE`, the function returns a sparse
 #' adjacency matrix (`dgCMatrix`) of the network.
-#' @importFrom igraph graph_from_edgelist E E<- V V<- as_data_frame 
+#' @param dist_type \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `dist.type` instead.
+#' @param dist_mat \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `dist.mat` instead.
+#' @param gap_open \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `gap.open` instead.
+#' @param gap_extend \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `gap.extend` instead.
+#' @param exportGraph \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.graph` instead.
+#' @param exportAdjMatrix \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.adj.matrix` instead.
+#' @importFrom igraph graph_from_edgelist E E<- V V<- as_data_frame
 #' as_adjacency_matrix membership set_vertex_attr
 #' @importFrom dplyr left_join ungroup
 #' @importFrom rlang %||%
@@ -97,36 +103,57 @@
 #' @importFrom S4Vectors DataFrame
 #' @importFrom Matrix sparseMatrix
 #' @importFrom stats reshape
-#' 
+#'
 #' @export
 #' @concept Visualizing_Clones
-#' @return 
+#' @return
 #' Depending on the export parameters, one of the following:
 #' \itemize{
 #'   \item An amended `input.data` object with a new metadata column containing cluster IDs (default).
-#'   \item An `igraph` object if `exportGraph = TRUE`.
-#'   \item A sparse `dgCMatrix` object if `exportAdjMatrix = TRUE`.
+#'   \item An `igraph` object if `export.graph = TRUE`.
+#'   \item A sparse `dgCMatrix` object if `export.adj.matrix = TRUE`.
 #' }
 
-clonalCluster <- function(input.data, 
-                          chain = "TRB", 
+clonalCluster <- function(input.data,
+                          chain = "TRB",
                           sequence = "aa",
-                          threshold = 0.85, 
-                          group.by = NULL, 
-                          dist_type = "levenshtein",
-                          dist_mat = "BLOSUM80",
+                          threshold = 0.85,
+                          group.by = NULL,
+                          dist.type = NULL,
+                          dist.mat = NULL,
                           normalize = "length",
-                          gap_open = -10,
-                          gap_extend = -1,
+                          gap.open = NULL,
+                          gap.extend = NULL,
                           cluster.method = "components",
                           cluster.prefix = "cluster.",
                           use.V = TRUE,
                           use.J = FALSE,
-                          exportAdjMatrix = FALSE,
-                          exportGraph = FALSE) {
+                          export.adj.matrix = NULL,
+                          export.graph = NULL,
+                          # Deprecated arguments
+                          dist_type = NULL,
+                          dist_mat = NULL,
+                          gap_open = NULL,
+                          gap_extend = NULL,
+                          exportAdjMatrix = NULL,
+                          exportGraph = NULL) {
+
+  # Handle deprecated arguments
+  dist.type <- .deprecate_arg(dist_type, dist.type, "dist_type", "dist.type",
+                              "clonalCluster", default = "levenshtein")
+  dist.mat <- .deprecate_arg(dist_mat, dist.mat, "dist_mat", "dist.mat",
+                             "clonalCluster", default = "BLOSUM80")
+  gap.open <- .deprecate_arg(gap_open, gap.open, "gap_open", "gap.open",
+                             "clonalCluster", default = -10)
+  gap.extend <- .deprecate_arg(gap_extend, gap.extend, "gap_extend", "gap.extend",
+                               "clonalCluster", default = -1)
+  export.graph <- .deprecate_arg(exportGraph, export.graph, "exportGraph", "export.graph",
+                                 "clonalCluster", default = FALSE)
+  export.adj.matrix <- .deprecate_arg(exportAdjMatrix, export.adj.matrix, "exportAdjMatrix", "export.adj.matrix",
+                                      "clonalCluster", default = FALSE)
   
-  if (exportGraph && exportAdjMatrix) {
-    stop("Please set only one of `exportGraph` or `exportAdjMatrix` to TRUE.")
+  if (export.graph && export.adj.matrix) {
+    stop("Please set only one of `export.graph` or `export.adj.matrix` to TRUE.")
   }
   
   #Prepping any single-cell object
@@ -154,9 +181,9 @@ clonalCluster <- function(input.data,
   # Apply the network function to each data frame and combine into one edge list
   result_list <- lapply(chain_data, function(y) {
     y <- y[!is.na(y[,1]),]
-    .buildNetwork(y, use.V, use.J, threshold, 
-                  dist_type, dist_mat, normalize, 
-                  gap_open, gap_extend)
+    .buildNetwork(y, use.V, use.J, threshold,
+                  dist.type, dist.mat, normalize,
+                  gap.open, gap.extend)
   })
   full_edge_list <- do.call(rbind, result_list)
   
@@ -212,7 +239,7 @@ clonalCluster <- function(input.data,
   igraph::V(full_g)$cluster <- renamed_membership
   
   # Returning Graph
-  if(exportGraph) {
+  if(export.graph) {
     # Adding additional vertex information if graph being exported
     vertex_df <- igraph::as_data_frame(full_g, what = "vertices")
     colnames(vertex_df)[1] <- "barcode" 
@@ -247,7 +274,7 @@ clonalCluster <- function(input.data,
   }
   
   # Returning Adjacency Matrix
-  if (exportAdjMatrix) {
+  if (export.adj.matrix) {
     adj_from_graph <- igraph::as_adjacency_matrix(full_g, 
                                                   sparse = TRUE,
                                                   attr = "weight")
@@ -324,9 +351,9 @@ clonalCluster <- function(input.data,
 }
 
 #' @importFrom immApex buildNetwork
-.buildNetwork <- function(df, use.V, use.J, threshold, 
-                          dist_type, dist_mat, normalize, 
-                          gap_open, gap_extend) {
+.buildNetwork <- function(df, use.V, use.J, threshold,
+                          dist.type, dist.mat, normalize,
+                          gap.open, gap.extend) {
   edge_list <- buildNetwork(df,
                             seq_col   = "cdr3_aa",
                             v_col     = "v",
@@ -335,11 +362,11 @@ clonalCluster <- function(input.data,
                             filter.j  = use.J,
                             ids       = df[["barcode"]],
                             threshold = threshold,
-                            dist_type = dist_type,
-                            dist_mat  = dist_mat,
+                            dist_type = dist.type,
+                            dist_mat  = dist.mat,
                             normalize = normalize,
-                            gap_open  = gap_open,
-                            gap_extend= gap_extend)
-  
+                            gap_open  = gap.open,
+                            gap_extend= gap.extend)
+
   return(edge_list)
 }

@@ -11,8 +11,9 @@ positionalProperty(
   order.by = NULL,
   aa.length = 20,
   method = "atchleyFactors",
-  exportTable = FALSE,
+  export.table = NULL,
   palette = "inferno",
+  exportTable = NULL,
   ...
 )
 }
@@ -39,10 +40,12 @@ Defaults to \code{"atchleyFactors"}, but includes: \code{"crucianiProperties"},
 \code{"FASGAI"}, \code{"kideraFactors"}, \code{"MSWHIM"}, \code{"ProtFP"}, \code{"stScales"},
 \code{"tScales"}, \code{"VHSE"}, \code{"zScales"}}
 
-\item{exportTable}{If \code{TRUE}, returns a data frame or matrix of the results
+\item{export.table}{If \code{TRUE}, returns a data frame or matrix of the results
 instead of a plot.}
 
 \item{palette}{Colors to use in visualization - input any \link[grDevices:palettes]{hcl.pals}}
+
+\item{exportTable}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{export.table} instead.}
 
 \item{...}{Additional arguments passed to the ggplot theme}
 }

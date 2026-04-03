@@ -1,59 +1,62 @@
 #' Visualize Clonal Network in Dimensional Reductions
 #'
-#' This function generates a network based on clonal 
+#' This function generates a network based on clonal
 #' proportions of an indicated identity and then superimposes
 #' the network onto a single-cell object dimensional reduction
-#' plot. 
-#' 
+#' plot.
+#'
 #' @examples
 
 #' \dontrun{
 #' # Getting the combined contigs
-#' combined <- combineTCR(contig_list, 
-#'                         samples = c("P17B", "P17L", "P18B", "P18L", 
+#' combined <- combineTCR(contig_list,
+#'                         samples = c("P17B", "P17L", "P18B", "P18L",
 #'                                     "P19B","P19L", "P20B", "P20L"))
-#' 
+#'
 #' # Getting a sample of a Seurat object
 #' scRep_example  <- get(data("scRep_example"))
-#' 
+#'
 #' # Using combineExpresion()
 #' scRep_example  <- combineExpression(combined, scRep_example)
-#' 
+#'
 #' # Using clonalNetwork()
-#' clonalNetwork(scRep_example, 
+#' clonalNetwork(scRep_example,
 #'               reduction = "umap",
 #'               group.by = "seurat_clusters")
 #' }
-#'               
+#'
 #' @param sc.data The single-cell object after [combineExpression()].
-#' @param cloneCall Defines the clonal sequence grouping. Accepted values 
-#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino 
+#' @param clone.call Defines the clonal sequence grouping. Accepted values
+#' are: `gene` (VDJC genes), `nt` (CDR3 nucleotide sequence), `aa` (CDR3 amino
 #' acid sequence), or `strict` (VDJC + nt). A custom column header can also be used.
-#' @param chain The TCR/BCR chain to use. Use `both` to include both chains 
+#' @param chain The TCR/BCR chain to use. Use `both` to include both chains
 #' (e.g., TRA/TRB). Accepted values: `TRA`, `TRB`, `TRG`, `TRD`, `IGH`, `IGL`,
 #' `IGK`, `Light` (for both light chains), or `both` (for TRA/B and Heavy/Light).
-#' @param reduction The name of the dimensional reduction of the 
+#' @param reduction The name of the dimensional reduction of the
 #' single-cell object.
-#' @param group.by A column header in the metadata or lists to group the analysis 
+#' @param group.by A column header in the metadata or lists to group the analysis
 #' by (e.g., "sample", "treatment"). This will be the nodes overlaid onto the graph.
-#' @param filter.clones Use to select the top n clones (e.g., ``filter.clones`**` 
-#' = 2000) or n of clones based on the minimum number of all the comparators 
+#' @param filter.clones Use to select the top n clones (e.g., ``filter.clones`**`
+#' = 2000) or n of clones based on the minimum number of all the comparators
 #' (e.g., `filter.clone`` = "min").
-#' @param filter.identity Display the network for a specific level of the 
+#' @param filter.identity Display the network for a specific level of the
 #' indicated identity.
 #' @param filter.proportion Remove clones from the network below a specific
 #'  proportion.
 #' @param filter.graph Remove the reciprocal edges from the half of the graph,
 #' allowing for cleaner visualization.
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
-#' @param exportClones Exports a table of clones that are shared
+#' @param export.clones Exports a table of clones that are shared
 #' across multiple identity groups and ordered by the total number
 #' of clone copies.
 #' @param palette Colors to use in visualization - input any
 #' [hcl.pals][grDevices::hcl.pals].
+#' @param cloneCall \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `clone.call` instead.
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
+#' @param exportClones \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.clones` instead.
 #' @param ... Additional arguments passed to the ggplot theme
-#' 
+#'
 #' @importFrom igraph graph_from_data_frame V `V<-`
 #' @importFrom dplyr summarize_all count across all_of desc
 #' @importFrom tidygraph as_tbl_graph activate
@@ -62,9 +65,9 @@
 #' @export
 #' @concept SC_Functions
 #' @return ggplot object
-#' 
-clonalNetwork <- function(sc.data, 
-                          cloneCall = "strict", 
+#'
+clonalNetwork <- function(sc.data,
+                          clone.call = NULL,
                           chain = "both",
                           reduction = "umap",
                           group.by = "ident",
@@ -72,13 +75,26 @@ clonalNetwork <- function(sc.data,
                           filter.identity = NULL,
                           filter.proportion = NULL,
                           filter.graph = FALSE,
-                          exportClones = FALSE,
-                          exportTable = FALSE,
+                          export.clones = NULL,
+                          export.table = NULL,
                           palette = "inferno",
+                          # Deprecated arguments
+                          cloneCall = NULL,
+                          exportClones = NULL,
+                          exportTable = NULL,
                           ...) {
+
+    # Handle deprecated arguments
+    clone.call <- .deprecate_arg(cloneCall, clone.call, "cloneCall", "clone.call",
+                                 "clonalNetwork", default = "strict")
+    export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                   "clonalNetwork", default = FALSE)
+    export.clones <- .deprecate_arg(exportClones, export.clones, "exportClones", "export.clones",
+                                    "clonalNetwork", default = FALSE)
+
     to <- from <- weight <- y <- NULL
     meta <- .grabMeta(sc.data)
-    cloneCall <- .theCall(meta, cloneCall)
+    clone.call <- .theCall(meta, clone.call)
     coord <- data.frame(.getCoord(sc.data, reduction), group.by = meta[,group.by])
     min <- c()
     meta <- .grabMeta(sc.data)
@@ -87,31 +103,31 @@ clonalNetwork <- function(sc.data,
         meta <- .grabMeta(sc.data)
         id.meta <- split(meta, meta[,group.by])
         for (x in seq_along(id.meta)) {
-            min.tmp <- length(which(!is.na(unique(id.meta[[x]][,cloneCall]))))
+            min.tmp <- length(which(!is.na(unique(id.meta[[x]][,clone.call]))))
             min <- c(min.tmp, min)
         }
         #Filtering clones based on the minimum value
         min_val <- min(min)
-        table <- .cloneCounter(meta, group.by, cloneCall)
+        table <- .cloneCounter(meta, group.by, clone.call)
         cut <- which.min(abs(table$clone.sum - min_val))
         clones.to.filter <- table[,1][seq_len(cut)]
       } else if (is.numeric(filter.clones)) {
           #Filtering based on a numeric value
           table <- meta %>%
-            dplyr::count(meta[, cloneCall]) %>%
+            dplyr::count(meta[, clone.call]) %>%
             na.omit() %>%
             arrange(desc(n)) %>%
             mutate(cumSum = cumsum(n))
           cut <- which.min(abs(table$cumSum - filter.clones))
           clones.to.filter <- table[seq_len(cut),1]
       }
-      meta <- meta[meta[,cloneCall] %in% clones.to.filter,]
+      meta <- meta[meta[,clone.call] %in% clones.to.filter,]
     } 
-    clones.duplicated <- na.omit(unique(meta[which(duplicated(meta[,cloneCall])),cloneCall]))
+    clones.duplicated <- na.omit(unique(meta[which(duplicated(meta[,clone.call])),clone.call]))
     
-    if(exportClones) {
+    if(export.clones) {
       #Summarizing all the clones by group.by
-      table <- .cloneCounter(meta, group.by, cloneCall)[,seq_len(3)]
+      table <- .cloneCounter(meta, group.by, clone.call)[,seq_len(3)]
       #Identifying the clones across the group by
       clones.across.identities <- names(which(table(table[,2]) > 1))
       if(length(clones.across.identities) < 1) {
@@ -145,7 +161,7 @@ clonalNetwork <- function(sc.data,
     
     #Unique clones per group.by
     clone.number <- meta %>%
-      select(all_of(c(cloneCall, group.by))) %>%
+      select(all_of(c(clone.call, group.by))) %>%
       group_by(meta[,group.by]) %>%
       na.omit() %>%
       unique() %>%
@@ -154,7 +170,7 @@ clonalNetwork <- function(sc.data,
     
     #Total clones per group.by
     total.number <- meta %>%
-      select(all_of(c(cloneCall, group.by))) %>%
+      select(all_of(c(clone.call, group.by))) %>%
       group_by(meta[,group.by]) %>%
       na.omit() %>%
       summarise(n = dplyr::n()) %>%
@@ -162,7 +178,7 @@ clonalNetwork <- function(sc.data,
     
     edge.list <- NULL
     for (i in seq_along(clones.duplicated)) {
-       pos <- which(meta[,cloneCall] == clones.duplicated[i])
+       pos <- which(meta[,clone.call] == clones.duplicated[i])
        num <- table(meta[pos,group.by])
        num <- num[num > 0]
        if(length(num) == 1) {
@@ -206,7 +222,7 @@ clonalNetwork <- function(sc.data,
     V(graph)$size <- unname(clone.number)
     centers <- centers[rownames(centers) %in% names(V(graph)),]
 
-    if (exportTable) {
+    if (export.table) {
       return(edge.list1)
     }
     #Warning from this is produced by geom_edge_bend and there is nothng that can be done

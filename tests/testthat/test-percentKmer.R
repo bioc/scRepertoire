@@ -9,17 +9,17 @@ test_that("percentKmer: output type is correct for aa", {
   
   # Test for ggplot output by default
   p <- percentKmer(combined, 
-                   cloneCall = "aa", 
+                   clone.call = "aa", 
                    motif.length = 3, 
                    min.depth = 1)
   expect_s3_class(p, "ggplot")
   
-  # Test for matrix output when exportTable = TRUE
+  # Test for matrix output when export.table = TRUE
   mat <- percentKmer(combined, 
-                     cloneCall = "aa", 
+                     clone.call = "aa", 
                      motif.length = 3, 
                      min.depth = 1, 
-                     exportTable = TRUE)
+                     export.table = TRUE)
   expect_true(is.matrix(mat))
 })
 
@@ -27,17 +27,17 @@ test_that("percentKmer: output type is correct for nt", {
   
   # Test for ggplot output by default
   p <- percentKmer(combined, 
-                   cloneCall = "nt", 
+                   clone.call = "nt", 
                    motif.length = 3, 
                    min.depth = 1)
   expect_s3_class(p, "ggplot")
   
-  # Test for matrix output when exportTable = TRUE
+  # Test for matrix output when export.table = TRUE
   mat <- percentKmer(combined, 
-                     cloneCall = "nt", 
+                     clone.call = "nt", 
                      motif.length = 3, 
                      min.depth = 1, 
-                     exportTable = TRUE)
+                     export.table = TRUE)
   expect_true(is.matrix(mat))
 })
 
@@ -45,11 +45,11 @@ test_that("percentKmer: output type is correct for nt", {
 test_that("percentKmer: matrix calculations are accurate", {
   
   mat <- percentKmer(combined, 
-                     cloneCall = "aa", 
+                     clone.call = "aa", 
                      motif.length = 3, 
                      min.depth = 1, 
                      top.motifs = NULL, 
-                     exportTable = TRUE)
+                     export.table = TRUE)
   
   # Check dimensions
   expect_equal(nrow(mat), 8)
@@ -65,30 +65,30 @@ test_that("percentKmer: matrix calculations are accurate", {
 test_that("percentKmer: parameter handling works as expected", {
   
   mat_top1 <- percentKmer(combined, 
-                          cloneCall = "aa", 
+                          clone.call = "aa", 
                           motif.length = 3, 
                           min.depth = 1, 
                           top.motifs = 1,
-                          exportTable = TRUE)
+                          export.table = TRUE)
   expect_true(ncol(mat_top1) == 1)
   expect_equal(colnames(mat_top1), "ASS")
   
   # Test `motif.length` parameter
   mat_len2 <- percentKmer(combined, 
-                          cloneCall = "aa", 
+                          clone.call = "aa", 
                           motif.length = 2, 
                           top.motifs = NULL, 
-                          exportTable = TRUE)
+                          export.table = TRUE)
   expect_true(all(nchar(colnames(mat_len2)) == 2))
 })
 
 
 test_that("percentKmer: input validation and error handling", {
   
-  # Test for error on invalid `cloneCall`
+  # Test for error on invalid `clone.call`
   expect_error(
-    percentKmer(combined, cloneCall = "invalid_option"),
-    "Please select either nucleotide (nt) or amino acid (aa) sequences for cloneCall",
+    percentKmer(combined, clone.call = "invalid_option"),
+    "Please select either nucleotide (nt) or amino acid (aa) sequences for clone.call",
     fixed = TRUE
   )
 })

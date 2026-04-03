@@ -55,13 +55,14 @@
 #' of the `group.by` variable. Alternatively, use `alphanumeric` to sort groups 
 #' automatically.
 #' @param aa.length The maximum length of the CDR3 amino acid sequence. 
-#' @param method Character string (one of the supported names) 
-#' Defaults to `"atchleyFactors"`, but includes: `"crucianiProperties"`, 
-#' `"FASGAI"`, `"kideraFactors"`, `"MSWHIM"`, `"ProtFP"`, `"stScales"`, 
+#' @param method Character string (one of the supported names)
+#' Defaults to `"atchleyFactors"`, but includes: `"crucianiProperties"`,
+#' `"FASGAI"`, `"kideraFactors"`, `"MSWHIM"`, `"ProtFP"`, `"stScales"`,
 #' `"tScales"`, `"VHSE"`, `"zScales"`
-#' @param exportTable If `TRUE`, returns a data frame or matrix of the results 
+#' @param export.table If `TRUE`, returns a data frame or matrix of the results
 #' instead of a plot.
 #' @param palette Colors to use in visualization - input any [hcl.pals][grDevices::hcl.pals]
+#' @param exportTable \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `export.table` instead.
 #' @param ... Additional arguments passed to the ggplot theme
 #' @importFrom stats qt sd
 #' @importFrom utils getFromNamespace
@@ -71,16 +72,23 @@
 #' If `exportTable = TRUE`, a matrix of the raw data is returned.
 #' @author Florian Bach, Nick Borcherding
 
-positionalProperty <- function(input.data, 
-                               chain = "TRB", 
-                               group.by = NULL, 
+positionalProperty <- function(input.data,
+                               chain = "TRB",
+                               group.by = NULL,
                                order.by = NULL,
                                aa.length = 20,
                                method = "atchleyFactors",
-                               exportTable = FALSE, 
+                               export.table = NULL,
                                palette = "inferno",
+                               # Deprecated arguments
+                               exportTable = NULL,
                                ...)  {
-  factors <- c("atchleyFactors", "crucianiProperties", "FASGAI", "kideraFactors", 
+
+  # Handle deprecated arguments
+  export.table <- .deprecate_arg(exportTable, export.table, "exportTable", "export.table",
+                                 "positionalProperty", default = FALSE)
+
+  factors <- c("atchleyFactors", "crucianiProperties", "FASGAI", "kideraFactors",
   "MSWHIM", "ProtFP", "stScales", "tScales", "VHSE", "zScales")
   if (!method %in% c(factors)) {
     stop("Please select a compatible method: ", paste0(factors, collapse = ", "))
@@ -176,7 +184,7 @@ positionalProperty <- function(input.data,
   }
   mat$position <- as.integer(mat$position)
   
-  if (exportTable) {
+  if (export.table) {
     return(mat)
   }
   

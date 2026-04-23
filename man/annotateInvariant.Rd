@@ -7,7 +7,8 @@
 annotateInvariant(
   input.data,
   type = c("MAIT", "iNKT"),
-  species = c("mouse", "human")
+  species = c("mouse", "human"),
+  bpparam = SerialParam()
 )
 }
 \arguments{

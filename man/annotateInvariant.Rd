@@ -19,6 +19,8 @@ annotate (\code{MAIT} or \code{iNKT}).}
 
 \item{species}{Character specifying the species
 ('mouse' or 'human').}
+
+\item{bpparam}{A BiocParallel parameter class. Defaults to \code{\link[BiocParallel:SerialParam-class]{BiocParallel::SerialParam()}}}
 }
 \value{
 A single-cell object or list with the corresponding annotation

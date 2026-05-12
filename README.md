@@ -7,7 +7,7 @@
 [![Bioc Downloads](http://www.bioconductor.org/shields/downloads/release/scRepertoire.svg)](http://bioconductor.org/packages/stats/bioc/scRepertoire/)
 <!-- badges: end -->
 
-<img align="right" src="https://www.borch.dev/uploads/screpertoire/reference/figures/screpertoire_hex.png" width="305" height="352">
+<img align="right" src="man/figures/logo.png" width="305" height="352">
 
 ### Introduction
 

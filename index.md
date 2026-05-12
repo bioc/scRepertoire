@@ -6,7 +6,7 @@
 [![Codecov test coverage](https://codecov.io/gh/BorchLab/scRepertoire/branch/devel/graph/badge.svg)](https://app.codecov.io/gh/BorchLab/scRepertoire?branch=devel)
 [![Bioc Downloads](http://www.bioconductor.org/shields/downloads/release/scRepertoire.svg)](http://bioconductor.org/packages/stats/bioc/scRepertoire/)
 <!-- badges: end -->
-<img src="https://www.borch.dev/uploads/screpertoire/reference/figures/screpertoire_hex.png" align="right" width="150"/>
+<img src="man/figures/logo.png" align="right" width="150"/>
 
 ## Introduction
 

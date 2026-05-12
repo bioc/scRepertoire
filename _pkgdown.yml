@@ -3,6 +3,7 @@ url: https://www.borch.dev/uploads/scRepertoire/
 template:
   bootstrap: 5
   bootswatch: flatly
+  package: scRepertoire
 
 home:
   sidebar:

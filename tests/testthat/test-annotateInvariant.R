@@ -44,3 +44,9 @@ test_that("annotateInvariant() correctly integrates with Seurat object", {
   }
 })
 
+test_that("annotateInvariant() performs when running in parallel", {
+    result <- annotateInvariant(test_obj, type = "MAIT", species = "human")
+    presult <- annotateInvariant(test_obj, type = "MAIT", species = "human", 
+                                 bpparam = BiocParallel::SnowParam(2, "SOCK"))
+    expect_equal(result, presult) 
+})

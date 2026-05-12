@@ -16,6 +16,7 @@
 #'annotate (`MAIT` or `iNKT`).
 #' @param species Character specifying the species 
 #' ('mouse' or 'human').
+#' @param bpparam A BiocParallel parameter class. Defaults to [SerialParam()]
 #' 
 #' @examples
 #' # Getting the combined contigs
@@ -35,12 +36,15 @@
 #' 
 #' @importFrom immApex getIR
 #' @importFrom  rlang %||%
+#' @importFrom  BiocParallel bplapply 
+#' @importFrom  BiocParallel SerialParam 
 #' @export
 #' @return A single-cell object or list with the corresponding annotation 
 #' scores (0 or 1) added.
 annotateInvariant <- function(input.data, 
                               type = c("MAIT", "iNKT"), 
-                              species = c("mouse", "human")) {
+                              species = c("mouse", "human"), 
+                              bpparam = SerialParam()) {
   
   type <- match.arg(type)
   species <- match.arg(species)
@@ -50,10 +54,9 @@ annotateInvariant <- function(input.data,
   }
 
   
-  TCRS <- lapply(c("TRA", "TRB"), function(x) {
-    tmp <- getIR(input.data, chains = x, sequence.type = "aa")
-    tmp
-  })
+  TCRS <- bplapply(c("TRA", "TRB"), function(x) {
+    getIR(input.data, chains = x, sequence.type = "aa")
+  }, BPPARAM = bpparam)
   
   criteria <- switch(type,
                      "MAIT" = .MAIT.criteria,
@@ -66,7 +69,7 @@ annotateInvariant <- function(input.data,
   
   barcode.ids <- unique(TRA.data$barcode)
   
-  scores <- vapply(barcode.ids, function(barcode) {
+  scores <- bplapply(barcode.ids, function(barcode) {
     
     TRA.subset <- TRA.data[TRA.data$barcode == barcode,]
     TRB.subset <- TRB.data[TRB.data$barcode == barcode,]
@@ -87,7 +90,8 @@ annotateInvariant <- function(input.data,
     
     as.integer(TRA.v.match & TRA.j.match & TRA.length.match & TRB.v.match)
     
-  }, integer(1))
+  }, BPPARAM = bpparam) 
+  scores <- unlist(scores)
   
   output <- data.frame(row.names = barcode.ids, score = scores)
   new.variable.name <- paste0(type, ".score")

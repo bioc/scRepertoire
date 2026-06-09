@@ -21,6 +21,18 @@ test_that("Basic functionality with Seurat object and default parameters", {
 })
 
 
+test_that("retained full-length sequence columns travel into metadata", {
+  combined_seq <- lapply(combined, function(df) {
+    df$sequence_nt1 <- "ACGTACGT"
+    df$sequence_aa1 <- "TYTY"
+    df
+  })
+  sc <- combineExpression(combined_seq, scRep_example)
+  metadata_cols <- colnames(sc[[]])
+  expect_true(all(c("sequence_nt1", "sequence_aa1") %in% metadata_cols))
+})
+
+
 test_that("`clone.call` parameter works correctly", {
   # Test with clone.call = "nt"
   sc_nt <- combineExpression(combined, scRep_example, clone.call = "nt")

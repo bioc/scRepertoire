@@ -58,9 +58,33 @@ test_that("'airr' format export works correctly", {
   expect_true(nrow(airr_df) > 0)
 })
 
+test_that("'airr' format export includes retained full-length sequences", {
+  seq_contigs <- list(data.frame(
+    barcode = c("bc1", "bc1"),
+    chain   = c("TRA", "TRB"),
+    v_gene  = c("TRAV1", "TRBV1"),
+    d_gene  = c(NA, "TRBD1"),
+    j_gene  = c("TRAJ1", "TRBJ1"),
+    c_gene  = c("TRAC", "TRBC1"),
+    cdr3    = c("CA1", "CB1"),
+    cdr3_nt = c("AAA", "TTT"),
+    reads   = c(10, 12),
+    sequence    = c("FULLA", "FULLB"),
+    sequence_aa = c("FA", "FB"),
+    stringsAsFactors = FALSE
+  ))
+  comb <- combineTCR(seq_contigs, retain.sequences = TRUE)
+  airr_df <- exportClones(comb, format = "airr", write.file = FALSE)
+
+  expect_true(all(c("sequence", "sequence_aa") %in% colnames(airr_df)))
+  tra_row <- airr_df[airr_df$locus == "TRA1", ]
+  expect_identical(tra_row$sequence, "FULLA")
+  expect_identical(tra_row$sequence_aa, "FA")
+})
+
 test_that("'immunarch' format export works correctly", {
   skip_if_not_installed("dplyr")
-  
+
   # Test returning a list object
   immunarch_list <- exportClones(combined, format = "immunarch", write.file = FALSE)
   expect_type(immunarch_list, "list")
@@ -84,4 +108,51 @@ test_that("'immunarch' format export works correctly", {
   expect_true(nrow(read_df) > 0)
   expect_true("Sample" %in% names(read_df))
   unlink(file_path) # Clean up
+})
+
+# --- dowser bridge ------------------------------------------------------------
+
+make_bcr_aligned_contigs <- function() {
+  list(data.frame(
+    barcode = c("bc1", "bc1", "bc2", "bc2"),
+    chain   = c("IGH", "IGK", "IGH", "IGL"),
+    v_gene  = c("IGHV1", "IGKV1", "IGHV1", "IGLV1"),
+    d_gene  = c("IGHD1", NA, "IGHD1", NA),
+    j_gene  = c("IGHJ1", "IGKJ1", "IGHJ1", "IGLJ1"),
+    c_gene  = c("IGHG1", "IGKC", "IGHG1", "IGLC1"),
+    cdr3    = c("CARH1", "CQKL1", "CARH1", "CQLL2"),
+    cdr3_nt = c("TGTGCA", "TGTCAA", "TGTGCA", "TGTCAG"),
+    reads   = c(20, 18, 22, 16),
+    sequence_alignment = c("ACGT...H1", "ACGT...K1", "ACGT...H2", "ACGT...L2"),
+    germline_alignment = c("ACGT...G1", "ACGT...G2", "ACGT...G3", "ACGT...G4"),
+    stringsAsFactors = FALSE
+  ))
+}
+
+test_that("exportDowser errors when alignment/germline columns are absent", {
+  expect_error(
+    exportDowser(combined, write.file = FALSE),
+    "sequence_alignment"
+  )
+})
+
+test_that("exportDowser returns an AIRR data frame with clone_id when sequences retained", {
+  comb <- combineBCR(make_bcr_aligned_contigs(),
+                     call.related.clones = FALSE,
+                     retain.sequences = c("sequence_alignment", "germline_alignment"))
+  dres <- exportDowser(comb, write.file = FALSE)
+  expect_s3_class(dres, "data.frame")
+  expect_true(all(c("sequence_id", "clone_id", "locus",
+                    "sequence_alignment", "germline_alignment") %in% colnames(dres)))
+  expect_true(nrow(dres) > 0)
+  expect_false(any(duplicated(dres$sequence_id)))
+})
+
+test_that("exportClones dispatches to the dowser format", {
+  comb <- combineBCR(make_bcr_aligned_contigs(),
+                     call.related.clones = FALSE,
+                     retain.sequences = c("sequence_alignment", "germline_alignment"))
+  dres <- exportClones(comb, format = "dowser", write.file = FALSE)
+  expect_s3_class(dres, "data.frame")
+  expect_true("clone_id" %in% colnames(dres))
 })

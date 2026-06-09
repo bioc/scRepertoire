@@ -25,6 +25,7 @@ combineBCR(
   remove.multi = NULL,
   filter.multi = NULL,
   filter.nonproductive = NULL,
+  retain.sequences = FALSE,
   removeNA = NULL,
   removeMulti = NULL,
   filterMulti = NULL,
@@ -92,6 +93,14 @@ only the most abundant IGH and IGL/IGK chains.}
 
 \item{filter.nonproductive}{Logical. If \code{TRUE}, removes non-productive contigs
 from the analysis.}
+
+\item{retain.sequences}{Optionally retain full-length sequences as additional
+per-chain columns without altering \code{CTaa}/\code{CTnt}/\code{CTgene}/\code{CTstrict}. \code{FALSE}
+(default) keeps the legacy output. \code{TRUE} retains the standardized
+\code{sequence} and \code{sequence_aa} columns (when present from \code{\link[=loadContigs]{loadContigs()}}) as
+\code{sequence_nt1}/\code{sequence_nt2} and \code{sequence_aa1}/\code{sequence_aa2}. A character
+vector retains specific columns, e.g.
+\code{c("sequence_alignment", "germline_alignment")} for downstream dowser use.}
 
 \item{removeNA}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{remove.na} instead.}
 

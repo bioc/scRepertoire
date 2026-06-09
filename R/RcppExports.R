@@ -9,3 +9,7 @@ rcppConstructConDfAndParseTCR <- function(data2, uniqueData2Barcodes) {
     .Call(`_scRepertoire_rcppConstructConDfAndParseTCR`, data2, uniqueData2Barcodes)
 }
 
+rcppConstructConDfAndParseTCRWithSeqs <- function(data2, uniqueData2Barcodes, retainCols) {
+    .Call(`_scRepertoire_rcppConstructConDfAndParseTCRWithSeqs`, data2, uniqueData2Barcodes, retainCols)
+}
+

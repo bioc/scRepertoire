@@ -5,7 +5,16 @@
 * Full-length sequence retention (resolves #535). `loadContigs()` now keeps a standardized `sequence`/`sequence_aa` column for every format (reconstructed from framework/CDR regions for 10x and MiXCR, copied natively for AIRR-family inputs, `NA` where unavailable), plus `sequence_alignment`/`germline_alignment` when present. This is additive and does not change existing columns.
 * `combineTCR()` and `combineBCR()` gain `retain.sequences` (default `FALSE`). When set, full-length sequences are carried into the combined object as per-chain columns (`sequence_nt1`/`sequence_nt2`, `sequence_aa1`/`sequence_aa2`, and optionally `sequence_alignment*`/`germline*`) without altering `CTaa`/`CTnt`/`CTgene`/`CTstrict`. The retained columns flow through `combineExpression()` into single-cell metadata.
 * `exportClones(format = "airr")` now populates `sequence`/`sequence_aa` (and alignment/germline) fields when those sequences were retained.
-* New `exportDowser()` function (and `exportClones(format = "dowser")`) reshapes BCR/TCR data into an AIRR data frame ready for `dowser::formatClones()`, enabling B cell lineage / phylogenetic analysis in the Immcantation framework (resolves #578).
+* New `exportDowser()` function (and `exportClones(format = "dowser")`) reshapes BCR/TCR data into an AIRR data frame ready for `dowser::formatClones()`, enabling B cell lineage / phylogenetic analysis in the Immcantation framework (resolves #578). `exportDowser()` errors with guidance when the required IMGT-gapped alignments are absent.
+
+## DEPENDENCIES
+
+* Added `dowser` to `Suggests` for the new lineage export path.
+
+## DOCUMENTATION
+
+* Documented full-length sequence retention and the `dowser` export path in the main vignette and the "Combining Contigs into Clones" article.
+* Added a "Exporting scRepertoire Clones to dowser" section to the Immcantation article covering the `retain.sequences` to `exportDowser()` to `dowser::formatClones()` workflow.
 
 # scRepertoire VERSION 2.7.3
 

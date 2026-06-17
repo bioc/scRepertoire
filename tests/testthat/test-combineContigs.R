@@ -118,6 +118,51 @@ test_that("combineBCR retain.sequences adds per-chain sequence columns without t
   expect_identical(bc1$sequence_nt2, "seqK1")
 })
 
+test_that("retain.sequences drops 'NA' placeholder tokens from multi-contig joins", {
+  # bc has two TRA contigs; the second lacks a full-length sequence.
+  contigs <- list(data.frame(
+    barcode = c("bc", "bc", "bc"),
+    chain   = c("TRA", "TRA", "TRB"),
+    v_gene  = c("TRAV1", "TRAV2", "TRBV1"),
+    d_gene  = c(NA, NA, "TRBD1"),
+    j_gene  = c("TRAJ1", "TRAJ2", "TRBJ1"),
+    c_gene  = c("TRAC", "TRAC", "TRBC1"),
+    cdr3    = c("CA1", "CA2", "CB"),
+    cdr3_nt = c("AAA", "CCC", "TTT"),
+    reads   = c(5, 4, 6),
+    sequence    = c("seqA1", NA, "seqB"),
+    sequence_aa = c("S1", NA, "SB"),
+    stringsAsFactors = FALSE
+  ))
+  on <- combineTCR(contigs, retain.sequences = TRUE)[[1]]
+  bc <- on[on$barcode == "bc", ]
+
+  # cdr3_nt keeps both contigs; the retained sequence keeps only the real one.
+  expect_identical(bc$cdr3_nt1, "AAA;CCC")
+  expect_identical(bc$sequence_nt1, "seqA1")
+  expect_false(grepl("NA", bc$sequence_nt1))
+})
+
+test_that("combineBCR retain.sequences tolerates samples with heterogeneous columns", {
+  # Sample 1 carries alignments, sample 2 does not. Resolving from sample 1
+  # alone previously crashed with 'undefined columns selected'.
+  with_align <- function() {
+    d <- make_bcr_seq_contigs()[[1]]
+    d$sequence_alignment <- paste0("AL", seq_len(nrow(d)))
+    d$germline_alignment <- paste0("GL", seq_len(nrow(d)))
+    d
+  }
+  het <- list(s1 = with_align(), s2 = make_bcr_seq_contigs()[[1]])
+
+  expect_no_error(
+    out <- combineBCR(het, samples = c("s1", "s2"), call.related.clones = FALSE,
+                      retain.sequences = c("sequence_alignment", "germline_alignment"))
+  )
+  # Intersection-based resolution: a column absent from any sample is not added.
+  expect_false(any(grepl("alignment|germline", colnames(out$s1))))
+  expect_false(any(grepl("alignment|germline", colnames(out$s2))))
+})
+
 # --- combineBCR testing -------------------------------------------------------
 
 # test-combineBCR.R

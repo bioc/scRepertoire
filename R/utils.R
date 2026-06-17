@@ -761,8 +761,29 @@
   }), use.names = FALSE)
 }
 
+# Collapse the ';'-joined placeholder tokens left when one contig in a
+# multi-contig chain lacks a retained sequence. The set-vs-append logic mirrors
+# cdr3_nt, so a missing contig sequence shows up as an "NA" token (e.g.
+# "seqA1;NA"); drop those tokens and rejoin. A value made up entirely of
+# placeholders becomes a real NA. grepl-gated so only affected rows pay the
+# per-element split cost; the rest pass through untouched.
+#' @keywords internal
+.cleanSeqJoin <- function(x) {
+  x <- as.character(x)
+  needs <- !is.na(x) & grepl("NA", x, fixed = TRUE)
+  if (!any(needs)) return(x)
+  x[needs] <- vapply(x[needs], function(v) {
+    parts <- strsplit(v, ";", fixed = TRUE)[[1]]
+    parts <- parts[parts != "NA"]
+    if (length(parts) == 0) NA_character_ else paste(parts, collapse = ";")
+  }, character(1), USE.NAMES = FALSE)
+  x
+}
+
 # Rename the generic <col>1 / <col>2 columns emitted by the parsers to their
-# storage names, and convert lone "NA" placeholders (chain absent) to real NA.
+# storage names, and tidy the ';'-joined values: lone "NA" placeholders (chain
+# absent) and embedded "NA" tokens (a contig without a sequence) become real NA
+# or are dropped from the join.
 #' @keywords internal
 .renameSeqCols <- function(df, retain_cols) {
   for (col in retain_cols) {
@@ -772,7 +793,7 @@
       new <- paste0(base, suffix)
       if (old %in% names(df)) {
         if (old != new) names(df)[names(df) == old] <- new
-        df[[new]][df[[new]] == "NA"] <- NA
+        df[[new]] <- .cleanSeqJoin(df[[new]])
       }
     }
   }

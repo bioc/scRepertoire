@@ -7,6 +7,11 @@
 * `exportClones(format = "airr")` now populates `sequence`/`sequence_aa` (and alignment/germline) fields when those sequences were retained.
 * New `exportDowser()` function (and `exportClones(format = "dowser")`) reshapes BCR/TCR data into an AIRR data frame ready for `dowser::formatClones()`, enabling B cell lineage / phylogenetic analysis in the Immcantation framework (resolves #578). `exportDowser()` errors with guidance when the required IMGT-gapped alignments are absent.
 
+## BUG FIXES
+
+* `combineBCR(retain.sequences = ...)` now resolves the retained columns against the intersection of columns shared by all samples, rather than the first sample only. This prevents an `"undefined columns selected"` error (or silent dropping of a column) when samples carry heterogeneous fields, matching `combineTCR()`.
+* Retained per-chain sequences from multi-contig chains no longer carry literal `"NA"` placeholder tokens (e.g. `"seq1;NA"`) when a contig lacks a full-length sequence; such tokens are dropped from the join and an all-placeholder value becomes a real `NA`.
+
 ## DEPENDENCIES
 
 * Added `dowser` to `Suggests` for the new lineage export path.

@@ -314,7 +314,11 @@ combineBCR <- function(input.data,
 
   # Resolve optional full-length sequence retention against the input columns.
   # Empty when retain.sequences = FALSE, keeping the default path untouched.
-  retain_cols <- .resolveRetainCols(retain.sequences, colnames(.checkList(input.data)[[1]]))
+  # Use the intersection of columns across ALL samples so a column missing from
+  # any one sample is never selected (a per-sample mismatch otherwise crashes
+  # .parseBCR with "undefined columns selected" or silently drops the column).
+  common_cols <- Reduce(intersect, lapply(.checkList(input.data), colnames))
+  retain_cols <- .resolveRetainCols(retain.sequences, common_cols)
   seq_bases <- .seqBases(retain_cols)
 
   # Initial Contig Processing and Filtering
@@ -467,6 +471,13 @@ combineBCR <- function(input.data,
     }
     col_selection <- col_selection[col_selection %in% names(df)] # Keep only existing cols
     df <- df[, col_selection]
+    # Tidy ';'-joined retained sequences: drop "NA" placeholder tokens left by
+    # multi-contig chains where a contig lacked a full-length sequence.
+    if (length(retain_cols) > 0) {
+      for (sc in c(paste0(seq_bases, "1"), paste0(seq_bases, "2"))) {
+        if (sc %in% names(df)) df[[sc]] <- .cleanSeqJoin(df[[sc]])
+      }
+    }
     df <- df[!duplicated(df$barcode), ]
     df <- df[rowSums(is.na(df)) < (ncol(df) - 1), ] 
     return(df)

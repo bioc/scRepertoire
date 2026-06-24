@@ -50,6 +50,13 @@ utils::globalVariables(c(
 #' @param filter.nonproductive This option will allow for the removal of
 #' nonproductive chains if the variable exists in the contig data. Default
 #' is set to TRUE to remove nonproductive contigs.
+#' @param retain.sequences Optionally retain full-length sequences as additional
+#' per-chain columns without altering `CTaa`/`CTnt`/`CTgene`/`CTstrict`. `FALSE`
+#' (default) keeps the legacy output. `TRUE` retains the standardized
+#' `sequence` and `sequence_aa` columns (when present from [loadContigs()]) as
+#' `sequence_nt1`/`sequence_nt2` and `sequence_aa1`/`sequence_aa2`. A character
+#' vector retains specific columns, e.g.
+#' `c("sequence_alignment", "germline_alignment")` for downstream dowser use.
 #' @param removeNA \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `remove.na` instead.
 #' @param removeMulti \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `remove.multi` instead.
 #' @param filterMulti \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `filter.multi` instead.
@@ -66,6 +73,7 @@ combineTCR <- function(input.data,
                        remove.multi = NULL,
                        filter.multi = NULL,
                        filter.nonproductive = NULL,
+                       retain.sequences = FALSE,
                        # Deprecated arguments
                        removeNA = NULL,
                        removeMulti = NULL,
@@ -118,12 +126,14 @@ combineTCR <- function(input.data,
     }
     for (i in seq_along(out)) {
         data2 <- .makeGenes(cellType = "T", out[[i]])
-        Con.df <- .constructConDfAndParseTCR(data2)
+        retain_cols <- .resolveRetainCols(retain.sequences, colnames(data2))
+        Con.df <- .constructConDfAndParseTCR(data2, retain_cols)
         Con.df <- .assignCT(cellType = "T", Con.df)
         Con.df[Con.df == "NA_NA" | Con.df == "NA;NA_NA;NA"] <- NA
+        Con.df <- .renameSeqCols(Con.df, retain_cols)
         data3 <- merge(data2[,-which(names(data2) %in% c("TCR1","TCR2"))],
             Con.df, by = "barcode")
-      
+
         columns_to_include <- c("barcode")
         # Conditionally add columns based on user input
         if (!is.null(samples)) {
@@ -132,13 +142,17 @@ combineTCR <- function(input.data,
         if (!is.null(ID)) {
           columns_to_include <- c(columns_to_include, "ID")
         }
-      
+
         # Add TCR and CT lines which are presumably always needed
         columns_to_include <- c(columns_to_include, tcr1_lines, tcr2_lines, CT_lines)
-      
+        # Optionally retain full-length sequence columns (additive, never CT*)
+        if (length(retain_cols) > 0) {
+          columns_to_include <- c(columns_to_include, .seqOutCols(retain_cols))
+        }
+
         # Subset the data frame based on the dynamically built list of columns
         data3 <- data3[, columns_to_include]
-      
+
         final[[i]] <- data3
     }
     name_vector <- character(length(samples))
@@ -227,6 +241,13 @@ combineTCR <- function(input.data,
 #' @param remove.na This will remove any chain without values.
 #' @param filter.nonproductive Logical. If `TRUE`, removes non-productive contigs
 #' from the analysis.
+#' @param retain.sequences Optionally retain full-length sequences as additional
+#' per-chain columns without altering `CTaa`/`CTnt`/`CTgene`/`CTstrict`. `FALSE`
+#' (default) keeps the legacy output. `TRUE` retains the standardized
+#' `sequence` and `sequence_aa` columns (when present from [loadContigs()]) as
+#' `sequence_nt1`/`sequence_nt2` and `sequence_aa1`/`sequence_aa2`. A character
+#' vector retains specific columns, e.g.
+#' `c("sequence_alignment", "germline_alignment")` for downstream dowser use.
 #' @param removeNA \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `remove.na` instead.
 #' @param removeMulti \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `remove.multi` instead.
 #' @param filterMulti \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use `filter.multi` instead.
@@ -261,6 +282,7 @@ combineBCR <- function(input.data,
                        remove.multi = NULL,
                        filter.multi = NULL,
                        filter.nonproductive = NULL,
+                       retain.sequences = FALSE,
                        # Deprecated arguments
                        removeNA = NULL,
                        removeMulti = NULL,
@@ -289,7 +311,16 @@ combineBCR <- function(input.data,
                              "combineBCR", default = -10)
   gap.extend <- .deprecate_arg(gap_extend, gap.extend, "gap_extend", "gap.extend",
                                "combineBCR", default = -1)
-  
+
+  # Resolve optional full-length sequence retention against the input columns.
+  # Empty when retain.sequences = FALSE, keeping the default path untouched.
+  # Use the intersection of columns across ALL samples so a column missing from
+  # any one sample is never selected (a per-sample mismatch otherwise crashes
+  # .parseBCR with "undefined columns selected" or silently drops the column).
+  common_cols <- Reduce(intersect, lapply(.checkList(input.data), colnames))
+  retain_cols <- .resolveRetainCols(retain.sequences, common_cols)
+  seq_bases <- .seqBases(retain_cols)
+
   # Initial Contig Processing and Filtering
   processed_list <- input.data %>%
     .checkList() %>%
@@ -326,10 +357,17 @@ combineBCR <- function(input.data,
       data2 <- data.frame(x)
       data2 <- .makeGenes(cellType = "B", data2)
       unique_df <- unique(data2$barcode)
-      Con.df <- data.frame(matrix(NA, length(unique_df), 9))
-      colnames(Con.df) <- c("barcode", heavy_lines, light_lines)
+      # Widen the per-cell target/source vectors when retaining sequences so the
+      # full-length columns ride the same .parseBCR pass as the gene/CDR3 data.
+      heavy_t <- c(heavy_lines, paste0(seq_bases, "1"))
+      light_t <- c(light_lines, paste0(seq_bases, "2"))
+      h_s <- c(h_lines, retain_cols)
+      k_s <- c(k_lines, retain_cols)
+      l_s <- c(l_lines, retain_cols)
+      Con.df <- data.frame(matrix(NA, length(unique_df), 1 + length(heavy_t) + length(light_t)))
+      colnames(Con.df) <- c("barcode", heavy_t, light_t)
       Con.df$barcode <- unique_df
-      Con.df <- .parseBCR(Con.df, unique_df, data2)
+      Con.df <- .parseBCR(Con.df, unique_df, data2, heavy_t, light_t, h_s, k_s, l_s)
       Con.df <- .assignCT(cellType = "B", Con.df)
       if(!is.null(group.by)) { #retain group.by variable for clustering
         barcode_groups <- data2[!duplicated(data2$barcode), c("barcode", group.by)]
@@ -426,8 +464,20 @@ combineBCR <- function(input.data,
     # Select, reorder, and filter final columns
     col_selection <- c("barcode", "sample", "ID",
                        heavy_lines[c(1, 2, 3)], light_lines[c(1, 2, 3)], CT_lines)
+    # Optionally retain full-length sequence columns (additive, never CT*)
+    if (length(retain_cols) > 0) {
+      col_selection <- c(col_selection,
+                         paste0(seq_bases, "1"), paste0(seq_bases, "2"))
+    }
     col_selection <- col_selection[col_selection %in% names(df)] # Keep only existing cols
     df <- df[, col_selection]
+    # Tidy ';'-joined retained sequences: drop "NA" placeholder tokens left by
+    # multi-contig chains where a contig lacked a full-length sequence.
+    if (length(retain_cols) > 0) {
+      for (sc in c(paste0(seq_bases, "1"), paste0(seq_bases, "2"))) {
+        if (sc %in% names(df)) df[[sc]] <- .cleanSeqJoin(df[[sc]])
+      }
+    }
     df <- df[!duplicated(df$barcode), ]
     df <- df[rowSums(is.na(df)) < (ncol(df) - 1), ] 
     return(df)

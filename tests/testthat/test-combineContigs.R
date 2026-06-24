@@ -34,6 +34,135 @@ test_that("combineTCR `remove.na` and `remove.multi` work", {
   expect_true(all(!grepl(";", combined_remove.multi$CTnt)))
 })
 
+# --- retain.sequences (full-length sequence retention) ------------------------
+
+make_tcr_seq_contigs <- function() {
+  list(data.frame(
+    barcode = c("bc1", "bc1", "bc2", "bc2", "bc2"),
+    chain   = c("TRA", "TRB", "TRA", "TRA", "TRB"),
+    v_gene  = c("TRAV1", "TRBV1", "TRAV2", "TRAV3", "TRBV2"),
+    d_gene  = c(NA, "TRBD1", NA, NA, "TRBD2"),
+    j_gene  = c("TRAJ1", "TRBJ1", "TRAJ2", "TRAJ3", "TRBJ2"),
+    c_gene  = c("TRAC", "TRBC1", "TRAC", "TRAC", "TRBC2"),
+    cdr3    = c("CA1", "CB1", "CA2", "CA3", "CB2"),
+    cdr3_nt = c("AAA", "TTT", "CCC", "GGG", "ACA"),
+    reads   = c(10, 12, 8, 6, 11),
+    sequence    = c("seqA1", "seqB1", "seqA2", "seqA3", "seqB2"),
+    sequence_aa = c("SA1", "SB1", "SA2", "SA3", "SB2"),
+    stringsAsFactors = FALSE
+  ))
+}
+
+test_that("combineTCR retain.sequences adds per-chain sequence columns without touching CT*", {
+  contigs <- make_tcr_seq_contigs()
+  off <- combineTCR(contigs, retain.sequences = FALSE)[[1]]
+  on  <- combineTCR(contigs, retain.sequences = TRUE)[[1]]
+
+  new_cols <- c("sequence_nt1", "sequence_nt2", "sequence_aa1", "sequence_aa2")
+  expect_false(any(new_cols %in% colnames(off)))
+  expect_true(all(new_cols %in% colnames(on)))
+
+  off <- off[order(off$barcode), ]
+  on  <- on[order(on$barcode), ]
+  for (col in c("CTgene", "CTnt", "CTaa", "CTstrict")) {
+    expect_identical(on[[col]], off[[col]])
+  }
+})
+
+test_that("combineTCR retain.sequences joins multi-contig sequences in cdr3 order", {
+  contigs <- make_tcr_seq_contigs()
+  on <- combineTCR(contigs, retain.sequences = TRUE)[[1]]
+  bc2 <- on[on$barcode == "bc2", ]
+
+  cdr3_parts <- strsplit(bc2$cdr3_nt1, ";")[[1]]
+  seq_parts  <- strsplit(bc2$sequence_nt1, ";")[[1]]
+  expect_length(seq_parts, length(cdr3_parts))
+  expect_identical(seq_parts, c("seqA2", "seqA3"))
+})
+
+make_bcr_seq_contigs <- function() {
+  list(data.frame(
+    barcode = c("bc1", "bc1", "bc2", "bc2"),
+    chain   = c("IGH", "IGK", "IGH", "IGL"),
+    v_gene  = c("IGHV1", "IGKV1", "IGHV2", "IGLV1"),
+    d_gene  = c("IGHD1", NA, "IGHD2", NA),
+    j_gene  = c("IGHJ1", "IGKJ1", "IGHJ2", "IGLJ1"),
+    c_gene  = c("IGHG1", "IGKC", "IGHG2", "IGLC1"),
+    cdr3    = c("CARH1", "CQKL1", "CARH2", "CQLL2"),
+    cdr3_nt = c("TGTGCA", "TGTCAA", "TGTGCC", "TGTCAG"),
+    reads   = c(20, 18, 22, 16),
+    sequence    = c("seqH1", "seqK1", "seqH2", "seqL2"),
+    sequence_aa = c("SH1", "SK1", "SH2", "SL2"),
+    stringsAsFactors = FALSE
+  ))
+}
+
+test_that("combineBCR retain.sequences adds per-chain sequence columns without touching CT*", {
+  contigs <- make_bcr_seq_contigs()
+  off <- combineBCR(contigs, call.related.clones = FALSE, retain.sequences = FALSE)[[1]]
+  on  <- combineBCR(contigs, call.related.clones = FALSE, retain.sequences = TRUE)[[1]]
+
+  new_cols <- c("sequence_nt1", "sequence_nt2", "sequence_aa1", "sequence_aa2")
+  expect_false(any(new_cols %in% colnames(off)))
+  expect_true(all(new_cols %in% colnames(on)))
+
+  off <- off[order(off$barcode), ]
+  on  <- on[order(on$barcode), ]
+  for (col in c("CTgene", "CTnt", "CTaa", "CTstrict")) {
+    expect_identical(on[[col]], off[[col]])
+  }
+
+  # Heavy chain full-length lands in slot 1, light chain in slot 2.
+  bc1 <- on[on$barcode == "bc1", ]
+  expect_identical(bc1$sequence_nt1, "seqH1")
+  expect_identical(bc1$sequence_nt2, "seqK1")
+})
+
+test_that("retain.sequences drops 'NA' placeholder tokens from multi-contig joins", {
+  # bc has two TRA contigs; the second lacks a full-length sequence.
+  contigs <- list(data.frame(
+    barcode = c("bc", "bc", "bc"),
+    chain   = c("TRA", "TRA", "TRB"),
+    v_gene  = c("TRAV1", "TRAV2", "TRBV1"),
+    d_gene  = c(NA, NA, "TRBD1"),
+    j_gene  = c("TRAJ1", "TRAJ2", "TRBJ1"),
+    c_gene  = c("TRAC", "TRAC", "TRBC1"),
+    cdr3    = c("CA1", "CA2", "CB"),
+    cdr3_nt = c("AAA", "CCC", "TTT"),
+    reads   = c(5, 4, 6),
+    sequence    = c("seqA1", NA, "seqB"),
+    sequence_aa = c("S1", NA, "SB"),
+    stringsAsFactors = FALSE
+  ))
+  on <- combineTCR(contigs, retain.sequences = TRUE)[[1]]
+  bc <- on[on$barcode == "bc", ]
+
+  # cdr3_nt keeps both contigs; the retained sequence keeps only the real one.
+  expect_identical(bc$cdr3_nt1, "AAA;CCC")
+  expect_identical(bc$sequence_nt1, "seqA1")
+  expect_false(grepl("NA", bc$sequence_nt1))
+})
+
+test_that("combineBCR retain.sequences tolerates samples with heterogeneous columns", {
+  # Sample 1 carries alignments, sample 2 does not. Resolving from sample 1
+  # alone previously crashed with 'undefined columns selected'.
+  with_align <- function() {
+    d <- make_bcr_seq_contigs()[[1]]
+    d$sequence_alignment <- paste0("AL", seq_len(nrow(d)))
+    d$germline_alignment <- paste0("GL", seq_len(nrow(d)))
+    d
+  }
+  het <- list(s1 = with_align(), s2 = make_bcr_seq_contigs()[[1]])
+
+  expect_no_error(
+    out <- combineBCR(het, samples = c("s1", "s2"), call.related.clones = FALSE,
+                      retain.sequences = c("sequence_alignment", "germline_alignment"))
+  )
+  # Intersection-based resolution: a column absent from any sample is not added.
+  expect_false(any(grepl("alignment|germline", colnames(out$s1))))
+  expect_false(any(grepl("alignment|germline", colnames(out$s2))))
+})
+
 # --- combineBCR testing -------------------------------------------------------
 
 # test-combineBCR.R

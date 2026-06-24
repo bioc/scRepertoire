@@ -18,7 +18,8 @@ exportClones(
 \code{combineExpression()}.}
 
 \item{format}{The format for exporting clones.
-Options are: \code{paired}, \code{airr}, \code{TCRMatch}, \code{tcrpheno}, \code{immunarch}.}
+Options are: \code{paired}, \code{airr}, \code{TCRMatch}, \code{tcrpheno}, \code{immunarch},
+\code{dowser}.}
 
 \item{group.by}{The variable in the metadata to use for grouping. If \code{NULL},
 data will be grouped by the sample names.}
@@ -56,6 +57,10 @@ frequency.
 pipeline, with TRA and TRB chains in separate columns.
 \item{\code{immunarch}}: Exports a list containing a data frame and metadata
 formatted for use with the \code{immunarch} package.
+\item{\code{dowser}}: Exports an AIRR-compliant data frame ready for
+\code{dowser::formatClones()} (B cell lineage analysis). Requires full-length
+IMGT-gapped alignments retained via \code{retain.sequences}. See
+\code{\link[=exportDowser]{exportDowser()}}.
 }
 }
 \examples{

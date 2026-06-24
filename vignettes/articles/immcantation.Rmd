@@ -584,6 +584,43 @@ ggplot(mut_freq_clone %>% filter(c_call != "NA"),
 
 This series of density plots shows the distribution of SHM frequencies for each isotype within each subject. The x-axis represents the mutation frequency. A peak near zero indicates a large population of naive or unmutated cells (such as expected for IGHM and IGHD). In a mature immune response, you would expect to see the peaks for IgG and IgA shifted to the right, indicating higher overall mutation levels. 
 
+# Exporting scRepertoire Clones to dowser
+
+The sections above flow from `Immcantation` into `scRepertoire`. You can also go the other direction: start in `scRepertoire` and hand full-length sequences to `dowser` for B cell lineage / phylogenetic analysis.
+
+## Retaining full-length sequences
+
+By default `scRepertoire` stores only the CDR3 in the `CTnt`/`CTaa` columns. `dowser` reconstructs ancestral sequences from IMGT-gapped alignments, so it needs the full-length `sequence_alignment` and `germline_alignment` fields. Those come from an `Immcantation`/AIRR annotation pipeline (IgBLAST + `MakeDb` + `CreateGermlines`), so import an annotated table and retain the alignments through the combine step.
+
+`loadContigs()` keeps the standardized `sequence`/`sequence_aa` columns automatically (and `sequence_alignment`/`germline_alignment` when present). `combineBCR()` then carries them forward when you opt in with `retain.sequences`, as additional per-chain columns that never disturb `CTaa`/`CTnt`/`CTgene`/`CTstrict`.
+
+```{r eval = FALSE}
+# `contigs` is an Immcantation / AIRR-annotated table loaded with loadContigs()
+combined <- combineBCR(contigs,
+                       samples = "P1",
+                       retain.sequences = c("sequence_alignment",
+                                            "germline_alignment"))
+
+# The combined object now carries per-chain full-length columns alongside CT*
+head(combined[[1]])
+```
+
+## Building dowser clones
+
+`exportDowser()` reshapes the combined object into an AIRR-compliant data frame, mapping each cell's clone definition (`CTstrict` by default) to dowser's `clone_id` and adding the `sequence_id`/`junction_length` housekeeping fields `formatClones()` expects.
+
+```{r eval = FALSE}
+airr <- exportDowser(combined, write.file = FALSE)
+
+# Hand off directly to dowser
+clones <- dowser::formatClones(airr)
+
+# Or let scRepertoire call formatClones() for you
+clones <- exportDowser(combined, run.formatClones = TRUE)
+```
+
+If the alignment/germline columns are missing (for example raw 10x Cell Ranger output, which never contains them), `exportDowser()` stops with guidance on how to obtain and retain them. From here you can build trees with `dowser::getTrees()` and visualize lineages with `dowser::plotTrees()`.
+
 # Interaction with Single-Cell Object
 
 In this final step, we will add the clonal and SHM information we derived from the `Immcantation` workflow into a Seurat object and then use the powerful tools in the `scRepertoire` package to perform integrated analyses.

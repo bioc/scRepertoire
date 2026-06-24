@@ -120,6 +120,16 @@ combineExpression <- function(input.data,
         "barcode", CT_lines, clone.call, "clonalProportion", "clonalFrequency"
     ))
 
+    # Carry any retained full-length sequence columns (from combineTCR/BCR with
+    # retain.sequences) into the single-cell metadata. Additive and present-only:
+    # when none are retained this is a no-op and the default path is unchanged.
+    seq_candidates <- paste0(rep(.seqColMap, each = 2), c("1", "2"))
+    retained_present <- Reduce(intersect,
+        c(list(seq_candidates), lapply(input.data, colnames)))
+    if (length(retained_present) > 0) {
+        conDfColnamesNoCloneSize <- unique(c(conDfColnamesNoCloneSize, retained_present))
+    }
+
     # Computes the clonalProportion and clonalFrequency for each clone
     if (is.null(group.by) || group.by == "none") {
 

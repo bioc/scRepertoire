@@ -58,6 +58,7 @@ Key Parameter(s) for `combineTCR()`
 * `removeMulti`: If `TRUE`, removes any cell barcode with more than two immune receptor chains (default is `FALSE`).
 * `filterMulti`: If `TRUE`, isolates the top two expressed chains in cell barcodes with multiple chains (default is `FALSE`).
 * `filterNonproductive`: If `TRUE`, removes non-productive chains if the variable exists in the contig data (default is `TRUE`).
+* `retain.sequences`: Retains full-length sequences as additional per-chain columns without altering the clone calls (default is `FALSE`). See [Retaining Full-Length Sequences](#retaining-full-length-sequences).
 
 To combine TCR contigs from `contig_list` and apply sample prefixes:
 
@@ -100,6 +101,7 @@ Key Parameter(s) for `combineBCR()`
 * `sequence`: The sequence type (`nt` or `aa`) for clustering (default: `nt`).
 * use.V, use.J: If `TRUE`, sequences must share the same V/J gene to be clustered (default: `TRUE`)
 * `cluster.method`: The clustering algorithm to apply to the edit-distanc network (default: `components`).
+* `retain.sequences`: Retains full-length sequences as additional per-chain columns without altering the clone calls (default is `FALSE`). See [Retaining Full-Length Sequences](#retaining-full-length-sequences).
 
 First, load the example BCR contig data:
 
@@ -157,6 +159,34 @@ head(cleaned.BCR[[1]])
 ```
 
 `combineBCR()` is designed for processing B cell repertoire data, going beyond simple contig aggregation to incorporate advanced clustering based on CDR3 sequence similarity. This enables the identification of clonally related B cells, crucial for studying B cell development, affinity maturation, and humoral immune responses. Its filtering options further ensure the quality and interpretability of the processed data.
+
+## Retaining Full-Length Sequences
+
+By default, `combineTCR()` and `combineBCR()` keep only the CDR3 in the `CTnt` and `CTaa` columns. Some downstream tools need the full-length receptor sequence instead. B cell lineage tracing with `dowser`, for example, reconstructs ancestral sequences from IMGT-gapped alignments, not the CDR3 alone.
+
+To support this, `loadContigs()` standardizes a full-length `sequence` (nucleotide) and `sequence_aa` (amino acid) column for every supported format:
+
+* AIRR-family inputs (`AIRR`, `BD`, `Dandelion`, `Immcantation`, `JSON`) carry these fields natively.
+* `10X` and `MiXCR` reconstruct them by concatenating the framework and CDR regions (FWR1 through FWR4).
+* CDR3-only formats (`TRUST4`, `WAT3R`, `ParseBio`) leave the columns as `NA`.
+* When the source provides IMGT-gapped `sequence_alignment` and `germline_alignment` fields, those pass through as well.
+
+The `retain.sequences` argument then carries these columns into the combined object. It is purely additive and never touches `CTaa`, `CTnt`, `CTgene`, or `CTstrict`.
+
+* `retain.sequences = FALSE` (default): legacy output with no extra columns.
+* `retain.sequences = TRUE`: retains `sequence_nt1`/`sequence_nt2` and `sequence_aa1`/`sequence_aa2` per chain.
+* A character vector retains specific source columns, for example `c("sequence_alignment", "germline_alignment")` for `dowser`.
+
+```{r eval = FALSE}
+# Retain the standardized full-length sequences for both chains
+combined.BCR.seq <- combineBCR(BCR.contigs,
+                               samples = "Patient1",
+                               retain.sequences = TRUE)
+
+head(combined.BCR.seq[[1]][, c("barcode", "sequence_nt1", "sequence_aa1")])
+```
+
+These retained columns flow through `combineExpression()` into single-cell metadata, and `exportClones(format = "airr")` writes them into the matching AIRR rearrangement fields. For B cell lineage analysis, `exportDowser()` (or `exportClones(format = "dowser")`) reshapes a combined object built with `retain.sequences = c("sequence_alignment", "germline_alignment")` into a data frame ready for `dowser::formatClones()`. See the [Immcantation article](immcantation.html) for the full lineage workflow.
 
 ## Next Steps
 

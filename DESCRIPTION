@@ -1,6 +1,6 @@
 Package: scRepertoire
 Title: A toolkit for single-cell immune receptor profiling
-Version: 2.9.0
+Version: 2.9.1
 Authors@R: c(
     person(given = "Nick", family = "Borcherding", role = c("aut", "cre"), email = "ncborch@gmail.com"), 
     person(given = "Qile", family = "Yang", role = c("aut"), email = "qile.yang@berkeley.edu"), 
@@ -39,10 +39,11 @@ Imports:
     purrr,
     lifecycle,
     methods
-Suggests: 
+Suggests:
     BiocManager,
     BiocStyle,
     circlize,
+    dowser,
     knitr,
     Peptides,
     rmarkdown,

@@ -1,3 +1,26 @@
+# scRepertoire VERSION 2.9.1
+
+## NEW FEATURES
+
+* Full-length sequence retention (resolves #535). `loadContigs()` now keeps a standardized `sequence`/`sequence_aa` column for every format (reconstructed from framework/CDR regions for 10x and MiXCR, copied natively for AIRR-family inputs, `NA` where unavailable), plus `sequence_alignment`/`germline_alignment` when present. This is additive and does not change existing columns.
+* `combineTCR()` and `combineBCR()` gain `retain.sequences` (default `FALSE`). When set, full-length sequences are carried into the combined object as per-chain columns (`sequence_nt1`/`sequence_nt2`, `sequence_aa1`/`sequence_aa2`, and optionally `sequence_alignment*`/`germline*`) without altering `CTaa`/`CTnt`/`CTgene`/`CTstrict`. The retained columns flow through `combineExpression()` into single-cell metadata.
+* `exportClones(format = "airr")` now populates `sequence`/`sequence_aa` (and alignment/germline) fields when those sequences were retained.
+* New `exportDowser()` function (and `exportClones(format = "dowser")`) reshapes BCR/TCR data into an AIRR data frame ready for `dowser::formatClones()`, enabling B cell lineage / phylogenetic analysis in the Immcantation framework (resolves #578). `exportDowser()` errors with guidance when the required IMGT-gapped alignments are absent.
+
+## BUG FIXES
+
+* `combineBCR(retain.sequences = ...)` now resolves the retained columns against the intersection of columns shared by all samples, rather than the first sample only. This prevents an `"undefined columns selected"` error (or silent dropping of a column) when samples carry heterogeneous fields, matching `combineTCR()`.
+* Retained per-chain sequences from multi-contig chains no longer carry literal `"NA"` placeholder tokens (e.g. `"seq1;NA"`) when a contig lacks a full-length sequence; such tokens are dropped from the join and an all-placeholder value becomes a real `NA`.
+
+## DEPENDENCIES
+
+* Added `dowser` to `Suggests` for the new lineage export path.
+
+## DOCUMENTATION
+
+* Documented full-length sequence retention and the `dowser` export path in the main vignette and the "Combining Contigs into Clones" article.
+* Added a "Exporting scRepertoire Clones to dowser" section to the Immcantation article covering the `retain.sequences` to `exportDowser()` to `dowser::formatClones()` workflow.
+
 # scRepertoire VERSION 2.7.3
 
 ## BUG FIXES

@@ -7,6 +7,11 @@
 * `exportClones(format = "airr")` now populates `sequence`/`sequence_aa` (and alignment/germline) fields when those sequences were retained.
 * New `exportDowser()` function (and `exportClones(format = "dowser")`) reshapes BCR/TCR data into an AIRR data frame ready for `dowser::formatClones()`, enabling B cell lineage / phylogenetic analysis in the Immcantation framework (resolves #578). `exportDowser()` errors with guidance when the required IMGT-gapped alignments are absent.
 
+## UNDERLYING CHANGES
+
+* `clonalCluster()` now passes the tight similarity threshold to `immApex::buildNetwork()` instead of the loose value that was refiltered afterward. The engine prunes early rather than returning a large edge list that is mostly discarded. Raw thresholds are unchanged, and cluster assignments match the previous behavior.
+* `clonalCluster()` selects the edge expansion from `cluster.method`. Connected-components clustering uses the memory-efficient star expansion, which is exact for components. Community-detection methods use the full clique expansion for exact edge multiplicity.
+
 ## BUG FIXES
 
 * `combineBCR(retain.sequences = ...)` now resolves the retained columns against the intersection of columns shared by all samples, rather than the first sample only. This prevents an `"undefined columns selected"` error (or silent dropping of a column) when samples carry heterogeneous fields, matching `combineTCR()`.
@@ -15,6 +20,7 @@
 ## DEPENDENCIES
 
 * Added `dowser` to `Suggests` for the new lineage export path.
+* `clonalCluster()` requires `immApex (>= 1.7.1)` for the new `expand` argument and the faster network engine.
 
 ## DOCUMENTATION
 

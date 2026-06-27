@@ -34,10 +34,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcppConstructConDfAndParseTCRWithSeqs
+Rcpp::DataFrame rcppConstructConDfAndParseTCRWithSeqs(Rcpp::DataFrame& data2, std::vector<std::string> uniqueData2Barcodes, std::vector<std::string> retainCols);
+RcppExport SEXP _scRepertoire_rcppConstructConDfAndParseTCRWithSeqs(SEXP data2SEXP, SEXP uniqueData2BarcodesSEXP, SEXP retainColsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::DataFrame& >::type data2(data2SEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type uniqueData2Barcodes(uniqueData2BarcodesSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type retainCols(retainColsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcppConstructConDfAndParseTCRWithSeqs(data2, uniqueData2Barcodes, retainCols));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_scRepertoire_rcppConstructBarcodeIndex", (DL_FUNC) &_scRepertoire_rcppConstructBarcodeIndex, 2},
     {"_scRepertoire_rcppConstructConDfAndParseTCR", (DL_FUNC) &_scRepertoire_rcppConstructConDfAndParseTCR, 2},
+    {"_scRepertoire_rcppConstructConDfAndParseTCRWithSeqs", (DL_FUNC) &_scRepertoire_rcppConstructConDfAndParseTCRWithSeqs, 3},
     {NULL, NULL, 0}
 };
 

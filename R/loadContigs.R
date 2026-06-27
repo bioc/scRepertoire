@@ -197,6 +197,64 @@ loadContigs <- function(input,
   }
 }
 
+# Standardized full-length sequence columns for a raw contig data frame.
+#
+# Returns a data frame with `nrow(df)` rows holding the standardized full-length
+# nucleotide (`sequence`) and amino-acid (`sequence_aa`) sequences, plus
+# `sequence_alignment` / `germline_alignment` when the source provides them
+# (needed by the dowser/Immcantation path). Columns are always present, set to
+# NA when a format cannot supply them, so downstream retention sees a stable
+# schema. This is purely additive and does not touch CDR3/CT* handling.
+#' @keywords internal
+.computeFullSeq <- function(df, format) {
+  n <- nrow(df)
+  cn <- colnames(df)
+
+  get_col <- function(name) {
+    if (name %in% cn) as.character(df[[name]]) else rep(NA_character_, n)
+  }
+  # Concatenate per-region columns (FWR1-CDR1-...-FWR4) into a full sequence.
+  # Returns all-NA when the region columns are not all present (e.g. older
+  # Cell Ranger output that predates the framework/CDR columns).
+  concat_regions <- function(regions) {
+    if (!all(regions %in% cn)) return(rep(NA_character_, n))
+    parts <- lapply(regions, function(r) {
+      v <- as.character(df[[r]]); v[is.na(v)] <- ""; v
+    })
+    out <- do.call(paste0, parts)
+    out[out == ""] <- NA_character_
+    out
+  }
+
+  airr_family <- c("AIRR", "BD", "Dandelion", "Immcantation", "JSON")
+  if (format %in% airr_family) {
+    seq_nt <- get_col("sequence")
+    seq_aa <- get_col("sequence_aa")
+  } else if (format == "10X") {
+    seq_nt <- concat_regions(c("fwr1_nt", "cdr1_nt", "fwr2_nt", "cdr2_nt",
+                               "fwr3_nt", "cdr3_nt", "fwr4_nt"))
+    seq_aa <- concat_regions(c("fwr1", "cdr1", "fwr2", "cdr2",
+                               "fwr3", "cdr3", "fwr4"))
+  } else if (format == "MiXCR") {
+    seq_nt <- concat_regions(c("nSeqFR1", "nSeqCDR1", "nSeqFR2", "nSeqCDR2",
+                               "nSeqFR3", "nSeqCDR3", "nSeqFR4"))
+    seq_aa <- concat_regions(c("aaSeqFR1", "aaSeqCDR1", "aaSeqFR2", "aaSeqCDR2",
+                               "aaSeqFR3", "aaSeqCDR3", "aaSeqFR4"))
+  } else {
+    # TRUST4 / WAT3R / ParseBio carry only CDR3, no full-length sequence.
+    seq_nt <- rep(NA_character_, n)
+    seq_aa <- rep(NA_character_, n)
+  }
+
+  res <- data.frame(sequence = seq_nt, sequence_aa = seq_aa,
+                    stringsAsFactors = FALSE)
+  # Pass through IMGT-gapped alignment + germline when present (dowser inputs).
+  for (extra in c("sequence_alignment", "germline_alignment")) {
+    if (extra %in% cn) res[[extra]] <- as.character(df[[extra]])
+  }
+  res
+}
+
 ## --- Parsing Functions ---
 .parseTRUST4 <- function(df_list) {
   split_and_pad <- function(x, n = NULL) {
@@ -238,7 +296,7 @@ loadContigs <- function(input,
     combined_data <- .sanitize_empty(combined_data)
     combined_data$chain <- substr(combined_data$v_gene, 1, 3)
     combined_data$reads <- as.numeric(combined_data$reads)
-    combined_data
+    cbind(combined_data, .computeFullSeq(combined_data, "TRUST4"))
   })
   return(formatted)
 }
@@ -286,15 +344,17 @@ loadContigs <- function(input,
       stringsAsFactors = FALSE
     )
     combined <- rbind(chain1, chain2, chain3)
-    .order_df(.sanitize_empty(combined))
+    combined <- .sanitize_empty(combined)
+    .order_df(cbind(combined, .computeFullSeq(combined, "WAT3R")))
   })
 }
 
 .parseAIRR <- function(df_list) {
   lapply(df_list, function(df) {
+    seqs <- .computeFullSeq(df, "AIRR")
     df <- df[, c("cell_id", "locus", "consensus_count", "v_call", "d_call", "j_call", "c_call", "junction", "junction_aa")]
     colnames(df) <- c("barcode", "chain", "reads", "v_gene", "d_gene", "j_gene", "c_gene", "cdr3_nt", "cdr3")
-    .order_df(df)
+    .order_df(cbind(df, seqs))
   })
 }
 
@@ -307,15 +367,17 @@ loadContigs <- function(input,
     }
     df <- subset(df, cdr3 != "None")
     df <- .sanitize_empty(df)
+    df <- cbind(df, .computeFullSeq(df, "10X"))
     .order_df(df)
   })
 }
 
 .parseBD <- function(df_list) {
   lapply(df_list, function(df) {
+    seqs <- .computeFullSeq(df, "BD")
     df <- df[, c("cell_id", "locus", "v_call", "d_call", "j_call", "c_call", "cdr3", "cdr3_aa", "consensus_count", "productive")]
     colnames(df) <- c("barcode", "chain", "v_gene", "d_gene", "j_gene", "c_gene", "cdr3_nt", "cdr3", "reads", "productive")
-    .order_df(df)
+    .order_df(cbind(df, seqs))
   })
 }
 
@@ -324,9 +386,10 @@ loadContigs <- function(input,
     df <- do.call(rbind, df)
     df <- .sanitize_empty(df)
     df <- as.data.frame(df, stringsAsFactors = FALSE)
+    seqs <- .computeFullSeq(df, "JSON")
     df <- df[, c("cell_id", "locus", "consensus_count", "v_call", "d_call", "j_call", "c_call", "junction", "junction_aa")]
     colnames(df) <- c("barcode", "chain", "reads", "v_gene", "d_gene", "j_gene", "c_gene", "cdr3_nt", "cdr3")
-    df
+    cbind(df, seqs)
   })
 }
 
@@ -334,12 +397,13 @@ loadContigs <- function(input,
   lapply(df_list, function(df) {
     df <- .sanitize_empty(df)
     df <- as.data.frame(df, stringsAsFactors = FALSE)
+    seqs <- .computeFullSeq(df, "MiXCR")
     df <- df[, c("tagValueCELL", "topChains", "readCount", "allVHitsWithScore",
                  "allDHitsWithScore", "allJHitsWithScore", "allCHitsWithScore",
                  "nSeqCDR3", "aaSeqCDR3")]
     colnames(df) <- c("barcode", "chain", "reads", "v_gene", "d_gene",
                       "j_gene", "c_gene", "cdr3_nt", "cdr3")
-    df
+    cbind(df, seqs)
   })
 }
 
@@ -347,6 +411,7 @@ loadContigs <- function(input,
   lapply(df_list, function(df) {
     df <- .sanitize_empty(df)
     df <- as.data.frame(df, stringsAsFactors = FALSE)
+    seqs <- .computeFullSeq(df, "Immcantation")
     if ("c_call" %in% colnames(df)) {
       df <- df[, c("sequence_id", "locus", "consensus_count", "v_call", "d_call", "j_call", "c_call", "cdr3", "cdr3_aa", "productive")]
       colnames(df) <- c("barcode", "chain", "reads", "v_gene", "d_gene", "j_gene", "c_gene", "cdr3_nt", "cdr3", "productive")
@@ -355,6 +420,7 @@ loadContigs <- function(input,
       colnames(df) <- c("barcode", "chain", "reads", "v_gene", "d_gene", "j_gene", "cdr3_nt", "cdr3", "productive")
       df$c_gene <- NA
     }
+    df <- cbind(df, seqs)
     df$barcode <- vapply(strsplit(df$barcode, "_"), `[`, 1, FUN.VALUE = character(1))
     df
   })
@@ -406,14 +472,15 @@ loadContigs <- function(input,
     colnames(combined) <- c("barcode", "v_gene", "d_gene", "j_gene", "c_gene", "cdr3", "reads", "umis", "chain")
     combined$cdr3_nt <- NA
     combined <- combined[, c("barcode", "chain", "v_gene", "d_gene", "j_gene", "c_gene", "cdr3_nt", "cdr3", "reads", "umis")]
-    .order_df(combined)
+    .order_df(cbind(combined, .computeFullSeq(combined, "ParseBio")))
   })
 }
 
 .parseDandelion <- function(df_list) {
   lapply(df_list, function(df) {
+    seqs <- .computeFullSeq(df, "Dandelion")
     df <- df[, c("cell_id", "locus", "consensus_count", "v_call", "d_call", "j_call", "c_call", "cdr3", "cdr3_aa", "productive")]
     colnames(df) <- c("barcode", "chain", "reads", "v_gene", "d_gene", "j_gene", "c_gene", "cdr3_nt", "cdr3", "productive")
-    df
+    cbind(df, seqs)
   })
 }

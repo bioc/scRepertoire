@@ -706,49 +706,148 @@
 # but now also constructs Con.df and runs the parseTCR algorithm on it, all in Rcpp
 #' @author Gloria Kraus, Nick Bormann, Nicky de Vrij, Nick Borcherding, Qile Yang
 #' @keywords internal
-.constructConDfAndParseTCR <- function(data2) {
-  rcppConstructConDfAndParseTCR(
-    dplyr::arrange(data2, chain, cdr3_nt),
-    uniqueData2Barcodes = unique(data2$barcode)
-  )
+.constructConDfAndParseTCR <- function(data2, retain_cols = character(0)) {
+  arranged <- dplyr::arrange(data2, chain, cdr3_nt)
+  ubc <- unique(data2$barcode)
+  if (length(retain_cols) == 0) {
+    rcppConstructConDfAndParseTCR(arranged, uniqueData2Barcodes = ubc)
+  } else {
+    rcppConstructConDfAndParseTCRWithSeqs(
+      arranged, uniqueData2Barcodes = ubc, retainCols = retain_cols
+    )
+  }
+}
+
+# Map of standardized loaded-contig sequence columns to the per-chain base name
+# used in the combined object (mirrors the cdr3_nt1 / cdr3_nt2 idiom).
+#' @keywords internal
+.seqColMap <- c(
+  sequence           = "sequence_nt",
+  sequence_aa        = "sequence_aa",
+  sequence_alignment = "sequence_alignment",
+  germline_alignment = "germline"
+)
+
+# Resolve the `retain.sequences` argument against the columns actually present
+# in the loaded contigs. Returns a character vector of source column names
+# (possibly empty), so the default path stays untouched.
+#' @keywords internal
+.resolveRetainCols <- function(retain.sequences, available) {
+  if (is.null(retain.sequences) || isFALSE(retain.sequences)) {
+    return(character(0))
+  }
+  requested <- if (isTRUE(retain.sequences)) {
+    c("sequence", "sequence_aa")
+  } else {
+    as.character(retain.sequences)
+  }
+  intersect(requested, available)
+}
+
+# Mapped per-chain base names for a set of retained source columns.
+#' @keywords internal
+.seqBases <- function(retain_cols) {
+  vapply(retain_cols, function(col) {
+    if (col %in% names(.seqColMap)) .seqColMap[[col]] else col
+  }, character(1), USE.NAMES = FALSE)
+}
+
+# Per-chain output column names for a set of retained source columns, in the
+# order chain1 then chain2 for each (e.g. sequence_nt1, sequence_nt2, ...).
+#' @keywords internal
+.seqOutCols <- function(retain_cols) {
+  unlist(lapply(.seqBases(retain_cols), function(base) {
+    paste0(base, c("1", "2"))
+  }), use.names = FALSE)
+}
+
+# Collapse the ';'-joined placeholder tokens left when one contig in a
+# multi-contig chain lacks a retained sequence. The set-vs-append logic mirrors
+# cdr3_nt, so a missing contig sequence shows up as an "NA" token (e.g.
+# "seqA1;NA"); drop those tokens and rejoin. A value made up entirely of
+# placeholders becomes a real NA. grepl-gated so only affected rows pay the
+# per-element split cost; the rest pass through untouched.
+#' @keywords internal
+.cleanSeqJoin <- function(x) {
+  x <- as.character(x)
+  needs <- !is.na(x) & grepl("NA", x, fixed = TRUE)
+  if (!any(needs)) return(x)
+  x[needs] <- vapply(x[needs], function(v) {
+    parts <- strsplit(v, ";", fixed = TRUE)[[1]]
+    parts <- parts[parts != "NA"]
+    if (length(parts) == 0) NA_character_ else paste(parts, collapse = ";")
+  }, character(1), USE.NAMES = FALSE)
+  x
+}
+
+# Rename the generic <col>1 / <col>2 columns emitted by the parsers to their
+# storage names, and tidy the ';'-joined values: lone "NA" placeholders (chain
+# absent) and embedded "NA" tokens (a contig without a sequence) become real NA
+# or are dropped from the join.
+#' @keywords internal
+.renameSeqCols <- function(df, retain_cols) {
+  for (col in retain_cols) {
+    base <- if (col %in% names(.seqColMap)) .seqColMap[[col]] else col
+    for (suffix in c("1", "2")) {
+      old <- paste0(col, suffix)
+      new <- paste0(base, suffix)
+      if (old %in% names(df)) {
+        if (old != new) names(df)[names(df) == old] <- new
+        df[[new]] <- .cleanSeqJoin(df[[new]])
+      }
+    }
+  }
+  df
 }
 
 # Assigning positions for BCR contig data
 # Now assumes lambda over kappa in the context of only 2 light chains
 #' @author Gloria Kraus, Nick Bormann, Nick Borcherding, Qile Yang
 #' @keywords internal
-.parseBCR <- function (Con.df, unique_df, data2) {
+.parseBCR <- function (Con.df, unique_df, data2,
+                        heavy_t = NULL, light_t = NULL,
+                        h_s = NULL, k_s = NULL, l_s = NULL) {
+  # Target (Con.df) and source (data2) column vectors default to the package
+  # globals; combineBCR passes widened versions when retaining full-length
+  # sequences. The whole vector is assigned per contig, so any retained
+  # columns ';'-join in lock-step with the gene/CDR3 columns.
+  if (is.null(heavy_t)) heavy_t <- heavy_lines
+  if (is.null(light_t)) light_t <- light_lines
+  if (is.null(h_s)) h_s <- h_lines
+  if (is.null(k_s)) k_s <- k_lines
+  if (is.null(l_s)) l_s <- l_lines
+
   barcodeIndex <- rcppConstructBarcodeIndex(unique_df, data2$barcode)
   for (y in seq_along(unique_df)) {
     location.i <- barcodeIndex[[y]]
-    
+
     for (z in seq_along(location.i)) {
       where.chain <- data2[location.i[z],"chain"]
-      
+
       if (where.chain == "IGH") {
         if(is.na(Con.df[y,"IGH"])) {
-          Con.df[y,heavy_lines] <- data2[location.i[z],h_lines]
+          Con.df[y,heavy_t] <- data2[location.i[z],h_s]
         } else {
-          Con.df[y,heavy_lines] <- paste(Con.df[y, heavy_lines],
-                                         data2[location.i[z],h_lines],sep=";") 
+          Con.df[y,heavy_t] <- paste(Con.df[y, heavy_t],
+                                         data2[location.i[z],h_s],sep=";")
         }
       } else if (where.chain == "IGK") {
         if(is.na(Con.df[y,"IGLC"])) {
-          Con.df[y,light_lines] <- data2[location.i[z],k_lines]
+          Con.df[y,light_t] <- data2[location.i[z],k_s]
         } else {
-          Con.df[y,light_lines] <- paste(Con.df[y, light_lines],
-                                         data2[location.i[z],k_lines],sep=";") 
+          Con.df[y,light_t] <- paste(Con.df[y, light_t],
+                                         data2[location.i[z],k_s],sep=";")
         }
       }else if (where.chain == "IGL") {
         if(is.na(Con.df[y,"IGLC"])) {
-          Con.df[y,light_lines] <- data2[location.i[z],l_lines]
+          Con.df[y,light_t] <- data2[location.i[z],l_s]
         } else {
-          Con.df[y,light_lines] <- paste(Con.df[y, light_lines],
-                                         data2[location.i[z],l_lines],sep=";") 
+          Con.df[y,light_t] <- paste(Con.df[y, light_t],
+                                         data2[location.i[z],l_s],sep=";")
         }
       }
     }
-    
+
   }
   return(Con.df)
 }

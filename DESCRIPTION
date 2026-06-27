@@ -38,10 +38,11 @@ Imports:
     purrr,
     lifecycle,
     methods
-Suggests: 
+Suggests:
     BiocManager,
     BiocStyle,
     circlize,
+    dowser,
     knitr,
     Peptides,
     rmarkdown,

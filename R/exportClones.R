@@ -20,12 +20,17 @@
 #'     pipeline, with TRA and TRB chains in separate columns.
 #'   \item{`immunarch`}: Exports a list containing a data frame and metadata
 #'     formatted for use with the `immunarch` package.
+#'   \item{`dowser`}: Exports an AIRR-compliant data frame ready for
+#'     `dowser::formatClones()` (B cell lineage analysis). Requires full-length
+#'     IMGT-gapped alignments retained via `retain.sequences`. See
+#'     [exportDowser()].
 #' }
 #'
 #' @param input.data The product of `combineTCR()`, `combineBCR()`, or
 #'   `combineExpression()`.
 #' @param format The format for exporting clones.
-#'   Options are: `paired`, `airr`, `TCRMatch`, `tcrpheno`, `immunarch`.
+#'   Options are: `paired`, `airr`, `TCRMatch`, `tcrpheno`, `immunarch`,
+#'   `dowser`.
 #' @param group.by The variable in the metadata to use for grouping. If `NULL`,
 #'   data will be grouped by the sample names.
 #' @param write.file If `TRUE` (default), saves the output to a CSV file. If
@@ -64,15 +69,16 @@ exportClones <- function(input.data,
                          file.name = "clones.csv") {
   
   # Validate format parameter
-  format <- match.arg(format, c("paired", "airr", "TCRMatch", "tcrpheno", "immunarch"))
-  
+  format <- match.arg(format, c("paired", "airr", "TCRMatch", "tcrpheno", "immunarch", "dowser"))
+
   # Select the appropriate internal export function
   exportFunc <- switch(format,
                        "paired"     = .pairedExport,
                        "airr"       = .airrExport,
                        "TCRMatch"   = .tcrMatchExport,
                        "tcrpheno"   = .tcrPhenoExport,
-                       "immunarch"  = .immunarchExport
+                       "immunarch"  = .immunarchExport,
+                       "dowser"     = .dowserExport
   )
   
   # Generate the data matrix/list
@@ -286,13 +292,29 @@ exportClones <- function(input.data,
   # Process chain 1 and chain 2 gene calls
   genes1 <- ._split_and_pad(genes[, 1], "[.]", 4)
   genes2 <- ._split_and_pad(genes[, 2], "[.]", 4)
-  
+
+  # Retained full-length sequence columns (present only when combineTCR/BCR was
+  # run with retain.sequences). Mapped to their AIRR rearrangement field names.
+  airr_seq_map <- c(sequence = "sequence_nt", sequence_aa = "sequence_aa",
+                    sequence_alignment = "sequence_alignment",
+                    germline_alignment = "germline")
+  slot_seq <- function(slot) {
+    out <- list()
+    for (field in names(airr_seq_map)) {
+      col <- paste0(airr_seq_map[[field]], slot)
+      if (col %in% colnames(bound_data)) {
+        out[[field]] <- clean_multichain(as.character(bound_data[[col]]))
+      }
+    }
+    out
+  }
+
   # Function to create a data frame for a single chain
-  format_chain_df <- function(cell_ids, locus_prefix, genes_mat, nt_seq, aa_seq) {
+  format_chain_df <- function(cell_ids, locus_prefix, genes_mat, nt_seq, aa_seq, seq_fields) {
     # Determine if chain is heavy/beta (has D gene)
     is_heavy_or_beta <- locus_prefix %in% c("IGH", "TRB", "TRD")
     is_heavy_or_beta <- names(table(is_heavy_or_beta))[1]
-    
+
     df <- data.frame(
       locus = paste0(locus_prefix, "1"),
       v_call = genes_mat[, 1],
@@ -300,34 +322,156 @@ exportClones <- function(input.data,
       j_call = if (is_heavy_or_beta) genes_mat[, 3] else genes_mat[, 2],
       c_call = if (is_heavy_or_beta) genes_mat[, 4] else genes_mat[, 3],
       junction = nt_seq,
-      junction_aa = aa_seq
+      junction_aa = aa_seq,
+      stringsAsFactors = FALSE
     )
+    # Append any retained full-length sequence fields for this chain.
+    for (field in names(seq_fields)) df[[field]] <- seq_fields[[field]]
     return(df)
   }
-  
+
   # Locus prefixes for chain 1 and 2
   locus1_prefix <- substr(genes[, 1], 1, 3)
   locus2_prefix <- substr(genes[, 2], 1, 3)
-  
+
   # Create data frames for each chain
-  df1 <- format_chain_df(bound_data$barcode, locus1_prefix, genes1, nt[, 1], aa[, 1])
-  df2 <- format_chain_df(bound_data$barcode, locus2_prefix, genes2, nt[, 2], aa[, 2])
-  
+  df1 <- format_chain_df(bound_data$barcode, locus1_prefix, genes1, nt[, 1], aa[, 1], slot_seq(1))
+  df2 <- format_chain_df(bound_data$barcode, locus2_prefix, genes2, nt[, 2], aa[, 2], slot_seq(2))
+
   # Add cell_id to both
   df1$cell_id <- bound_data$barcode
   df2$cell_id <- bound_data$barcode
-  
+
   # Combine chain data frames
   mat <- rbind(df1, df2)
-  
-  # Reorder columns to AIRR standard
+
+  # Reorder columns to AIRR standard, appending any retained sequence fields.
   airr_cols <- c("cell_id", "locus", "v_call", "d_call", "j_call", "c_call", "junction", "junction_aa")
+  airr_cols <- c(airr_cols, intersect(names(airr_seq_map), colnames(mat)))
   mat <- mat[, airr_cols]
   
   # Remove rows that are entirely NA except for cell_id
   mat <- mat[rowSums(is.na(mat[, -1])) < (ncol(mat) - 1), ]
-  
+
   return(mat)
+}
+
+
+#' @noRd
+.dowserExport <- function(input.data, group.by, clone.call = "CTstrict") {
+  airr <- .airrExport(input.data, group.by)
+
+  # dowser reconstructs ancestral sequences from IMGT-gapped alignments, so it
+  # needs sequence_alignment + germline_alignment. These only exist when the
+  # input was annotated by an Immcantation/AIRR pipeline (IgBLAST + MakeDb +
+  # CreateGermlines) and retained through combineBCR()/combineTCR(). Raw 10x
+  # output never contains them.
+  required <- c("sequence_alignment", "germline_alignment")
+  absent <- setdiff(required, colnames(airr))
+  if (length(absent) > 0) {
+    stop(
+      "dowser export requires the IMGT-gapped ",
+      paste(absent, collapse = " and "),
+      " field(s), which are not present in the data.\n",
+      "Import an Immcantation/AIRR-annotated object (IgBLAST + MakeDb + ",
+      "CreateGermlines) and retain the alignments, e.g.\n",
+      "  combineBCR(..., retain.sequences = c(\"sequence_alignment\", ",
+      "\"germline_alignment\"))",
+      call. = FALSE
+    )
+  }
+
+  # Attach the per-cell clone id (from clone.call) to each chain row.
+  bound <- ._bind_contig_list(
+    .dataWrangle(input.data, group.by, clone.call, "both")
+  )
+  clone_map <- stats::setNames(bound[[clone.call]], bound$barcode)
+  airr$clone_id <- unname(clone_map[airr$cell_id])
+
+  # AIRR housekeeping fields dowser::formatClones expects.
+  airr$sequence_id <- make.unique(paste(airr$cell_id, airr$locus, sep = "_"))
+  if ("junction" %in% colnames(airr)) {
+    airr$junction_length <- nchar(airr$junction)
+  }
+  airr
+}
+
+
+#' Export scRepertoire Clones for dowser / Immcantation
+#'
+#' Reshapes a `combineTCR()`, `combineBCR()`, or `combineExpression()` object
+#' into an AIRR-compliant data frame ready for `dowser::formatClones()`, the
+#' entry point for B cell lineage / phylogenetic analysis in the Immcantation
+#' framework.
+#'
+#' @details
+#' dowser builds lineage trees from full-length, IMGT-gapped sequences, so the
+#' input must carry `sequence_alignment` and `germline_alignment`. These come
+#' from an Immcantation/AIRR annotation pipeline (IgBLAST + MakeDb +
+#' CreateGermlines) and must be retained through the combine step, e.g.
+#' `combineBCR(..., retain.sequences = c("sequence_alignment", "germline_alignment"))`.
+#' Raw 10x Cell Ranger output does not contain these fields, and the function
+#' errors with guidance when they are missing.
+#'
+#' @param input.data The product of `combineTCR()`, `combineBCR()`, or
+#'   `combineExpression()`.
+#' @param group.by The variable to use for grouping. If `NULL`, data are
+#'   grouped by sample.
+#' @param clone.call The clone definition column mapped to dowser's `clone_id`.
+#'   Defaults to `"CTstrict"`.
+#' @param run.formatClones If `TRUE`, calls `dowser::formatClones()` on the
+#'   assembled data frame and returns its result (requires the `dowser`
+#'   package). If `FALSE` (default), returns the AIRR data frame.
+#' @param write.file If `TRUE`, writes the AIRR data frame to a CSV file.
+#' @param dir The directory for the output file. Defaults to the working
+#'   directory.
+#' @param file.name The name of the output file.
+#' @param ... Additional arguments passed to `dowser::formatClones()` when
+#'   `run.formatClones = TRUE`.
+#'
+#' @return An AIRR-compliant data frame (default) or, when
+#'   `run.formatClones = TRUE`, the object returned by
+#'   `dowser::formatClones()`.
+#'
+#' @importFrom utils write.csv
+#' @export
+#' @concept Loading_and_Processing_Contigs
+#'
+#' @examples
+#' \dontrun{
+#' # BCR data imported from an Immcantation pipeline, with alignments retained
+#' combined <- combineBCR(immcantation_contigs,
+#'                        retain.sequences = c("sequence_alignment",
+#'                                             "germline_alignment"))
+#' airr <- exportDowser(combined, write.file = FALSE)
+#' clones <- dowser::formatClones(airr)
+#' }
+exportDowser <- function(input.data,
+                         group.by = NULL,
+                         clone.call = "CTstrict",
+                         run.formatClones = FALSE,
+                         write.file = FALSE,
+                         dir = NULL,
+                         file.name = "dowser_clones.csv",
+                         ...) {
+
+  airr <- .dowserExport(input.data, group.by, clone.call = clone.call)
+
+  if (run.formatClones) {
+    if (!requireNamespace("dowser", quietly = TRUE)) {
+      stop("Package 'dowser' is required when run.formatClones = TRUE. ",
+           "Install it from CRAN/Bioconductor.", call. = FALSE)
+    }
+    return(dowser::formatClones(airr, ...))
+  }
+
+  if (write.file) {
+    if (is.null(dir)) dir <- "."
+    write.csv(airr, file = file.path(dir, file.name), row.names = FALSE)
+    return(invisible(airr))
+  }
+
+  airr
 }
 
 

@@ -1,6 +1,6 @@
 Package: scRepertoire
 Title: A toolkit for single-cell immune receptor profiling
-Version: 2.9.0
+Version: 2.9.1
 Authors@R: c(
     person(given = "Nick", family = "Borcherding", role = c("aut", "cre"), email = "ncborch@gmail.com"), 
     person(given = "Qile", family = "Yang", role = c("aut"), email = "qile.yang@berkeley.edu"), 
@@ -10,7 +10,6 @@ Description: scRepertoire is a toolkit for processing and analyzing single-cell 
 License: MIT + file LICENSE 
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.3
 biocViews: Software, ImmunoOncology, SingleCell, Classification, Annotation, Sequencing
 Depends: 
      ggplot2, 
@@ -24,7 +23,7 @@ Imports:
     ggraph,
     grDevices,
     igraph,
-    immApex,
+    immApex (>= 1.7.1),
     iNEXT,
     Matrix,
     quantreg,
@@ -59,3 +58,4 @@ LinkingTo:
 URL: https://www.borch.dev/uploads/scRepertoire/
 BugReports: https://github.com/BorchLab/scRepertoire/issues
 Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0

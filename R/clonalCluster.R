@@ -178,12 +178,17 @@ clonalCluster <- function(input.data,
   }
   all_barcodes <- unique(do.call(rbind, chain_data)[["barcode"]])
   
+  # Connected-components clustering only needs connectivity, so the cheaper
+  # "star" edge expansion is exact there; community methods need the full edge
+  # multiplicity, so they use "clique".
+  expand <- if (identical(cluster.method, "components")) "star" else "clique"
+
   # Apply the network function to each data frame and combine into one edge list
   result_list <- lapply(chain_data, function(y) {
     y <- y[!is.na(y[,1]),]
     .buildNetwork(y, use.V, use.J, threshold,
                   dist.type, dist.mat, normalize,
-                  gap.open, gap.extend)
+                  gap.open, gap.extend, expand)
   })
   full_edge_list <- do.call(rbind, result_list)
   
@@ -353,7 +358,16 @@ clonalCluster <- function(input.data,
 #' @importFrom immApex buildNetwork
 .buildNetwork <- function(df, use.V, use.J, threshold,
                           dist.type, dist.mat, normalize,
-                          gap.open, gap.extend) {
+                          gap.open, gap.extend, expand = "clique") {
+  # A normalized `threshold` (e.g. 0.85) means "keep >= 85% similar", i.e. keep
+  # normalized distance <= 1 - threshold. buildNetwork interprets a <1 threshold
+  # as the max normalized distance, so pass the tight bound (1 - threshold)
+  # instead of the loose 0.85. This lets the engine prune early (and the
+  # downstream `dist <= 1 - threshold` filter below stays a no-op) rather than
+  # returning a huge edge list that is then discarded. Raw thresholds (>= 1) are
+  # passed through unchanged.
+  bn_threshold <- if (threshold < 1) 1 - threshold else threshold
+
   edge_list <- buildNetwork(df,
                             seq_col   = "cdr3_aa",
                             v_col     = "v",
@@ -361,12 +375,13 @@ clonalCluster <- function(input.data,
                             filter.v  = use.V,
                             filter.j  = use.J,
                             ids       = df[["barcode"]],
-                            threshold = threshold,
+                            threshold = bn_threshold,
                             dist_type = dist.type,
                             dist_mat  = dist.mat,
                             normalize = normalize,
                             gap_open  = gap.open,
-                            gap_extend= gap.extend)
+                            gap_extend= gap.extend,
+                            expand    = expand)
 
   return(edge_list)
 }

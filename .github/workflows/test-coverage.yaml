@@ -26,6 +26,8 @@ jobs:
           extra-packages: any::covr
           needs: coverage
 
+      - uses: ./.github/actions/sync-immapex
+
       - name: Test coverage and generate report
         run: |
           # First, calculate the package coverage

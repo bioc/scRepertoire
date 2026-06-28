@@ -26,4 +26,6 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      - uses: ./.github/actions/sync-immapex
+
       - uses: r-lib/actions/check-r-package@v2

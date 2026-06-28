@@ -20,10 +20,10 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: |
+            any::rcmdcheck
+            BorchLab/immApex@devel
           needs: check
-
-      - uses: ./.github/actions/sync-immapex
 
       - uses: r-lib/actions/check-r-package@v2
 
@@ -43,10 +43,10 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: |
+            any::rcmdcheck
+            BorchLab/immApex@devel
           needs: check
-
-      - uses: ./.github/actions/sync-immapex
 
       - name: Validate version matches tag
         run: |

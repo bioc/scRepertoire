@@ -23,10 +23,10 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::covr
+          extra-packages: |
+            any::covr
+            BorchLab/immApex@devel
           needs: coverage
-
-      - uses: ./.github/actions/sync-immapex
 
       - name: Test coverage and generate report
         run: |
